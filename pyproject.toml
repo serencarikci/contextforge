@@ -28,6 +28,10 @@ dependencies = [
   "qdrant-client>=1.12.0",
   "minio>=7.2.0",
   "python-multipart>=0.0.32",
+  "pypdf>=6.14.2",
+  "python-docx>=1.2.0",
+  "beautifulsoup4>=4.15.0",
+  "lxml>=6.1.1",
 ]
 
 [dependency-groups]
@@ -39,6 +43,8 @@ dev = [
   "mypy>=1.14.0",
   "pre-commit>=4.0.0",
   "types-redis>=4.2.0",
+  "types-beautifulsoup4>=4.12.0.20250516",
+  "types-lxml>=2026.2.16",
 ]
 
 [project.scripts]
@@ -76,13 +82,12 @@ select = [
   "T20",
 ]
 ignore = [
-  "S101", # assert used in tests
+  "S101",
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S105", "S106"]
 "migrations/**/*.py" = ["N999"]
-# CLI scripts intentionally print human-readable output to stdout/stderr.
 "scripts/**/*.py" = ["T201"]
 
 [tool.ruff.format]
@@ -140,13 +145,6 @@ filterwarnings = [
 [tool.coverage.run]
 branch = true
 source = ["contextforge"]
-# The FastAPI TestClient (via httpx/anyio) runs the ASGI app's async code in a
-# background thread (an anyio blocking portal), not the main test thread, so
-# "thread" is required. SQLAlchemy's asyncio extension additionally bridges
-# its (fundamentally sync) Core execution engine to async DBAPI drivers via
-# greenlet switches on that same thread, which the default tracer can't
-# follow either -- "greenlet" is required too, or entire service/repository
-# layers silently report as uncovered despite executing correctly.
 concurrency = ["thread", "greenlet"]
 omit = [
   "*/tests/*",

@@ -76,9 +76,7 @@ KS_RESTRICTED_SLUG = "incident-playbooks"
 
 WELCOME_DOCUMENT_TITLE = "Welcome"
 WELCOME_DOCUMENT_FILENAME = "welcome.txt"
-WELCOME_DOCUMENT_CONTENT = (
-    b"Welcome to the ContextForge Company Handbook knowledge space.\n"
-)
+WELCOME_DOCUMENT_CONTENT = b"Welcome to the ContextForge Company Handbook knowledge space.\n"
 
 
 def _dev_uuid(name: str) -> uuid.UUID:
@@ -155,7 +153,7 @@ async def _ensure_org_scope_role_assignment(
     role_code: SystemRoleCode,
 ) -> RoleAssignment:
     role = await uow.rbac.get_system_role_by_code(role_code.value)
-    if role is None:  # pragma: no cover - defensive, seeded by migration
+    if role is None:  # pragma: no cover
         msg = f"System role '{role_code.value}' is not seeded. Run migrations first."
         raise RuntimeError(msg)
 
@@ -174,7 +172,7 @@ async def _ensure_org_scope_role_assignment(
             ):
                 return assignment
 
-        raise RuntimeError(  # pragma: no cover - defensive
+        raise RuntimeError(  # pragma: no cover
             f"Role assignment for {membership.id}/{role.id} reported as existing but not found."
         )
 
@@ -386,7 +384,7 @@ async def bootstrap(uow: SqlAlchemyUnitOfWork, minio: MinioClient) -> BootstrapR
                 uploaded_by_user_id=admin_user.id,
             )
             welcome_document_id = welcome_document.id
-        except Exception:  # noqa: BLE001 - sample doc upload is best-effort
+        except Exception:  # noqa: S110
             pass
 
         return BootstrapResult(

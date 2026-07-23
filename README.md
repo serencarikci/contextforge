@@ -381,6 +381,7 @@ Example system info capabilities (implemented in this commit vs. still planned):
   "knowledge_spaces": true,
   "audit_log": true,
   "document_ingestion": true,
+  "document_parsing": true,
   "rag": false,
   "chat": false,
   "multilingual_answers": false

@@ -64,7 +64,7 @@ try:
         permission_id,
         system_role_id,
     )
-except ImportError:  # pragma: no cover - fallback when the app package isn't importable
+except ImportError:  # pragma: no cover
     _RBAC_UUID_NAMESPACE = _uuid.UUID("6f2a9b4e-2c3f-4b8a-9d1e-8a2b6f4c1e3a")
 
     def permission_id(code: str) -> _uuid.UUID:

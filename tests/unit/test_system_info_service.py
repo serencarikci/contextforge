@@ -35,6 +35,7 @@ def test_system_info_service_implemented_capabilities(monkeypatch: pytest.Monkey
     assert info.capabilities.audit_log is True
 
     assert info.capabilities.document_ingestion is True
+    assert info.capabilities.document_parsing is True
     assert info.capabilities.rag is False
     assert info.capabilities.chat is False
     assert info.capabilities.multilingual_answers is False

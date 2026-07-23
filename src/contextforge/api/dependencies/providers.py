@@ -12,6 +12,10 @@ from contextforge.infrastructure.cache.redis_client import RedisClient
 from contextforge.infrastructure.database.session import DatabaseManager
 from contextforge.infrastructure.object_storage.minio_client import MinioClient
 from contextforge.infrastructure.vector_store.qdrant_client import QdrantHealthClient
+from contextforge.modules.documents.application.ports.document_parser import DocumentParserPort
+from contextforge.modules.documents.infrastructure.parsing.composite_parser import (
+    CompositeDocumentParser,
+)
 from contextforge.shared.config.settings import Settings
 
 
@@ -25,6 +29,10 @@ def get_database(request: Request) -> DatabaseManager:
 
 def get_minio_client(request: Request) -> MinioClient:
     return request.app.state.minio_client  # type: ignore[no-any-return]
+
+
+def get_document_parser() -> DocumentParserPort:
+    return CompositeDocumentParser()
 
 
 def get_health_service(request: Request) -> HealthService:

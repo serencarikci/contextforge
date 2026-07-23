@@ -10,4 +10,16 @@ class DocumentStatus(StrEnum):
     DELETED = "deleted"
 
 
-__all__ = ["DocumentStatus"]
+class DocumentFormat(StrEnum):
+    PDF = "pdf"
+    DOCX = "docx"
+    HTML = "html"
+    MARKDOWN = "markdown"
+
+
+class DocumentParseStatus(StrEnum):
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+
+
+__all__ = ["DocumentFormat", "DocumentParseStatus", "DocumentStatus"]

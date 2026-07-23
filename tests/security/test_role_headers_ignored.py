@@ -25,7 +25,6 @@ from contextforge.api.dependencies.identity import (
 if TYPE_CHECKING:
     from tests.conftest import TenantScenario
 
-
 _RECOGNIZED_HEADERS = {
     USER_ID_HEADER,
     ORGANIZATION_ID_HEADER,

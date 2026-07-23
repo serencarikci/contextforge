@@ -33,6 +33,7 @@ async def system_info(
             knowledge_spaces=caps.knowledge_spaces,
             audit_log=caps.audit_log,
             document_ingestion=caps.document_ingestion,
+            document_parsing=caps.document_parsing,
             rag=caps.rag,
             chat=caps.chat,
             multilingual_answers=caps.multilingual_answers,

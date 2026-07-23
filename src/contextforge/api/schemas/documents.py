@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from contextforge.modules.documents.domain.enums import DocumentStatus
+from contextforge.modules.documents.domain.enums import (
+    DocumentFormat,
+    DocumentParseStatus,
+    DocumentStatus,
+)
 
 
 class DocumentMetadataUpdateRequest(BaseModel):
@@ -32,4 +37,27 @@ class DocumentResponse(BaseModel):
     deleted_at: datetime | None
 
 
-__all__ = ["DocumentMetadataUpdateRequest", "DocumentResponse"]
+class DocumentParseResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    organization_id: UUID
+    document_id: UUID
+    format: DocumentFormat
+    status: DocumentParseStatus
+    extracted_text: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    character_count: int
+    page_count: int | None = None
+    error_code: str | None = None
+    error_message: str | None = None
+    parsed_at: datetime
+    created_at: datetime
+    updated_at: datetime
+
+
+__all__ = [
+    "DocumentMetadataUpdateRequest",
+    "DocumentParseResponse",
+    "DocumentResponse",
+]
