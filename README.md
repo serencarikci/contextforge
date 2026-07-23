@@ -1,18 +1,18 @@
 # ContextForge — Multilingual Enterprise Knowledge Assistant
 
-Secure enterprise knowledge platform foundation where organizations will upload project
-documents, technical documentation, support records, API specifications, architecture
-documents, and operational guides. Users will later ask questions in Turkish or English
-and receive answers grounded in authorized company documents.
+Secure enterprise knowledge platform where organizations upload project documents,
+technical documentation, support records, API specifications, architecture documents,
+and operational guides. Users later ask questions in Turkish or English and receive
+answers grounded in authorized company documents.
 
-> **Current scope:** this repository commit establishes a production-oriented backend
-> foundation with identity, multi-tenancy, RBAC, and audit logging. Document ingestion,
-> embeddings, RAG, LLM integration, and chat are **not** implemented yet.
+> **Current scope:** identity, multi-tenancy, RBAC, audit logging, document upload/storage,
+> parsing, semantic chunking, multilingual embeddings (Qdrant), and background ingestion
+> workers are implemented. RAG retrieval, LLM answers, and chat are **not** shipped yet.
 >
-> **Authentication:** identity in this commit is resolved via development-only HTTP
-> headers (see [Development identity headers](#development-identity-headers)), gated off
-> entirely in `staging`/`production`. It is **not** a substitute for real authentication
-> (OIDC/SSO) — see [Auth roadmap](#auth-roadmap).
+> **Authentication:** identity is resolved via development-only HTTP headers (see
+> [Development identity headers](#development-identity-headers)), gated off in
+> `staging`/`production`. It is **not** a substitute for real authentication (OIDC/SSO) —
+> see [Auth roadmap](#auth-roadmap).
 
 ## Long-term product vision
 
@@ -41,6 +41,10 @@ and receive answers grounded in authorized company documents.
   knowledge-space visibility rules (`organization` vs `restricted`)
 * **Append-only audit trail** — every mutation is durably recorded with sanitized
   metadata (see [ADR-008](docs/adr/ADR-008-append-only-audit.md))
+* **Document pipeline** — MinIO upload/storage, PDF/DOCX/HTML/Markdown parsing, semantic
+  chunking, multilingual embeddings into Qdrant
+* **Background ingestion workers** — Redis-backed jobs that run parse → chunk → embed with
+  retries and failed-job recovery (`make worker` / Compose `ingestion-worker`)
 * Pytest (unit, integration, architecture, authorization, security, API)
 * Ruff, mypy, pre-commit, GitHub Actions CI
 
@@ -53,6 +57,10 @@ flowchart LR
     API --> Redis[(Redis)]
     API --> Qdrant[(Qdrant)]
     API --> MinIO[(MinIO)]
+    Worker[Ingestion Worker] --> PG
+    Worker --> Redis
+    Worker --> Qdrant
+    Worker --> MinIO
 ```
 
 Conceptual layers:
@@ -223,6 +231,7 @@ docker compose up --build
 This starts:
 
 * `api` on http://localhost:8000
+* `ingestion-worker` (background document processing)
 * `postgres` on localhost:5432
 * `redis` on localhost:6379
 * `qdrant` on localhost:6333
@@ -317,6 +326,7 @@ not by this script) is actually present, and prints their counts.
 make migrate                 # alembic upgrade head
 make migration name="desc"   # autogenerate revision
 make downgrade               # alembic downgrade -1
+make worker                  # run ingestion worker locally
 uv run alembic history
 ```
 
@@ -363,6 +373,8 @@ make type-check
 | POST/GET/PATCH | `/api/v1/knowledge-spaces`, `/{id}`, `/{id}/archive` | Knowledge space lifecycle |
 | POST/GET/PATCH/DELETE | `/api/v1/knowledge-spaces/{id}/memberships`, `/{ks_membership_id}` | Knowledge-space membership |
 | POST/GET/PATCH/PUT/DELETE | `/api/v1/documents`, `/{id}`, `/{id}/content`, `/{id}/download` | Document upload, metadata, content replace, download, delete |
+| POST/GET | `/api/v1/documents/{id}/parse`, `/{id}/chunks`, `/{id}/embeddings` | Parse, chunk, and embed a document on demand |
+| GET/POST | `/api/v1/ingestion-jobs`, `/{id}`, `/{id}/retry`, `/documents/{id}/ingestion-jobs` | Background ingestion jobs (list, inspect, retry failed) |
 | GET | `/api/v1/audit` | Query the append-only audit trail (`audit:read`) |
 
 All endpoints above (except `/health/*` and `/system/info`) require
@@ -384,6 +396,7 @@ Example system info capabilities (implemented in this commit vs. still planned):
   "document_parsing": true,
   "document_chunking": true,
   "document_embeddings": true,
+  "ingestion_workers": true,
   "rag": false,
   "chat": false,
   "multilingual_answers": false
@@ -475,8 +488,8 @@ mechanism only. Planned follow-ups, in rough order:
 4. Service-to-service / API-key authentication for automation clients.
 5. Removing development identity from non-production builds entirely once (1)–(2) ship.
 
-Document ingestion, embeddings, RAG, and chat remain out of scope until authentication and
-tenancy are considered stable — see the [Planned roadmap](#planned-roadmap) below.
+RAG retrieval, LLM answer generation, and chat remain on the product roadmap — see
+[Planned roadmap](#planned-roadmap) below.
 
 ## Health-check behavior
 
@@ -520,18 +533,21 @@ tenancy are considered stable — see the [Planned roadmap](#planned-roadmap) be
 
 ## Planned roadmap
 
-1. ~~Multi-tenancy, scoped RBAC, and audit logging~~ — done in this commit (development
-   identity only; see [Auth roadmap](#auth-roadmap) for real authentication)
-2. Real authentication (OIDC/SSO) replacing development identity
-3. Document upload and MinIO ingestion pipeline
-4. Chunking, embeddings, and Qdrant indexing
-5. Retrieval and grounded answer generation
-6. Multilingual chat experience (Turkish / English)
-7. Admin tooling on top of the audit trail
+1. ~~Multi-tenancy, scoped RBAC, and audit logging~~ — done (development identity only;
+   see [Auth roadmap](#auth-roadmap) for real authentication)
+2. ~~Document upload, parsing, chunking, embeddings, and ingestion workers~~ — done
+3. Real authentication (OIDC/SSO) replacing development identity
+4. Retrieval and grounded answer generation
+5. Multilingual chat experience (Turkish / English)
+6. Admin tooling on top of the audit trail
 
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+## Author
+
+Built by [serencarikci](https://github.com/serencarikci).
 
 ## Architecture decision records
 

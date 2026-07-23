@@ -7,6 +7,7 @@ from typing import Annotated
 from fastapi import Depends, Request
 
 from contextforge.application.ports.embedding_provider import EmbeddingProviderPort
+from contextforge.application.ports.ingestion_job_queue import IngestionJobQueuePort
 from contextforge.application.ports.vector_store import VectorStorePort
 from contextforge.application.services.health_service import HealthService
 from contextforge.application.services.system_info_service import SystemInfoService
@@ -14,6 +15,10 @@ from contextforge.infrastructure.cache.redis_client import RedisClient
 from contextforge.infrastructure.database.session import DatabaseManager
 from contextforge.infrastructure.embeddings import build_embedding_provider
 from contextforge.infrastructure.object_storage.minio_client import MinioClient
+from contextforge.infrastructure.queue.ingestion_job_queue import (
+    InMemoryIngestionJobQueue,
+    RedisIngestionJobQueue,
+)
 from contextforge.infrastructure.vector_store.qdrant_client import QdrantHealthClient
 from contextforge.infrastructure.vector_store.qdrant_vector_store import QdrantVectorStore
 from contextforge.modules.documents.application.ports.document_chunker import DocumentChunkerPort
@@ -27,7 +32,10 @@ from contextforge.modules.documents.infrastructure.chunking.semantic_text_chunke
 from contextforge.modules.documents.infrastructure.parsing.composite_parser import (
     CompositeDocumentParser,
 )
-from contextforge.shared.config.settings import Settings
+from contextforge.modules.ingestion.application.services.ingestion_job_service import (
+    IngestionJobService,
+)
+from contextforge.shared.config.settings import Environment, Settings
 
 
 def get_settings_dependency(request: Request) -> Settings:
@@ -83,6 +91,25 @@ def get_document_embedding_service(
         max_retries=settings.embedding.max_retries,
         retry_backoff_seconds=settings.embedding.retry_backoff_seconds,
     )
+
+
+def get_ingestion_job_queue(request: Request) -> IngestionJobQueuePort:
+    existing = getattr(request.app.state, "ingestion_job_queue", None)
+    if existing is not None:
+        return existing  # type: ignore[no-any-return]
+    settings: Settings = request.app.state.settings
+    if settings.app.environment == Environment.TEST:
+        queue: IngestionJobQueuePort = InMemoryIngestionJobQueue()
+    else:
+        redis_client: RedisClient = request.app.state.redis_client
+        queue = RedisIngestionJobQueue(redis_client.client, settings.ingestion)
+    request.app.state.ingestion_job_queue = queue
+    return queue
+
+
+def get_ingestion_job_service(request: Request) -> IngestionJobService:
+    settings: Settings = request.app.state.settings
+    return IngestionJobService(settings.ingestion)
 
 
 def get_health_service(request: Request) -> HealthService:

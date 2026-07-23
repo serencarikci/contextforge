@@ -29,6 +29,9 @@ def import_all_models() -> None:
     from contextforge.modules.identity_access.infrastructure import (  # noqa: F401
         models as _identity_access_models,
     )
+    from contextforge.modules.ingestion.infrastructure import (  # noqa: F401
+        models as _ingestion_models,
+    )
     from contextforge.modules.knowledge_spaces.infrastructure import (  # noqa: F401
         models as _knowledge_space_models,
     )

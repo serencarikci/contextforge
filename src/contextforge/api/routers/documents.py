@@ -13,6 +13,8 @@ from contextforge.api.dependencies.providers import (
     get_document_chunker,
     get_document_embedding_service,
     get_document_parser,
+    get_ingestion_job_queue,
+    get_ingestion_job_service,
     get_minio_client,
     get_vector_store,
 )
@@ -27,6 +29,7 @@ from contextforge.api.schemas.documents import (
 )
 from contextforge.application.context.request_context import RequestContext
 from contextforge.application.pagination import PaginationParams
+from contextforge.application.ports.ingestion_job_queue import IngestionJobQueuePort
 from contextforge.application.ports.vector_store import VectorStorePort
 from contextforge.application.uow.sqlalchemy_uow import SqlAlchemyUnitOfWork
 from contextforge.infrastructure.object_storage.minio_client import MinioClient
@@ -42,6 +45,9 @@ from contextforge.modules.documents.application.services.document_parsing_servic
     DocumentParsingService,
 )
 from contextforge.modules.documents.application.services.document_service import DocumentService
+from contextforge.modules.ingestion.application.services.ingestion_job_service import (
+    IngestionJobService,
+)
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -61,6 +67,8 @@ async def upload_document(
     uow: Annotated[SqlAlchemyUnitOfWork, Depends(get_uow)],
     ctx: Annotated[RequestContext, Depends(get_request_context)],
     minio: Annotated[MinioClient, Depends(get_minio_client)],
+    ingestion_service: Annotated[IngestionJobService, Depends(get_ingestion_job_service)],
+    queue: Annotated[IngestionJobQueuePort, Depends(get_ingestion_job_queue)],
     knowledge_space_id: Annotated[UUID, Form()],
     title: Annotated[str, Form(min_length=2, max_length=200)],
     file: Annotated[UploadFile, File()],
@@ -75,6 +83,13 @@ async def upload_document(
         filename=file.filename or "upload.bin",
         content_type=file.content_type or "application/octet-stream",
         data=data,
+    )
+    await ingestion_service.enqueue_for_document(
+        uow,
+        ctx,
+        queue,
+        document_id=document.id,
+        knowledge_space_id=document.knowledge_space_id,
     )
     return DocumentResponse.model_validate(document)
 
@@ -123,6 +138,8 @@ async def replace_document_content(
     uow: Annotated[SqlAlchemyUnitOfWork, Depends(get_uow)],
     ctx: Annotated[RequestContext, Depends(get_request_context)],
     minio: Annotated[MinioClient, Depends(get_minio_client)],
+    ingestion_service: Annotated[IngestionJobService, Depends(get_ingestion_job_service)],
+    queue: Annotated[IngestionJobQueuePort, Depends(get_ingestion_job_queue)],
     file: Annotated[UploadFile, File()],
     title: Annotated[str | None, Form(min_length=2, max_length=200)] = None,
 ) -> DocumentResponse:
@@ -138,6 +155,13 @@ async def replace_document_content(
     )
     if title is not None:
         document = await _service.update_metadata(uow, ctx, document_id, title=title)
+    await ingestion_service.enqueue_for_document(
+        uow,
+        ctx,
+        queue,
+        document_id=document.id,
+        knowledge_space_id=document.knowledge_space_id,
+    )
     return DocumentResponse.model_validate(document)
 
 

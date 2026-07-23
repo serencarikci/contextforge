@@ -31,6 +31,9 @@ from contextforge.modules.identity_access.infrastructure.repositories.rbac impor
 from contextforge.modules.identity_access.infrastructure.repositories.user import (
     SqlAlchemyUserRepository,
 )
+from contextforge.modules.ingestion.infrastructure.repositories.ingestion_job import (
+    SqlAlchemyIngestionJobRepository,
+)
 from contextforge.modules.knowledge_spaces.infrastructure.repositories.knowledge_space import (
     SqlAlchemyKnowledgeSpaceRepository,
 )
@@ -58,6 +61,7 @@ class SqlAlchemyUnitOfWork:
         self.documents: SqlAlchemyDocumentRepository
         self.document_parses: SqlAlchemyDocumentParseResultRepository
         self.document_chunks: SqlAlchemyDocumentChunkRepository
+        self.ingestion_jobs: SqlAlchemyIngestionJobRepository
         self.audit: SqlAlchemyAuditEventRepository
 
     async def __aenter__(self) -> Self:
@@ -72,6 +76,7 @@ class SqlAlchemyUnitOfWork:
         self.documents = SqlAlchemyDocumentRepository(self.session)
         self.document_parses = SqlAlchemyDocumentParseResultRepository(self.session)
         self.document_chunks = SqlAlchemyDocumentChunkRepository(self.session)
+        self.ingestion_jobs = SqlAlchemyIngestionJobRepository(self.session)
         self.audit = SqlAlchemyAuditEventRepository(self.session)
         return self
 

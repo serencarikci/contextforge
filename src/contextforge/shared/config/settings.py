@@ -152,8 +152,21 @@ class LoggingSettings(BaseSettings):
     service_name: str = "contextforge-api"
 
 
+class IngestionSettings(BaseSettings):
+    """Background document ingestion worker settings."""
+
+    model_config = SettingsConfigDict(extra="ignore")
+
+    enabled: bool = True
+    queue_key: str = "contextforge:ingestion:jobs"
+    max_attempts: int = Field(default=3, ge=1, le=20)
+    poll_timeout_seconds: float = Field(default=5.0, gt=0)
+    retry_backoff_seconds: float = Field(default=1.0, gt=0)
+    worker_idle_sleep_seconds: float = Field(default=0.5, gt=0)
+
+
 class SecuritySettings(BaseSettings):
-    """Security placeholders for future authentication."""
+    """JWT and related auth settings reserved for real authentication."""
 
     model_config = SettingsConfigDict(extra="ignore")
 
@@ -180,6 +193,7 @@ class Settings(BaseSettings):
     qdrant: QdrantSettings = Field(default_factory=QdrantSettings)
     minio: MinioSettings = Field(default_factory=MinioSettings)
     embedding: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
+    ingestion: IngestionSettings = Field(default_factory=IngestionSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
     security: SecuritySettings = Field(default_factory=SecuritySettings)
 

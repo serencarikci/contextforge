@@ -172,6 +172,35 @@ services:
     networks:
       - contextforge
 
+  ingestion-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: contextforge-ingestion-worker
+    restart: unless-stopped
+    command: ["contextforge-ingestion-worker"]
+    environment:
+      <<: *api-env
+      CONTEXTFORGE_RUN_MIGRATIONS: "false"
+      CONTEXTFORGE_LOGGING__SERVICE_NAME: contextforge-ingestion-worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      disable: true
+    networks:
+      - contextforge
+
 networks:
   contextforge:
     name: contextforge-network
