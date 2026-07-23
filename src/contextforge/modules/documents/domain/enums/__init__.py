@@ -22,4 +22,15 @@ class DocumentParseStatus(StrEnum):
     FAILED = "failed"
 
 
-__all__ = ["DocumentFormat", "DocumentParseStatus", "DocumentStatus"]
+class ChunkEmbeddingStatus(StrEnum):
+    PENDING = "pending"
+    EMBEDDED = "embedded"
+    FAILED = "failed"
+
+
+__all__ = [
+    "ChunkEmbeddingStatus",
+    "DocumentFormat",
+    "DocumentParseStatus",
+    "DocumentStatus",
+]

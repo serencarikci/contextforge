@@ -20,6 +20,7 @@ class SystemCapabilities:
     audit_log: bool = True
     document_ingestion: bool = True
     document_parsing: bool = True
+    document_chunking: bool = True
     rag: bool = False
     chat: bool = False
     multilingual_answers: bool = False

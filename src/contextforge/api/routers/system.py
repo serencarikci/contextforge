@@ -34,6 +34,7 @@ async def system_info(
             audit_log=caps.audit_log,
             document_ingestion=caps.document_ingestion,
             document_parsing=caps.document_parsing,
+            document_chunking=caps.document_chunking,
             rag=caps.rag,
             chat=caps.chat,
             multilingual_answers=caps.multilingual_answers,

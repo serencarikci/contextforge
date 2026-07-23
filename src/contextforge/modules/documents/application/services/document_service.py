@@ -228,6 +228,7 @@ class DocumentService:
                     checksum_sha256=checksum,
                 )
                 document = await uow.documents.update(document)
+                await uow.document_chunks.delete_by_document(document.id)
                 await uow.document_parses.delete_by_document(document.id)
             except Exception:
                 if new_storage_key != old_storage_key:

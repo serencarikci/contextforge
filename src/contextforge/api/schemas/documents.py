@@ -9,6 +9,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 from contextforge.modules.documents.domain.enums import (
+    ChunkEmbeddingStatus,
     DocumentFormat,
     DocumentParseStatus,
     DocumentStatus,
@@ -56,7 +57,34 @@ class DocumentParseResponse(BaseModel):
     updated_at: datetime
 
 
+class DocumentChunkResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    organization_id: UUID
+    document_id: UUID
+    parse_result_id: UUID
+    knowledge_space_id: UUID
+    chunk_index: int
+    content: str
+    content_hash: str
+    char_start: int
+    char_end: int
+    token_count: int
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    embedding_status: ChunkEmbeddingStatus
+    created_at: datetime
+    updated_at: datetime
+
+
+class DocumentChunkListResponse(BaseModel):
+    items: list[DocumentChunkResponse]
+    total: int
+
+
 __all__ = [
+    "DocumentChunkListResponse",
+    "DocumentChunkResponse",
     "DocumentMetadataUpdateRequest",
     "DocumentParseResponse",
     "DocumentResponse",
