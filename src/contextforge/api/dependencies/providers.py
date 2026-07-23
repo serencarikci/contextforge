@@ -28,6 +28,10 @@ def get_database(request: Request) -> DatabaseManager:
     return request.app.state.database  # type: ignore[no-any-return]
 
 
+def get_minio_client(request: Request) -> MinioClient:
+    return request.app.state.minio_client  # type: ignore[no-any-return]
+
+
 async def get_db_session(
     database: Annotated[DatabaseManager, Depends(get_database)],
 ) -> AsyncIterator[AsyncSession]:

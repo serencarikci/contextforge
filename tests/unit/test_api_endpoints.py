@@ -39,7 +39,7 @@ def test_correlation_id_passthrough(client: TestClient) -> None:
 
 
 @pytest.mark.unit
-def test_system_info_capabilities_false(client: TestClient) -> None:
+def test_system_info_capabilities(client: TestClient) -> None:
     response = client.get("/api/v1/system/info")
     assert response.status_code == 200
     body = response.json()
@@ -54,7 +54,7 @@ def test_system_info_capabilities_false(client: TestClient) -> None:
         "projects": True,
         "knowledge_spaces": True,
         "audit_log": True,
-        "document_ingestion": False,
+        "document_ingestion": True,
         "rag": False,
         "chat": False,
         "multilingual_answers": False,

@@ -87,4 +87,8 @@ class PermissionCode(StrEnum):
     KNOWLEDGE_SPACE_UPDATE = "knowledge_space:update"
     KNOWLEDGE_SPACE_ARCHIVE = "knowledge_space:archive"
     KNOWLEDGE_SPACE_MANAGE_MEMBERS = "knowledge_space:manage_members"
+    DOCUMENT_CREATE = "document:create"
+    DOCUMENT_READ = "document:read"
+    DOCUMENT_UPDATE = "document:update"
+    DOCUMENT_DELETE = "document:delete"
     AUDIT_READ = "audit:read"
