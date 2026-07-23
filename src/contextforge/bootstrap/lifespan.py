@@ -31,7 +31,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         },
     )
 
-    # Construct infrastructure clients. Connectivity is validated by readiness checks.
     database = DatabaseManager(settings.postgres)
     redis_client = RedisClient(settings.redis)
     qdrant_client = QdrantHealthClient(settings.qdrant)

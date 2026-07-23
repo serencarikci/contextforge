@@ -85,5 +85,5 @@ def test_type_aliases_importable() -> None:
 
 @pytest.mark.unit
 def test_correlation_uuid_value_error_path() -> None:
-    # Matches regex shape poorly enough to fail UUID parsing edge cases.
+
     assert is_valid_correlation_id("00000000-0000-0000-0000-00000000000g") is False

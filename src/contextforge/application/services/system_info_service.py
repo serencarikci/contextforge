@@ -9,8 +9,15 @@ from contextforge.shared.config.settings import Settings
 
 @dataclass(frozen=True, slots=True)
 class SystemCapabilities:
-    """Explicit capability flags for features not yet implemented."""
+    """Explicit capability flags for implemented and planned features."""
 
+    identity_context: bool = True
+    multi_tenancy: bool = True
+    rbac: bool = True
+    customers: bool = True
+    projects: bool = True
+    knowledge_spaces: bool = True
+    audit_log: bool = True
     document_ingestion: bool = False
     rag: bool = False
     chat: bool = False
@@ -25,6 +32,7 @@ class SystemInfo:
     version: str
     environment: str
     capabilities: SystemCapabilities
+    authentication: str = "development_only"
 
 
 class SystemInfoService:
@@ -40,4 +48,5 @@ class SystemInfoService:
             version=self._settings.app.version,
             environment=self._settings.app.environment.value,
             capabilities=SystemCapabilities(),
+            authentication="development_only",
         )

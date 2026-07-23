@@ -51,8 +51,7 @@ def test_unhandled_error_hides_internal_details(client: TestClient) -> None:
 
 @pytest.mark.unit
 def test_validation_error_response(client: TestClient) -> None:
-    # Hit an endpoint with an invalid query shape via OpenAPI-validated path if present.
-    # Use a non-existent method to exercise HTTP exception formatting.
+
     response = client.request("TRACE", "/api/v1/health/live")
     assert response.status_code in {405, 400, 404, 422}
     assert "error" in response.json()

@@ -61,5 +61,5 @@ class MinioClient:
             )
 
     async def close(self) -> None:
-        # The MinIO SDK does not expose an async close; keep a no-op for symmetry.
+
         logger.info("minio_client_closed")
