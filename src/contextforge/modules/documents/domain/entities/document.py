@@ -10,7 +10,7 @@ from contextforge.domain.exceptions.identity import InvalidResourceStateError
 from contextforge.modules.documents.domain.enums import DocumentStatus
 from contextforge.shared.utilities.datetime import utc_now
 
-MAX_DOCUMENT_SIZE_BYTES = 25 * 1024 * 1024  # 25 MB
+MAX_DOCUMENT_SIZE_BYTES = 25 * 1024 * 1024
 
 
 def ensure_upload_size_within_limit(size_bytes: int) -> None:

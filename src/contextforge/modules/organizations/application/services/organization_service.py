@@ -66,7 +66,7 @@ class OrganizationService:
             admin_role = await uow.rbac.get_system_role_by_code(
                 SystemRoleCode.ORGANIZATION_ADMIN.value
             )
-            if admin_role is None:  # pragma: no cover - defensive, seeded by migration
+            if admin_role is None:  # pragma: no cover
                 msg = "System role 'organization_admin' is not seeded."
                 raise ResourceNotFoundError(msg)
 

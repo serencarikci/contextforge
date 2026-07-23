@@ -58,7 +58,7 @@ depends_on: str | Sequence[str] | None = None
 
 try:
     from contextforge.shared.constants.rbac import permission_id, system_role_id
-except ImportError:  # pragma: no cover - fallback when the app package isn't importable
+except ImportError:  # pragma: no cover
     _RBAC_UUID_NAMESPACE = _uuid.UUID("6f2a9b4e-2c3f-4b8a-9d1e-8a2b6f4c1e3a")
 
     def permission_id(code: str) -> _uuid.UUID:
@@ -194,14 +194,13 @@ def _seed_document_rbac_reference_data() -> None:
         for code, description in NEW_PERMISSIONS
     ]
     connection.execute(
-        pg_insert(permissions_table).values(permission_rows).on_conflict_do_nothing(
-            index_elements=["code"]
-        )
+        pg_insert(permissions_table)
+        .values(permission_rows)
+        .on_conflict_do_nothing(index_elements=["code"])
     )
 
     role_codes_present = {
-        row[0]
-        for row in connection.execute(sa.select(roles_table.c.code)).fetchall()
+        row[0] for row in connection.execute(sa.select(roles_table.c.code)).fetchall()
     }
 
     role_permission_rows = [

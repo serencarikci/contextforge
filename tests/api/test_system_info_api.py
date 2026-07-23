@@ -25,6 +25,7 @@ def test_system_info_reports_expected_capability_flags(api_client: TestClient) -
         "knowledge_spaces",
         "audit_log",
         "document_ingestion",
+        "document_parsing",
     )
     for flag in implemented:
         assert capabilities[flag] is True, f"expected capability '{flag}' to be True"

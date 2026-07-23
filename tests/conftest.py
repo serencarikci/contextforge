@@ -16,7 +16,6 @@ if TYPE_CHECKING:
     from contextforge.infrastructure.database.session import DatabaseManager
     from contextforge.shared.config.settings import Settings
 
-
 os.environ.setdefault("CONTEXTFORGE_APP__ENVIRONMENT", "test")
 os.environ.setdefault("CONTEXTFORGE_LOGGING__LEVEL", "WARNING")
 os.environ.setdefault("CONTEXTFORGE_LOGGING__FORMAT", "console")

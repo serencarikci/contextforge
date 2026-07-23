@@ -1,7 +1,6 @@
 #!/bin/sh
 set -eu
 
-
 if [ "${CONTEXTFORGE_RUN_MIGRATIONS:-false}" = "true" ]; then
   echo "Running database migrations..."
   alembic upgrade head

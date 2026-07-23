@@ -43,7 +43,7 @@ class APISettings(BaseSettings):
 
     model_config = SettingsConfigDict(extra="ignore")
 
-    host: str = "0.0.0.0"  # noqa: S104 — intentional bind for container networking
+    host: str = "0.0.0.0"  # noqa: S104
     port: int = Field(default=8000, ge=1, le=65535)
     root_path: str = ""
     cors_origins: Annotated[list[str], NoDecode] = Field(default_factory=list)

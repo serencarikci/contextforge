@@ -34,7 +34,7 @@ class MembershipService:
             ctx.require_permission("organization:manage_members")
 
             organization = await uow.organizations.get_by_id(ctx.organization_id)
-            if organization is None:  # pragma: no cover - defensive
+            if organization is None:  # pragma: no cover
                 raise ResourceNotFoundError("Organization not found.")
             ensure_organization_writable(organization)
             organization.ensure_accepts_memberships()

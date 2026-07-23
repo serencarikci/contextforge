@@ -46,7 +46,7 @@ class DocumentService:
             ctx.require_knowledge_space_access(knowledge_space_id)
 
             organization = await uow.organizations.get_by_id(ctx.organization_id)
-            if organization is None:  # pragma: no cover - defensive
+            if organization is None:  # pragma: no cover
                 raise ResourceNotFoundError("Organization not found.")
             ensure_organization_writable(organization)
 
@@ -228,6 +228,7 @@ class DocumentService:
                     checksum_sha256=checksum,
                 )
                 document = await uow.documents.update(document)
+                await uow.document_parses.delete_by_document(document.id)
             except Exception:
                 if new_storage_key != old_storage_key:
                     await minio.remove_object(new_storage_key)

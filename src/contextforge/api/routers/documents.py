@@ -1,4 +1,4 @@
-"""Document endpoints: upload, read, update metadata/content, download, delete."""
+"""Document endpoints: upload, read, update metadata/content, parse, download, delete."""
 
 from __future__ import annotations
 
@@ -9,18 +9,30 @@ from fastapi import APIRouter, Depends, File, Form, Query, Response, UploadFile,
 
 from contextforge.api.dependencies.identity import get_request_context, get_uow
 from contextforge.api.dependencies.pagination import get_pagination
-from contextforge.api.dependencies.providers import get_minio_client
+from contextforge.api.dependencies.providers import get_document_parser, get_minio_client
 from contextforge.api.schemas.common import PaginationMeta, PaginationResponse
-from contextforge.api.schemas.documents import DocumentMetadataUpdateRequest, DocumentResponse
+from contextforge.api.schemas.documents import (
+    DocumentMetadataUpdateRequest,
+    DocumentParseResponse,
+    DocumentResponse,
+)
 from contextforge.application.context.request_context import RequestContext
 from contextforge.application.pagination import PaginationParams
 from contextforge.application.uow.sqlalchemy_uow import SqlAlchemyUnitOfWork
 from contextforge.infrastructure.object_storage.minio_client import MinioClient
+from contextforge.modules.documents.application.ports.document_parser import DocumentParserPort
+from contextforge.modules.documents.application.services.document_parsing_service import (
+    DocumentParsingService,
+)
 from contextforge.modules.documents.application.services.document_service import DocumentService
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
 _service = DocumentService()
+
+
+def _parsing_service(parser: DocumentParserPort) -> DocumentParsingService:
+    return DocumentParsingService(parser)
 
 
 @router.post("", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
@@ -106,6 +118,29 @@ async def replace_document_content(
     if title is not None:
         document = await _service.update_metadata(uow, ctx, document_id, title=title)
     return DocumentResponse.model_validate(document)
+
+
+@router.post("/{document_id}/parse", response_model=DocumentParseResponse)
+async def parse_document(
+    document_id: UUID,
+    uow: Annotated[SqlAlchemyUnitOfWork, Depends(get_uow)],
+    ctx: Annotated[RequestContext, Depends(get_request_context)],
+    minio: Annotated[MinioClient, Depends(get_minio_client)],
+    parser: Annotated[DocumentParserPort, Depends(get_document_parser)],
+) -> DocumentParseResponse:
+    result = await _parsing_service(parser).parse_document(uow, ctx, minio, document_id)
+    return DocumentParseResponse.model_validate(result)
+
+
+@router.get("/{document_id}/parse", response_model=DocumentParseResponse)
+async def get_document_parse_result(
+    document_id: UUID,
+    uow: Annotated[SqlAlchemyUnitOfWork, Depends(get_uow)],
+    ctx: Annotated[RequestContext, Depends(get_request_context)],
+    parser: Annotated[DocumentParserPort, Depends(get_document_parser)],
+) -> DocumentParseResponse:
+    result = await _parsing_service(parser).get_parse_result(uow, ctx, document_id)
+    return DocumentParseResponse.model_validate(result)
 
 
 @router.get("/{document_id}/download")

@@ -1,7 +1,6 @@
 #!/bin/sh
 set -eu
 
-
 MC_ALIAS="local"
 ENDPOINT="${MINIO_ENDPOINT:-http://minio:9000}"
 ACCESS_KEY="${MINIO_ROOT_USER:-contextforge_minio}"
