@@ -11,25 +11,32 @@ from contextforge.api.dependencies.identity import get_request_context, get_uow
 from contextforge.api.dependencies.pagination import get_pagination
 from contextforge.api.dependencies.providers import (
     get_document_chunker,
+    get_document_embedding_service,
     get_document_parser,
     get_minio_client,
+    get_vector_store,
 )
 from contextforge.api.schemas.common import PaginationMeta, PaginationResponse
 from contextforge.api.schemas.documents import (
     DocumentChunkListResponse,
     DocumentChunkResponse,
+    DocumentEmbeddingResponse,
     DocumentMetadataUpdateRequest,
     DocumentParseResponse,
     DocumentResponse,
 )
 from contextforge.application.context.request_context import RequestContext
 from contextforge.application.pagination import PaginationParams
+from contextforge.application.ports.vector_store import VectorStorePort
 from contextforge.application.uow.sqlalchemy_uow import SqlAlchemyUnitOfWork
 from contextforge.infrastructure.object_storage.minio_client import MinioClient
 from contextforge.modules.documents.application.ports.document_chunker import DocumentChunkerPort
 from contextforge.modules.documents.application.ports.document_parser import DocumentParserPort
 from contextforge.modules.documents.application.services.document_chunking_service import (
     DocumentChunkingService,
+)
+from contextforge.modules.documents.application.services.document_embedding_service import (
+    DocumentEmbeddingService,
 )
 from contextforge.modules.documents.application.services.document_parsing_service import (
     DocumentParsingService,
@@ -163,8 +170,11 @@ async def chunk_document(
     uow: Annotated[SqlAlchemyUnitOfWork, Depends(get_uow)],
     ctx: Annotated[RequestContext, Depends(get_request_context)],
     chunker: Annotated[DocumentChunkerPort, Depends(get_document_chunker)],
+    vector_store: Annotated[VectorStorePort, Depends(get_vector_store)],
 ) -> DocumentChunkListResponse:
-    chunks = await _chunking_service(chunker).chunk_document(uow, ctx, document_id)
+    chunks = await _chunking_service(chunker).chunk_document(
+        uow, ctx, document_id, vector_store=vector_store
+    )
     items = [DocumentChunkResponse.model_validate(chunk) for chunk in chunks]
     return DocumentChunkListResponse(items=items, total=len(items))
 
@@ -179,6 +189,28 @@ async def list_document_chunks(
     chunks = await _chunking_service(chunker).list_chunks(uow, ctx, document_id)
     items = [DocumentChunkResponse.model_validate(chunk) for chunk in chunks]
     return DocumentChunkListResponse(items=items, total=len(items))
+
+
+@router.post("/{document_id}/embeddings", response_model=DocumentEmbeddingResponse)
+async def embed_document(
+    document_id: UUID,
+    uow: Annotated[SqlAlchemyUnitOfWork, Depends(get_uow)],
+    ctx: Annotated[RequestContext, Depends(get_request_context)],
+    service: Annotated[DocumentEmbeddingService, Depends(get_document_embedding_service)],
+    language: Annotated[str | None, Query(min_length=2, max_length=16)] = None,
+    force: Annotated[bool, Query()] = False,
+) -> DocumentEmbeddingResponse:
+    result = await service.embed_document(uow, ctx, document_id, language=language, force=force)
+    return DocumentEmbeddingResponse(
+        document_id=result.document_id,
+        model=result.model,
+        dimensions=result.dimensions,
+        language=result.language,
+        embedded_count=result.embedded_count,
+        failed_count=result.failed_count,
+        skipped_count=result.skipped_count,
+        items=[DocumentChunkResponse.model_validate(chunk) for chunk in result.chunks],
+    )
 
 
 @router.get("/{document_id}/download")

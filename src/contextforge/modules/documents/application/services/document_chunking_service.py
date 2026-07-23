@@ -6,6 +6,7 @@ import asyncio
 from uuid import UUID
 
 from contextforge.application.context.request_context import RequestContext
+from contextforge.application.ports.vector_store import VectorStoreError, VectorStorePort
 from contextforge.application.services.command_support import build_audit_event
 from contextforge.application.uow.sqlalchemy_uow import SqlAlchemyUnitOfWork
 from contextforge.domain.exceptions.identity import InvalidResourceStateError, ResourceNotFoundError
@@ -30,6 +31,7 @@ class DocumentChunkingService:
         uow: SqlAlchemyUnitOfWork,
         ctx: RequestContext,
         document_id: UUID,
+        vector_store: VectorStorePort | None = None,
     ) -> list[DocumentChunk]:
         async with uow:
             ctx.require_permission("document:update")
@@ -109,7 +111,18 @@ class DocumentChunkingService:
                 },
             )
             await uow.audit.add(event)
-            return stored
+
+        if vector_store is not None:
+            try:
+                await vector_store.delete_by_document(organization_id, document_id)
+            except VectorStoreError as exc:
+                logger.warning(
+                    "document_vector_cleanup_failed",
+                    exc_info=exc,
+                    extra={"document_id": str(document_id)},
+                )
+
+        return stored
 
     async def list_chunks(
         self,

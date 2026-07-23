@@ -109,6 +109,23 @@ class QdrantSettings(BaseSettings):
     url: str = "http://localhost:6333"
     api_key: SecretStr | None = None
     timeout_seconds: float = Field(default=3.0, gt=0)
+    collection_name: str = "document_chunks"
+
+
+class EmbeddingSettings(BaseSettings):
+    """Embedding generation settings for multilingual chunk vectors."""
+
+    model_config = SettingsConfigDict(extra="ignore")
+
+    provider: Literal["hashing", "openai_compatible"] = "hashing"
+    model: str = "contextforge-multilingual-hash-v1"
+    dimensions: int = Field(default=384, ge=8, le=4096)
+    batch_size: int = Field(default=32, ge=1, le=256)
+    max_retries: int = Field(default=3, ge=0, le=10)
+    retry_backoff_seconds: float = Field(default=0.5, gt=0)
+    base_url: str = "https://api.openai.com/v1"
+    api_key: SecretStr | None = None
+    timeout_seconds: float = Field(default=30.0, gt=0)
 
 
 class MinioSettings(BaseSettings):
@@ -162,6 +179,7 @@ class Settings(BaseSettings):
     redis: RedisSettings = Field(default_factory=RedisSettings)
     qdrant: QdrantSettings = Field(default_factory=QdrantSettings)
     minio: MinioSettings = Field(default_factory=MinioSettings)
+    embedding: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
     security: SecuritySettings = Field(default_factory=SecuritySettings)
 

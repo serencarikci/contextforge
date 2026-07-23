@@ -23,8 +23,29 @@ class DocumentChunkError(DomainError):
     code = "DOCUMENT_CHUNK_FAILED"
 
 
+class DocumentEmbeddingError(DomainError):
+    """Raised when embedding generation or vector persistence fails."""
+
+    code = "DOCUMENT_EMBEDDING_FAILED"
+
+
+class TransientEmbeddingError(DomainError):
+    """Raised for retryable embedding provider failures."""
+
+    code = "EMBEDDING_PROVIDER_TRANSIENT"
+
+
+class PermanentEmbeddingError(DomainError):
+    """Raised for non-retryable embedding provider failures."""
+
+    code = "EMBEDDING_PROVIDER_ERROR"
+
+
 __all__ = [
     "DocumentChunkError",
+    "DocumentEmbeddingError",
     "DocumentParseError",
+    "PermanentEmbeddingError",
+    "TransientEmbeddingError",
     "UnsupportedDocumentFormatError",
 ]

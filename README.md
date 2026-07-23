@@ -383,6 +383,7 @@ Example system info capabilities (implemented in this commit vs. still planned):
   "document_ingestion": true,
   "document_parsing": true,
   "document_chunking": true,
+  "document_embeddings": true,
   "rag": false,
   "chat": false,
   "multilingual_answers": false
