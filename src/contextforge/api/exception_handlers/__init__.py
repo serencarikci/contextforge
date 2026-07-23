@@ -63,6 +63,18 @@ def register_exception_handlers(app: FastAPI) -> None:
             content=_error_payload(exc.code, exc.message),
         )
 
+    @app.exception_handler(ValueError)
+    async def value_error_handler(request: Request, exc: ValueError) -> JSONResponse:
+
+        logger.warning(
+            "domain_value_error",
+            extra={"path": request.url.path, "error_message": str(exc)},
+        )
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content=_error_payload("DOMAIN_ERROR", str(exc)),
+        )
+
     @app.exception_handler(DependencyUnavailableError)
     async def dependency_exception_handler(
         request: Request,
@@ -86,13 +98,16 @@ def register_exception_handlers(app: FastAPI) -> None:
         request: Request,
         exc: ApplicationError,
     ) -> JSONResponse:
-        logger.error(
+
+        status_code = getattr(exc, "http_status", None) or status.HTTP_500_INTERNAL_SERVER_ERROR
+        log = logger.warning if status_code < 500 else logger.error
+        log(
             "application_error",
-            extra={"path": request.url.path, "code": exc.code},
-            exc_info=exc,
+            extra={"path": request.url.path, "code": exc.code, "status_code": status_code},
+            exc_info=exc if status_code >= 500 else None,
         )
         return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=status_code,
             content=_error_payload(exc.code, exc.message),
         )
 

@@ -19,14 +19,23 @@ async def system_info(
 ) -> SystemInfoResponse:
     """Return safe system information and explicit capability flags."""
     info = service.get_info()
+    caps = info.capabilities
     return SystemInfoResponse(
         name=info.name,
         version=info.version,
         environment=info.environment,
         capabilities=CapabilitiesSchema(
-            document_ingestion=info.capabilities.document_ingestion,
-            rag=info.capabilities.rag,
-            chat=info.capabilities.chat,
-            multilingual_answers=info.capabilities.multilingual_answers,
+            identity_context=caps.identity_context,
+            multi_tenancy=caps.multi_tenancy,
+            rbac=caps.rbac,
+            customers=caps.customers,
+            projects=caps.projects,
+            knowledge_spaces=caps.knowledge_spaces,
+            audit_log=caps.audit_log,
+            document_ingestion=caps.document_ingestion,
+            rag=caps.rag,
+            chat=caps.chat,
+            multilingual_answers=caps.multilingual_answers,
         ),
+        authentication=info.authentication,
     )

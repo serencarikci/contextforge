@@ -6,6 +6,13 @@ from pydantic import BaseModel, Field
 
 
 class CapabilitiesSchema(BaseModel):
+    identity_context: bool = True
+    multi_tenancy: bool = True
+    rbac: bool = True
+    customers: bool = True
+    projects: bool = True
+    knowledge_spaces: bool = True
+    audit_log: bool = True
     document_ingestion: bool = False
     rag: bool = False
     chat: bool = False
@@ -17,3 +24,4 @@ class SystemInfoResponse(BaseModel):
     version: str
     environment: str
     capabilities: CapabilitiesSchema = Field(default_factory=CapabilitiesSchema)
+    authentication: str = "development_only"

@@ -12,7 +12,7 @@ from contextforge.shared.config.settings import Settings
 
 def register_middleware(app: FastAPI, settings: Settings) -> None:
     """Register middleware in the correct order."""
-    # Starlette middleware executes in reverse addition order for requests.
+
     app.add_middleware(RequestLoggingMiddleware)
     app.add_middleware(CorrelationIdMiddleware)
 

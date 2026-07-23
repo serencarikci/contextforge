@@ -47,8 +47,16 @@ def test_system_info_capabilities_false(client: TestClient) -> None:
     assert body["version"] == "0.1.0"
     assert body["environment"] == "test"
     assert body["capabilities"] == {
+        "identity_context": True,
+        "multi_tenancy": True,
+        "rbac": True,
+        "customers": True,
+        "projects": True,
+        "knowledge_spaces": True,
+        "audit_log": True,
         "document_ingestion": False,
         "rag": False,
         "chat": False,
         "multilingual_answers": False,
     }
+    assert body["authentication"] == "development_only"

@@ -1,4 +1,4 @@
-.PHONY: install dev up down logs lint format type-check test test-unit test-integration test-architecture coverage migrate migration downgrade clean help
+.PHONY: install dev up down logs lint format type-check test test-unit test-integration test-architecture test-authorization test-security coverage migrate migration downgrade bootstrap-dev seed-system-data clean help
 
 UV ?= uv
 PYTHON ?= python3
@@ -18,10 +18,14 @@ help:
 	@echo "  make test-unit            Run unit tests"
 	@echo "  make test-integration     Run integration tests"
 	@echo "  make test-architecture    Run architecture tests"
+	@echo "  make test-authorization   Run authorization-marked tests"
+	@echo "  make test-security        Run security-marked tests"
 	@echo "  make coverage             Run tests with coverage"
 	@echo "  make migrate              Apply Alembic migrations"
 	@echo "  make migration name=...   Create a new Alembic migration"
 	@echo "  make downgrade            Downgrade one Alembic migration"
+	@echo "  make bootstrap-dev        Seed deterministic local development data"
+	@echo "  make seed-system-data     Verify RBAC reference data is seeded"
 	@echo "  make clean                Remove caches and build artifacts"
 
 install:
@@ -62,6 +66,12 @@ test-integration:
 test-architecture:
 	$(UV) run pytest -m architecture
 
+test-authorization:
+	$(UV) run pytest -m authorization
+
+test-security:
+	$(UV) run pytest -m security
+
 coverage:
 	$(UV) run pytest --cov=contextforge --cov-report=term-missing --cov-report=xml --cov-fail-under=85
 
@@ -74,6 +84,12 @@ migration:
 
 downgrade:
 	$(UV) run alembic downgrade -1
+
+bootstrap-dev:
+	$(UV) run python scripts/bootstrap_dev.py
+
+seed-system-data:
+	$(UV) run python scripts/seed_system_data.py
 
 clean:
 	rm -rf .pytest_cache .mypy_cache .ruff_cache .coverage htmlcov coverage.xml dist build

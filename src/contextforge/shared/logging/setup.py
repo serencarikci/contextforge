@@ -26,7 +26,6 @@ def configure_logging(settings: LoggingSettings, *, environment: str) -> None:
         )
     root.addHandler(handler)
 
-    # Quiet noisy third-party loggers.
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("httpcore").setLevel(logging.WARNING)

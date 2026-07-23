@@ -1,8 +1,6 @@
 #!/bin/sh
 set -eu
 
-# Initialize the MinIO bucket used for document storage.
-# Development credentials only — not for production.
 
 MC_ALIAS="local"
 ENDPOINT="${MINIO_ENDPOINT:-http://minio:9000}"

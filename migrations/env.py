@@ -11,8 +11,10 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from contextforge.infrastructure.database.base import Base
-from contextforge.infrastructure.database.models import SystemMetadataModel  # noqa: F401
+from contextforge.infrastructure.database.models.registry import import_all_models
 from contextforge.shared.config.settings import get_settings
+
+import_all_models()
 
 config = context.config
 

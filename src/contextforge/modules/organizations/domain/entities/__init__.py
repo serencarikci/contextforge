@@ -1,0 +1,1 @@
+"""organizations/domain/entities package."""
