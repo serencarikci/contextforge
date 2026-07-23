@@ -1,1 +1,0 @@
-"""projects/api/routers package."""

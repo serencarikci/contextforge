@@ -1,1 +1,0 @@
-"""documents/domain/exceptions package."""

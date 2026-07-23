@@ -8,7 +8,6 @@ import time
 from qdrant_client import QdrantClient
 
 from contextforge.application.ports.health import DependencyCheckResult
-from contextforge.domain.exceptions.base import DependencyUnavailableError
 from contextforge.shared.config.settings import QdrantSettings
 from contextforge.shared.logging.setup import get_logger
 
@@ -35,13 +34,6 @@ class QdrantHealthClient:
             timeout=int(settings.timeout_seconds),
             check_compatibility=False,
         )
-
-    async def verify(self) -> None:
-        result = await self.check()
-        if result.status != "up":
-            raise DependencyUnavailableError(
-                f"Qdrant is unavailable: {result.detail or 'connection failed'}"
-            )
 
     async def check(self) -> DependencyCheckResult:
         started = time.perf_counter()

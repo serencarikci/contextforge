@@ -12,7 +12,7 @@ from uuid import UUID
 from minio import Minio
 
 from contextforge.application.ports.health import DependencyCheckResult
-from contextforge.domain.exceptions.base import DependencyUnavailableError, InfrastructureError
+from contextforge.domain.exceptions.base import InfrastructureError
 from contextforge.shared.config.settings import MinioSettings
 from contextforge.shared.logging.setup import get_logger
 
@@ -41,17 +41,6 @@ class MinioClient:
             secure=settings.secure,
             region=settings.region,
         )
-
-    @property
-    def client(self) -> Minio:
-        return self._client
-
-    async def verify(self) -> None:
-        result = await self.check()
-        if result.status != "up":
-            raise DependencyUnavailableError(
-                f"MinIO is unavailable: {result.detail or 'connection failed'}"
-            )
 
     async def check(self) -> DependencyCheckResult:
         started = time.perf_counter()

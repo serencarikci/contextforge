@@ -10,7 +10,7 @@ import pytest
 from contextforge.domain.exceptions.base import ApplicationError, DomainError
 from contextforge.shared.config.settings import Settings, clear_settings_cache
 from contextforge.shared.logging.formatters import ConsoleFormatter, JsonFormatter
-from contextforge.shared.logging.setup import LoggerAdapter, configure_logging, get_logger
+from contextforge.shared.logging.setup import configure_logging, get_logger
 from contextforge.shared.types.aliases import EntityId, JSONValue
 from contextforge.shared.utilities.correlation import is_valid_correlation_id
 
@@ -37,13 +37,12 @@ def test_json_formatter_includes_exception() -> None:
 
 
 @pytest.mark.unit
-def test_console_formatter_and_adapter() -> None:
+def test_console_formatter_and_configure_logging() -> None:
     configure_logging(
         Settings().logging,
         environment="test",
     )
-    logger = LoggerAdapter(get_logger("test.adapter"), {"route": "/x"})
-    logger.info("hello")
+    get_logger("test.adapter").info("hello")
     formatter = ConsoleFormatter(service_name="contextforge-api", environment="test")
     record = logging.LogRecord(
         name="test",

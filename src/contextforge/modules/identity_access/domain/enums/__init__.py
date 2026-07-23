@@ -35,7 +35,6 @@ class CustomerStatus(StrEnum):
 
 class ProjectStatus(StrEnum):
     ACTIVE = "active"
-    MAINTENANCE = "maintenance"
     ARCHIVED = "archived"
 
 

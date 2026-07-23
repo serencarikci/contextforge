@@ -15,7 +15,6 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from contextforge.application.ports.health import DependencyCheckResult
-from contextforge.domain.exceptions.base import DependencyUnavailableError
 from contextforge.shared.config.settings import PostgresSettings
 from contextforge.shared.logging.setup import get_logger
 
@@ -45,20 +44,8 @@ class DatabaseManager:
         )
 
     @property
-    def engine(self) -> AsyncEngine:
-        return self._engine
-
-    @property
     def session_factory(self) -> async_sessionmaker[AsyncSession]:
         return self._session_factory
-
-    async def verify(self) -> None:
-        """Verify the database connection can be established."""
-        result = await self.check()
-        if result.status != "up":
-            raise DependencyUnavailableError(
-                f"PostgreSQL is unavailable: {result.detail or 'connection failed'}"
-            )
 
     async def check(self) -> DependencyCheckResult:
         """Probe PostgreSQL readiness."""

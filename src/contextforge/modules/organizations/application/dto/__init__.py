@@ -1,1 +1,0 @@
-"""organizations/application/dto package."""

@@ -193,19 +193,6 @@ class SqlAlchemyRbacRepository:
         await self._session.flush()
         return self._assignment_to_entity(model)
 
-    async def get_assignment(
-        self, organization_id: UUID, assignment_id: UUID
-    ) -> RoleAssignment | None:
-        statement = select(RoleAssignmentModel).where(
-            RoleAssignmentModel.id == assignment_id,
-            RoleAssignmentModel.organization_id == organization_id,
-        )
-        result = await self._session.execute(statement)
-        model = result.scalar_one_or_none()
-        if model is None:
-            return None
-        return self._assignment_to_entity(model)
-
     async def delete_assignment(self, organization_id: UUID, assignment_id: UUID) -> bool:
         statement = select(RoleAssignmentModel).where(
             RoleAssignmentModel.id == assignment_id,

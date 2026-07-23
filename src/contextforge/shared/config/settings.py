@@ -91,14 +91,6 @@ class PostgresSettings(BaseSettings):
             f"postgresql+asyncpg://{self.user}:{password}@{self.host}:{self.port}/{self.database}"
         )
 
-    @property
-    def sync_dsn(self) -> str:
-        """DSN used by Alembic (sync driver URL form)."""
-        password = self.password.get_secret_value()
-        return (
-            f"postgresql+asyncpg://{self.user}:{password}@{self.host}:{self.port}/{self.database}"
-        )
-
 
 class RedisSettings(BaseSettings):
     """Redis connection settings."""
