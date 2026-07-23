@@ -7,6 +7,7 @@ from contextforge.api.routers import (
     customers,
     documents,
     health,
+    ingestion_jobs,
     knowledge_spaces,
     memberships,
     organizations,
@@ -27,4 +28,6 @@ api_router.include_router(customers.router)
 api_router.include_router(projects.router)
 api_router.include_router(knowledge_spaces.router)
 api_router.include_router(documents.router)
+api_router.include_router(ingestion_jobs.router)
+api_router.include_router(ingestion_jobs.documents_ingestion_router)
 api_router.include_router(audit.router)

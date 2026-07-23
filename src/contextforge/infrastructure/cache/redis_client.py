@@ -27,6 +27,10 @@ class RedisClient:
             decode_responses=True,
         )
 
+    @property
+    def client(self) -> Redis[str]:
+        return self._client
+
     async def check(self) -> DependencyCheckResult:
         started = time.perf_counter()
         try:

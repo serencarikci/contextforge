@@ -28,6 +28,7 @@ def test_system_info_reports_expected_capability_flags(api_client: TestClient) -
         "document_parsing",
         "document_chunking",
         "document_embeddings",
+        "ingestion_workers",
     )
     for flag in implemented:
         assert capabilities[flag] is True, f"expected capability '{flag}' to be True"

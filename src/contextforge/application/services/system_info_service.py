@@ -22,6 +22,7 @@ class SystemCapabilities:
     document_parsing: bool = True
     document_chunking: bool = True
     document_embeddings: bool = True
+    ingestion_workers: bool = True
     rag: bool = False
     chat: bool = False
     multilingual_answers: bool = False

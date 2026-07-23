@@ -9,9 +9,10 @@ ContextForge is implemented as a modular monolith.
 | `api` | HTTP routes, request/response schemas, middleware |
 | `application` | Use cases, ports, application services |
 | `domain` | Entities, domain errors, domain rules |
-| `infrastructure` | Database, Redis, Qdrant, MinIO adapters |
+| `infrastructure` | Database, Redis, Qdrant, MinIO, queue adapters |
 | `shared` | Settings, logging, shared utilities |
 | `bootstrap` | Application factory and lifespan |
+| `workers` | Long-running background processes (ingestion) |
 
 ## Dependency rule
 
@@ -19,8 +20,9 @@ ContextForge is implemented as a modular monolith.
 * `application` depends on domain and ports
 * `infrastructure` implements application ports
 * `api` depends on application services via FastAPI dependencies
+* `workers` reuse application services and infrastructure adapters
 
 ## Timezone policy
 
-All backend timestamps are stored and processed in UTC. Presentation-layer timezone
-conversion will be introduced with user-facing features in later commits.
+All backend timestamps are stored and processed in UTC. User-facing timezone conversion
+belongs at presentation boundaries.

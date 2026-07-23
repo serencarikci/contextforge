@@ -1,4 +1,4 @@
-.PHONY: install dev up down logs lint format type-check test test-unit test-integration test-architecture test-authorization test-security coverage migrate migration downgrade bootstrap-dev seed-system-data clean help
+.PHONY: install dev worker up down logs lint format type-check test test-unit test-integration test-architecture test-authorization test-security coverage migrate migration downgrade bootstrap-dev seed-system-data clean help
 
 UV ?= uv
 PYTHON ?= python3
@@ -8,6 +8,7 @@ help:
 	@echo "ContextForge development commands"
 	@echo "  make install              Install dependencies with uv"
 	@echo "  make dev                  Run API locally with uvicorn"
+	@echo "  make worker               Run the document ingestion worker"
 	@echo "  make up                   Start full Docker Compose stack"
 	@echo "  make down                 Stop Docker Compose stack"
 	@echo "  make logs                 Tail Compose logs"
@@ -34,6 +35,9 @@ install:
 
 dev:
 	$(UV) run uvicorn contextforge.main:app --host 0.0.0.0 --port 8000 --reload
+
+worker:
+	$(UV) run contextforge-ingestion-worker
 
 up:
 	$(COMPOSE) up --build -d

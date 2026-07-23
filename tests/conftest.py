@@ -21,6 +21,9 @@ os.environ.setdefault("CONTEXTFORGE_LOGGING__LEVEL", "WARNING")
 os.environ.setdefault("CONTEXTFORGE_LOGGING__FORMAT", "console")
 os.environ.setdefault("CONTEXTFORGE_SECURITY__SECRET_KEY", "test-secret-key-not-for-production")
 os.environ.setdefault("CONTEXTFORGE_API__DOCS_ENABLED", "true")
+os.environ.setdefault("CONTEXTFORGE_INGESTION__RETRY_BACKOFF_SECONDS", "0.01")
+os.environ.setdefault("CONTEXTFORGE_INGESTION__WORKER_IDLE_SLEEP_SECONDS", "0.01")
+os.environ.setdefault("CONTEXTFORGE_INGESTION__POLL_TIMEOUT_SECONDS", "1")
 
 
 @pytest.fixture(autouse=True)

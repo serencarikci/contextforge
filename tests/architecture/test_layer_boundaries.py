@@ -89,6 +89,8 @@ def test_application_does_not_import_concrete_infrastructure() -> None:
         "contextforge.infrastructure.cache",
         "contextforge.infrastructure.vector_store",
         "contextforge.infrastructure.object_storage",
+        "contextforge.infrastructure.queue",
+        "contextforge.infrastructure.embeddings",
     )
     application_dirs = [ROOT / "application", *_module_application_dirs()]
     for application_dir in application_dirs:

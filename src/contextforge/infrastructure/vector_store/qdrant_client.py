@@ -15,10 +15,7 @@ logger = get_logger(__name__)
 
 
 class QdrantHealthClient:
-    """Qdrant client used for readiness probes.
-
-    Full vector operations will be introduced in later commits.
-    """
+    """Qdrant client used for readiness probes."""
 
     name = "qdrant"
 
