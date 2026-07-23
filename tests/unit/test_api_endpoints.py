@@ -57,6 +57,7 @@ def test_system_info_capabilities(client: TestClient) -> None:
         "document_ingestion": True,
         "document_parsing": True,
         "document_chunking": True,
+        "document_embeddings": True,
         "rag": False,
         "chat": False,
         "multilingual_answers": False,

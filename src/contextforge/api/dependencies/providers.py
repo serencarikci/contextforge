@@ -6,14 +6,21 @@ from typing import Annotated
 
 from fastapi import Depends, Request
 
+from contextforge.application.ports.embedding_provider import EmbeddingProviderPort
+from contextforge.application.ports.vector_store import VectorStorePort
 from contextforge.application.services.health_service import HealthService
 from contextforge.application.services.system_info_service import SystemInfoService
 from contextforge.infrastructure.cache.redis_client import RedisClient
 from contextforge.infrastructure.database.session import DatabaseManager
+from contextforge.infrastructure.embeddings import build_embedding_provider
 from contextforge.infrastructure.object_storage.minio_client import MinioClient
 from contextforge.infrastructure.vector_store.qdrant_client import QdrantHealthClient
+from contextforge.infrastructure.vector_store.qdrant_vector_store import QdrantVectorStore
 from contextforge.modules.documents.application.ports.document_chunker import DocumentChunkerPort
 from contextforge.modules.documents.application.ports.document_parser import DocumentParserPort
+from contextforge.modules.documents.application.services.document_embedding_service import (
+    DocumentEmbeddingService,
+)
 from contextforge.modules.documents.infrastructure.chunking.semantic_text_chunker import (
     SemanticTextChunker,
 )
@@ -41,6 +48,41 @@ def get_document_parser() -> DocumentParserPort:
 
 def get_document_chunker() -> DocumentChunkerPort:
     return SemanticTextChunker()
+
+
+def get_vector_store(request: Request) -> VectorStorePort:
+    existing = getattr(request.app.state, "vector_store", None)
+    if existing is not None:
+        return existing  # type: ignore[no-any-return]
+    settings: Settings = request.app.state.settings
+    store = QdrantVectorStore(settings.qdrant)
+    request.app.state.vector_store = store
+    return store
+
+
+def get_embedding_provider(request: Request) -> EmbeddingProviderPort:
+    existing = getattr(request.app.state, "embedding_provider", None)
+    if existing is not None:
+        return existing  # type: ignore[no-any-return]
+    settings: Settings = request.app.state.settings
+    provider = build_embedding_provider(settings.embedding)
+    request.app.state.embedding_provider = provider
+    return provider
+
+
+def get_document_embedding_service(
+    request: Request,
+    provider: Annotated[EmbeddingProviderPort, Depends(get_embedding_provider)],
+    vector_store: Annotated[VectorStorePort, Depends(get_vector_store)],
+) -> DocumentEmbeddingService:
+    settings: Settings = request.app.state.settings
+    return DocumentEmbeddingService(
+        provider,
+        vector_store,
+        batch_size=settings.embedding.batch_size,
+        max_retries=settings.embedding.max_retries,
+        retry_backoff_seconds=settings.embedding.retry_backoff_seconds,
+    )
 
 
 def get_health_service(request: Request) -> HealthService:

@@ -60,6 +60,11 @@ class DocumentChunk:
     id: UUID = field(default_factory=uuid4)
     metadata: dict[str, JSONValue] = field(default_factory=dict)
     embedding_status: ChunkEmbeddingStatus = ChunkEmbeddingStatus.PENDING
+    language: str | None = None
+    embedding_model: str | None = None
+    embedding_dimensions: int | None = None
+    embedded_at: datetime | None = None
+    embedding_error: str | None = None
     created_at: datetime = field(default_factory=utc_now)
     updated_at: datetime = field(default_factory=utc_now)
 
@@ -87,6 +92,27 @@ class DocumentChunk:
             metadata=dict(draft.metadata),
             embedding_status=ChunkEmbeddingStatus.PENDING,
         )
+
+    def mark_embedded(
+        self,
+        *,
+        language: str,
+        model: str,
+        dimensions: int,
+    ) -> None:
+        self.embedding_status = ChunkEmbeddingStatus.EMBEDDED
+        self.language = language
+        self.embedding_model = model
+        self.embedding_dimensions = dimensions
+        self.embedded_at = utc_now()
+        self.embedding_error = None
+        self.updated_at = utc_now()
+
+    def mark_embedding_failed(self, error_message: str) -> None:
+        self.embedding_status = ChunkEmbeddingStatus.FAILED
+        self.embedding_error = error_message[:2000]
+        self.embedded_at = None
+        self.updated_at = utc_now()
 
 
 __all__ = [

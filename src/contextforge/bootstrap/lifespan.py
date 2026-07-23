@@ -47,6 +47,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     finally:
         logger.info("application_stopping")
         await minio_client.close()
+        vector_store = getattr(app.state, "vector_store", None)
+        if vector_store is not None and hasattr(vector_store, "close"):
+            await vector_store.close()
+        embedding_provider = getattr(app.state, "embedding_provider", None)
+        if embedding_provider is not None and hasattr(embedding_provider, "close"):
+            await embedding_provider.close()
         await qdrant_client.close()
         await redis_client.close()
         await database.dispose()

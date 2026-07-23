@@ -73,6 +73,11 @@ class DocumentChunkResponse(BaseModel):
     token_count: int
     metadata: dict[str, Any] = Field(default_factory=dict)
     embedding_status: ChunkEmbeddingStatus
+    language: str | None = None
+    embedding_model: str | None = None
+    embedding_dimensions: int | None = None
+    embedded_at: datetime | None = None
+    embedding_error: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -82,9 +87,21 @@ class DocumentChunkListResponse(BaseModel):
     total: int
 
 
+class DocumentEmbeddingResponse(BaseModel):
+    document_id: UUID
+    model: str
+    dimensions: int
+    language: str
+    embedded_count: int
+    failed_count: int
+    skipped_count: int
+    items: list[DocumentChunkResponse]
+
+
 __all__ = [
     "DocumentChunkListResponse",
     "DocumentChunkResponse",
+    "DocumentEmbeddingResponse",
     "DocumentMetadataUpdateRequest",
     "DocumentParseResponse",
     "DocumentResponse",
