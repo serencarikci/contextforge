@@ -1,0 +1,140 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint, type-check, and unit/architecture tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          version: "0.11.31"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: uv sync --all-groups --frozen
+
+      - name: Ruff check
+        run: uv run ruff check .
+
+      - name: Ruff format check
+        run: uv run ruff format --check .
+
+      - name: mypy
+        run: uv run mypy
+
+      - name: Unit tests
+        run: uv run pytest -m unit --cov=contextforge --cov-report=term-missing
+
+      - name: Architecture tests
+        run: uv run pytest -m architecture
+
+  integration:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          version: "0.11.31"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: uv sync --all-groups --frozen
+
+      - name: Start infrastructure
+        run: docker compose up -d --wait postgres redis qdrant minio minio-init
+
+      - name: Apply migrations
+        env:
+          CONTEXTFORGE_APP__ENVIRONMENT: test
+          CONTEXTFORGE_POSTGRES__HOST: localhost
+          CONTEXTFORGE_POSTGRES__PORT: "5432"
+          CONTEXTFORGE_POSTGRES__USER: contextforge
+          CONTEXTFORGE_POSTGRES__PASSWORD: contextforge_dev_password
+          CONTEXTFORGE_POSTGRES__DATABASE: contextforge
+        run: uv run alembic upgrade head
+
+      - name: Integration tests with coverage
+        env:
+          CONTEXTFORGE_APP__ENVIRONMENT: test
+          CONTEXTFORGE_APP__DEBUG: "true"
+          CONTEXTFORGE_API__DOCS_ENABLED: "true"
+          CONTEXTFORGE_POSTGRES__HOST: localhost
+          CONTEXTFORGE_POSTGRES__PORT: "5432"
+          CONTEXTFORGE_POSTGRES__USER: contextforge
+          CONTEXTFORGE_POSTGRES__PASSWORD: contextforge_dev_password
+          CONTEXTFORGE_POSTGRES__DATABASE: contextforge
+          CONTEXTFORGE_REDIS__URL: redis://localhost:6379/0
+          CONTEXTFORGE_QDRANT__URL: http://localhost:6333
+          CONTEXTFORGE_MINIO__ENDPOINT: localhost:9000
+          CONTEXTFORGE_MINIO__ACCESS_KEY: contextforge_minio
+          CONTEXTFORGE_MINIO__SECRET_KEY: contextforge_minio_secret
+          CONTEXTFORGE_MINIO__BUCKET: contextforge-documents
+          CONTEXTFORGE_MINIO__SECURE: "false"
+          CONTEXTFORGE_LOGGING__LEVEL: WARNING
+          CONTEXTFORGE_LOGGING__FORMAT: console
+          CONTEXTFORGE_SECURITY__SECRET_KEY: test-secret-key-not-for-production
+        run: >
+          uv run pytest -m "integration or unit or architecture"
+          --cov=contextforge
+          --cov-report=term-missing
+          --cov-report=xml
+          --cov-fail-under=85
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+      - name: Stop infrastructure
+        if: always()
+        run: docker compose down -v
+
+  docker:
+    name: Build Docker image
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: contextforge-api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

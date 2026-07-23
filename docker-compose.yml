@@ -1,0 +1,184 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: contextforge-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: contextforge
+      POSTGRES_PASSWORD: contextforge_dev_password  # NON-PRODUCTION DEFAULT
+      POSTGRES_DB: contextforge
+    ports:
+      - "5432:5432"
+    volumes:
+      - contextforge_postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U contextforge -d contextforge"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - contextforge
+
+  redis:
+    image: redis:7-alpine
+    container_name: contextforge-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - contextforge_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      - contextforge
+
+  qdrant:
+    image: qdrant/qdrant:v1.13.2
+    container_name: contextforge-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - contextforge_qdrant_data:/qdrant/storage
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "bash -c 'exec 3<>/dev/tcp/127.0.0.1/6333'",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - contextforge
+
+  minio:
+    image: minio/minio:latest
+    container_name: contextforge-minio
+    restart: unless-stopped
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: contextforge_minio  # NON-PRODUCTION DEFAULT
+      MINIO_ROOT_PASSWORD: contextforge_minio_secret  # NON-PRODUCTION DEFAULT
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - contextforge_minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - contextforge
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: contextforge-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: contextforge_minio
+      MINIO_ROOT_PASSWORD: contextforge_minio_secret
+      MINIO_BUCKET: contextforge-documents
+    volumes:
+      - ./infrastructure/minio/create-bucket.sh:/create-bucket.sh:ro
+    entrypoint: ["/bin/sh", "/create-bucket.sh"]
+    restart: "no"
+    networks:
+      - contextforge
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: contextforge-migrate
+    environment: &api-env
+      CONTEXTFORGE_APP__NAME: contextforge-api
+      CONTEXTFORGE_APP__ENVIRONMENT: local
+      CONTEXTFORGE_APP__DEBUG: "false"
+      CONTEXTFORGE_APP__VERSION: "0.1.0"
+      CONTEXTFORGE_API__HOST: 0.0.0.0
+      CONTEXTFORGE_API__PORT: "8000"
+      CONTEXTFORGE_API__DOCS_ENABLED: "true"
+      CONTEXTFORGE_API__CORS_ORIGINS: "[]"
+      CONTEXTFORGE_POSTGRES__HOST: postgres
+      CONTEXTFORGE_POSTGRES__PORT: "5432"
+      CONTEXTFORGE_POSTGRES__USER: contextforge
+      CONTEXTFORGE_POSTGRES__PASSWORD: contextforge_dev_password
+      CONTEXTFORGE_POSTGRES__DATABASE: contextforge
+      CONTEXTFORGE_REDIS__URL: redis://redis:6379/0
+      CONTEXTFORGE_QDRANT__URL: http://qdrant:6333
+      CONTEXTFORGE_MINIO__ENDPOINT: minio:9000
+      CONTEXTFORGE_MINIO__ACCESS_KEY: contextforge_minio
+      CONTEXTFORGE_MINIO__SECRET_KEY: contextforge_minio_secret
+      CONTEXTFORGE_MINIO__BUCKET: contextforge-documents
+      CONTEXTFORGE_MINIO__SECURE: "false"
+      CONTEXTFORGE_LOGGING__LEVEL: INFO
+      CONTEXTFORGE_LOGGING__FORMAT: json
+      CONTEXTFORGE_LOGGING__SERVICE_NAME: contextforge-api
+      CONTEXTFORGE_SECURITY__SECRET_KEY: change-me-local-only-not-for-production
+      CONTEXTFORGE_RUN_MIGRATIONS: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - contextforge
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: contextforge-api
+    restart: unless-stopped
+    environment:
+      <<: *api-env
+      CONTEXTFORGE_RUN_MIGRATIONS: "false"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/api/v1/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 25s
+    networks:
+      - contextforge
+
+networks:
+  contextforge:
+    name: contextforge-network
+    driver: bridge
+
+volumes:
+  contextforge_postgres_data:
+  contextforge_redis_data:
+  contextforge_qdrant_data:
+  contextforge_minio_data:
