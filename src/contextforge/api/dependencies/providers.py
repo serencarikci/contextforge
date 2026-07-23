@@ -12,7 +12,11 @@ from contextforge.infrastructure.cache.redis_client import RedisClient
 from contextforge.infrastructure.database.session import DatabaseManager
 from contextforge.infrastructure.object_storage.minio_client import MinioClient
 from contextforge.infrastructure.vector_store.qdrant_client import QdrantHealthClient
+from contextforge.modules.documents.application.ports.document_chunker import DocumentChunkerPort
 from contextforge.modules.documents.application.ports.document_parser import DocumentParserPort
+from contextforge.modules.documents.infrastructure.chunking.semantic_text_chunker import (
+    SemanticTextChunker,
+)
 from contextforge.modules.documents.infrastructure.parsing.composite_parser import (
     CompositeDocumentParser,
 )
@@ -33,6 +37,10 @@ def get_minio_client(request: Request) -> MinioClient:
 
 def get_document_parser() -> DocumentParserPort:
     return CompositeDocumentParser()
+
+
+def get_document_chunker() -> DocumentChunkerPort:
+    return SemanticTextChunker()
 
 
 def get_health_service(request: Request) -> HealthService:

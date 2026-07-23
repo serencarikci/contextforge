@@ -117,6 +117,7 @@ class DocumentParsingService:
             ctx.require_knowledge_space_access(document.knowledge_space_id)
 
             result = await uow.document_parses.upsert(result)
+            await uow.document_chunks.delete_by_document(document_id)
             action = (
                 "document.parsed"
                 if result.status is DocumentParseStatus.SUCCEEDED

@@ -17,4 +17,14 @@ class DocumentParseError(DomainError):
     code = "DOCUMENT_PARSE_FAILED"
 
 
-__all__ = ["DocumentParseError", "UnsupportedDocumentFormatError"]
+class DocumentChunkError(DomainError):
+    """Raised when parsed text cannot be split into usable chunks."""
+
+    code = "DOCUMENT_CHUNK_FAILED"
+
+
+__all__ = [
+    "DocumentChunkError",
+    "DocumentParseError",
+    "UnsupportedDocumentFormatError",
+]

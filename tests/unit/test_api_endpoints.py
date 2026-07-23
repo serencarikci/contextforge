@@ -56,6 +56,7 @@ def test_system_info_capabilities(client: TestClient) -> None:
         "audit_log": True,
         "document_ingestion": True,
         "document_parsing": True,
+        "document_chunking": True,
         "rag": False,
         "chat": False,
         "multilingual_answers": False,

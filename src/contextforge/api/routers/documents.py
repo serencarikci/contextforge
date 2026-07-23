@@ -9,9 +9,15 @@ from fastapi import APIRouter, Depends, File, Form, Query, Response, UploadFile,
 
 from contextforge.api.dependencies.identity import get_request_context, get_uow
 from contextforge.api.dependencies.pagination import get_pagination
-from contextforge.api.dependencies.providers import get_document_parser, get_minio_client
+from contextforge.api.dependencies.providers import (
+    get_document_chunker,
+    get_document_parser,
+    get_minio_client,
+)
 from contextforge.api.schemas.common import PaginationMeta, PaginationResponse
 from contextforge.api.schemas.documents import (
+    DocumentChunkListResponse,
+    DocumentChunkResponse,
     DocumentMetadataUpdateRequest,
     DocumentParseResponse,
     DocumentResponse,
@@ -20,7 +26,11 @@ from contextforge.application.context.request_context import RequestContext
 from contextforge.application.pagination import PaginationParams
 from contextforge.application.uow.sqlalchemy_uow import SqlAlchemyUnitOfWork
 from contextforge.infrastructure.object_storage.minio_client import MinioClient
+from contextforge.modules.documents.application.ports.document_chunker import DocumentChunkerPort
 from contextforge.modules.documents.application.ports.document_parser import DocumentParserPort
+from contextforge.modules.documents.application.services.document_chunking_service import (
+    DocumentChunkingService,
+)
 from contextforge.modules.documents.application.services.document_parsing_service import (
     DocumentParsingService,
 )
@@ -33,6 +43,10 @@ _service = DocumentService()
 
 def _parsing_service(parser: DocumentParserPort) -> DocumentParsingService:
     return DocumentParsingService(parser)
+
+
+def _chunking_service(chunker: DocumentChunkerPort) -> DocumentChunkingService:
+    return DocumentChunkingService(chunker)
 
 
 @router.post("", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
@@ -141,6 +155,30 @@ async def get_document_parse_result(
 ) -> DocumentParseResponse:
     result = await _parsing_service(parser).get_parse_result(uow, ctx, document_id)
     return DocumentParseResponse.model_validate(result)
+
+
+@router.post("/{document_id}/chunks", response_model=DocumentChunkListResponse)
+async def chunk_document(
+    document_id: UUID,
+    uow: Annotated[SqlAlchemyUnitOfWork, Depends(get_uow)],
+    ctx: Annotated[RequestContext, Depends(get_request_context)],
+    chunker: Annotated[DocumentChunkerPort, Depends(get_document_chunker)],
+) -> DocumentChunkListResponse:
+    chunks = await _chunking_service(chunker).chunk_document(uow, ctx, document_id)
+    items = [DocumentChunkResponse.model_validate(chunk) for chunk in chunks]
+    return DocumentChunkListResponse(items=items, total=len(items))
+
+
+@router.get("/{document_id}/chunks", response_model=DocumentChunkListResponse)
+async def list_document_chunks(
+    document_id: UUID,
+    uow: Annotated[SqlAlchemyUnitOfWork, Depends(get_uow)],
+    ctx: Annotated[RequestContext, Depends(get_request_context)],
+    chunker: Annotated[DocumentChunkerPort, Depends(get_document_chunker)],
+) -> DocumentChunkListResponse:
+    chunks = await _chunking_service(chunker).list_chunks(uow, ctx, document_id)
+    items = [DocumentChunkResponse.model_validate(chunk) for chunk in chunks]
+    return DocumentChunkListResponse(items=items, total=len(items))
 
 
 @router.get("/{document_id}/download")
