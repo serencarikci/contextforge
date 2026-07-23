@@ -1,1 +1,0 @@
-"""organizations/application/commands package."""

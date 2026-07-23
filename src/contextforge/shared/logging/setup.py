@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from contextforge.shared.config.settings import LoggingSettings
 from contextforge.shared.logging.formatters import ConsoleFormatter, JsonFormatter
@@ -34,13 +33,3 @@ def configure_logging(settings: LoggingSettings, *, environment: str) -> None:
 def get_logger(name: str) -> logging.Logger:
     """Return a named logger."""
     return logging.getLogger(name)
-
-
-class LoggerAdapter(logging.LoggerAdapter[logging.Logger]):
-    """Adapter that injects extra structured fields."""
-
-    def process(self, msg: str, kwargs: Any) -> tuple[str, Any]:
-        extra = kwargs.setdefault("extra", {})
-        if self.extra:
-            extra.update(self.extra)
-        return msg, kwargs

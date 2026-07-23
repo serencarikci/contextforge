@@ -13,6 +13,9 @@ from contextforge.modules.audit.infrastructure.repositories.audit_event import (
 from contextforge.modules.customers.infrastructure.repositories.customer import (
     SqlAlchemyCustomerRepository,
 )
+from contextforge.modules.documents.infrastructure.repositories.document import (
+    SqlAlchemyDocumentRepository,
+)
 from contextforge.modules.identity_access.infrastructure.repositories.membership import (
     SqlAlchemyMembershipRepository,
 )
@@ -46,6 +49,7 @@ class SqlAlchemyUnitOfWork:
         self.customers: SqlAlchemyCustomerRepository
         self.projects: SqlAlchemyProjectRepository
         self.knowledge_spaces: SqlAlchemyKnowledgeSpaceRepository
+        self.documents: SqlAlchemyDocumentRepository
         self.audit: SqlAlchemyAuditEventRepository
 
     async def __aenter__(self) -> Self:
@@ -57,6 +61,7 @@ class SqlAlchemyUnitOfWork:
         self.customers = SqlAlchemyCustomerRepository(self.session)
         self.projects = SqlAlchemyProjectRepository(self.session)
         self.knowledge_spaces = SqlAlchemyKnowledgeSpaceRepository(self.session)
+        self.documents = SqlAlchemyDocumentRepository(self.session)
         self.audit = SqlAlchemyAuditEventRepository(self.session)
         return self
 

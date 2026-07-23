@@ -24,12 +24,15 @@ admin user so they can be pasted straight into ``curl`` or an HTTP client:
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import uuid
 from dataclasses import dataclass
 
 from contextforge.application.uow.sqlalchemy_uow import SqlAlchemyUnitOfWork
 from contextforge.infrastructure.database.session import DatabaseManager
+from contextforge.infrastructure.object_storage.minio_client import MinioClient
 from contextforge.modules.customers.domain.entities.customer import Customer
+from contextforge.modules.documents.domain.entities.document import Document
 from contextforge.modules.identity_access.domain.entities.membership import (
     OrganizationMembership,
 )
@@ -71,6 +74,12 @@ PROJECT_NAME = "Demo Project"
 KS_ORG_VISIBLE_SLUG = "company-handbook"
 KS_RESTRICTED_SLUG = "incident-playbooks"
 
+WELCOME_DOCUMENT_TITLE = "Welcome"
+WELCOME_DOCUMENT_FILENAME = "welcome.txt"
+WELCOME_DOCUMENT_CONTENT = (
+    b"Welcome to the ContextForge Company Handbook knowledge space.\n"
+)
+
 
 def _dev_uuid(name: str) -> uuid.UUID:
     """Deterministic UUID for a piece of bootstrap sample data."""
@@ -90,6 +99,7 @@ class BootstrapResult:
     project_id: uuid.UUID
     org_visible_knowledge_space_id: uuid.UUID
     restricted_knowledge_space_id: uuid.UUID
+    welcome_document_id: uuid.UUID | None
 
 
 async def _ensure_user(
@@ -250,7 +260,57 @@ async def _ensure_knowledge_space_membership(
     return await uow.knowledge_spaces.add_membership(ks_membership)
 
 
-async def bootstrap(uow: SqlAlchemyUnitOfWork) -> BootstrapResult:
+async def _ensure_welcome_document(
+    uow: SqlAlchemyUnitOfWork,
+    minio: MinioClient,
+    *,
+    organization_id: uuid.UUID,
+    knowledge_space_id: uuid.UUID,
+    uploaded_by_user_id: uuid.UUID,
+) -> Document:
+    """Ensure a tiny "Welcome" sample document exists in the given knowledge space.
+
+    Idempotent by title within the knowledge space: if a document titled
+    ``WELCOME_DOCUMENT_TITLE`` already exists there, it is returned as-is
+    without uploading anything new.
+    """
+    existing_items, _ = await uow.documents.list(
+        organization_id,
+        limit=100,
+        offset=0,
+        knowledge_space_id=knowledge_space_id,
+        query=WELCOME_DOCUMENT_TITLE,
+    )
+    for item in existing_items:
+        if item.title == WELCOME_DOCUMENT_TITLE:
+            return item
+
+    document_id = _dev_uuid(f"document:{ORG_SLUG}:{knowledge_space_id}:{WELCOME_DOCUMENT_TITLE}")
+    storage_key = minio.build_object_key(
+        organization_id, knowledge_space_id, document_id, WELCOME_DOCUMENT_FILENAME
+    )
+    document = Document(
+        id=document_id,
+        organization_id=organization_id,
+        knowledge_space_id=knowledge_space_id,
+        title=WELCOME_DOCUMENT_TITLE,
+        filename=WELCOME_DOCUMENT_FILENAME,
+        content_type="text/plain",
+        size_bytes=len(WELCOME_DOCUMENT_CONTENT),
+        storage_key=storage_key,
+        checksum_sha256=hashlib.sha256(WELCOME_DOCUMENT_CONTENT).hexdigest(),
+        uploaded_by_user_id=uploaded_by_user_id,
+    )
+    await minio.put_object(
+        storage_key,
+        WELCOME_DOCUMENT_CONTENT,
+        len(WELCOME_DOCUMENT_CONTENT),
+        "text/plain",
+    )
+    return await uow.documents.add(document)
+
+
+async def bootstrap(uow: SqlAlchemyUnitOfWork, minio: MinioClient) -> BootstrapResult:
     """Ensure the full development dataset exists. Safe to call repeatedly."""
     async with uow:
         organization = await _ensure_organization(uow)
@@ -316,6 +376,19 @@ async def bootstrap(uow: SqlAlchemyUnitOfWork) -> BootstrapResult:
             access_level=KnowledgeSpaceAccessLevel.CONTRIBUTOR,
         )
 
+        welcome_document_id: uuid.UUID | None = None
+        try:
+            welcome_document = await _ensure_welcome_document(
+                uow,
+                minio,
+                organization_id=organization.id,
+                knowledge_space_id=org_visible_space.id,
+                uploaded_by_user_id=admin_user.id,
+            )
+            welcome_document_id = welcome_document.id
+        except Exception:  # noqa: BLE001 - sample doc upload is best-effort
+            pass
+
         return BootstrapResult(
             organization_id=organization.id,
             admin_user_id=admin_user.id,
@@ -326,6 +399,7 @@ async def bootstrap(uow: SqlAlchemyUnitOfWork) -> BootstrapResult:
             project_id=project.id,
             org_visible_knowledge_space_id=org_visible_space.id,
             restricted_knowledge_space_id=restricted_space.id,
+            welcome_document_id=welcome_document_id,
         )
 
 
@@ -343,6 +417,8 @@ def _print_result(result: BootstrapResult) -> None:
     print(
         f"  knowledge space (rstr):  {KS_RESTRICTED_SLUG} ({result.restricted_knowledge_space_id})"
     )
+    if result.welcome_document_id is not None:
+        print(f"  welcome document:        {WELCOME_DOCUMENT_TITLE} ({result.welcome_document_id})")
     print()
     print("Use these development identity headers to call the API as the admin user:")
     print()
@@ -353,10 +429,12 @@ def _print_result(result: BootstrapResult) -> None:
 async def _main() -> None:
     settings = get_settings()
     database = DatabaseManager(settings.postgres)
+    minio = MinioClient(settings.minio)
     try:
         uow = SqlAlchemyUnitOfWork(database.session_factory)
-        result = await bootstrap(uow)
+        result = await bootstrap(uow, minio)
     finally:
+        await minio.close()
         await database.dispose()
     _print_result(result)
 

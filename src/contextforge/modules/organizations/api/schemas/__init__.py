@@ -1,1 +1,0 @@
-"""organizations/api/schemas package."""

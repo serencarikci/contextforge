@@ -13,7 +13,7 @@ class CapabilitiesSchema(BaseModel):
     projects: bool = True
     knowledge_spaces: bool = True
     audit_log: bool = True
-    document_ingestion: bool = False
+    document_ingestion: bool = True
     rag: bool = False
     chat: bool = False
     multilingual_answers: bool = False

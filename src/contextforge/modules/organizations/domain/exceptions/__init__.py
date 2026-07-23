@@ -1,1 +1,0 @@
-"""organizations/domain/exceptions package."""

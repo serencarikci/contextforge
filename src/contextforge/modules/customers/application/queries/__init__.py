@@ -1,1 +1,0 @@
-"""customers/application/queries package."""

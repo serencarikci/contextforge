@@ -7,7 +7,6 @@ import time
 from redis.asyncio import Redis
 
 from contextforge.application.ports.health import DependencyCheckResult
-from contextforge.domain.exceptions.base import DependencyUnavailableError
 from contextforge.shared.config.settings import RedisSettings
 from contextforge.shared.logging.setup import get_logger
 
@@ -27,17 +26,6 @@ class RedisClient:
             socket_timeout=settings.timeout_seconds,
             decode_responses=True,
         )
-
-    @property
-    def client(self) -> Redis[str]:
-        return self._client
-
-    async def verify(self) -> None:
-        result = await self.check()
-        if result.status != "up":
-            raise DependencyUnavailableError(
-                f"Redis is unavailable: {result.detail or 'connection failed'}"
-            )
 
     async def check(self) -> DependencyCheckResult:
         started = time.perf_counter()

@@ -17,6 +17,8 @@ from sqlalchemy import text
 
 from contextforge.application.uow.sqlalchemy_uow import SqlAlchemyUnitOfWork
 from contextforge.infrastructure.database.session import DatabaseManager
+from contextforge.infrastructure.object_storage.minio_client import MinioClient
+from contextforge.shared.config.settings import Settings
 
 _SCRIPTS_DIR = Path(__file__).resolve().parents[3] / "scripts"
 if str(_SCRIPTS_DIR) not in sys.path:
@@ -27,12 +29,15 @@ import bootstrap_dev  # noqa: E402
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_bootstrap_dev_is_idempotent(db_manager: DatabaseManager) -> None:
+async def test_bootstrap_dev_is_idempotent(
+    db_manager: DatabaseManager, integration_settings: Settings
+) -> None:
+    minio = MinioClient(integration_settings.minio)
     uow = SqlAlchemyUnitOfWork(db_manager.session_factory)
-    first = await bootstrap_dev.bootstrap(uow)
+    first = await bootstrap_dev.bootstrap(uow, minio)
 
     uow_again = SqlAlchemyUnitOfWork(db_manager.session_factory)
-    second = await bootstrap_dev.bootstrap(uow_again)
+    second = await bootstrap_dev.bootstrap(uow_again, minio)
 
     assert first == second
 
@@ -85,10 +90,11 @@ async def test_bootstrap_dev_is_idempotent(db_manager: DatabaseManager) -> None:
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_bootstrap_dev_admin_has_organization_admin_role(
-    db_manager: DatabaseManager,
+    db_manager: DatabaseManager, integration_settings: Settings
 ) -> None:
+    minio = MinioClient(integration_settings.minio)
     uow = SqlAlchemyUnitOfWork(db_manager.session_factory)
-    result = await bootstrap_dev.bootstrap(uow)
+    result = await bootstrap_dev.bootstrap(uow, minio)
 
     async with db_manager.session_factory() as session:
         role_code = (

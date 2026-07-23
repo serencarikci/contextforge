@@ -1,1 +1,0 @@
-"""customers/api/schemas package."""

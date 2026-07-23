@@ -15,18 +15,6 @@ class DomainError(Exception):
             self.code = code
 
 
-class EntityNotFoundError(DomainError):
-    """Raised when a domain entity cannot be found."""
-
-    code = "ENTITY_NOT_FOUND"
-
-
-class ConflictError(DomainError):
-    """Raised when a domain invariant conflict occurs."""
-
-    code = "CONFLICT"
-
-
 class ApplicationError(Exception):
     """Base class for application-layer errors."""
 

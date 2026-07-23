@@ -23,6 +23,9 @@ def import_all_models() -> None:
     from contextforge.modules.customers.infrastructure import (
         models as _customer_models,  # noqa: F401
     )
+    from contextforge.modules.documents.infrastructure import (
+        models as _document_models,  # noqa: F401
+    )
     from contextforge.modules.identity_access.infrastructure import (  # noqa: F401
         models as _identity_access_models,
     )

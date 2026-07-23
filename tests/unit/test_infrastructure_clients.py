@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from typing import Any
 from unittest.mock import MagicMock
+from uuid import uuid4
 
 import pytest
 
 from contextforge.infrastructure.cache.redis_client import RedisClient
 from contextforge.infrastructure.database.session import DatabaseManager
-from contextforge.infrastructure.object_storage.minio_client import MinioClient
+from contextforge.infrastructure.object_storage.minio_client import MinioClient, ObjectStorageError
 from contextforge.infrastructure.vector_store.qdrant_client import QdrantHealthClient
 from contextforge.shared.config.settings import (
     MinioSettings,
@@ -74,6 +75,76 @@ async def test_minio_check_up_and_down() -> None:
     mock.bucket_exists.side_effect = RuntimeError("down")
     assert (await client.check()).status == "down"
     await client.close()
+
+
+@pytest.mark.unit
+def test_minio_build_object_key_sanitizes_filename() -> None:
+    org_id = uuid4()
+    ks_id = uuid4()
+    doc_id = uuid4()
+
+    key = MinioClient.build_object_key(org_id, ks_id, doc_id, "report v1 (final).pdf")
+
+    assert key == f"{org_id}/{ks_id}/{doc_id}/report_v1_final_.pdf"
+    assert " " not in key
+    assert "(" not in key
+
+
+@pytest.mark.unit
+def test_minio_build_object_key_falls_back_for_empty_filename() -> None:
+    org_id, ks_id, doc_id = uuid4(), uuid4(), uuid4()
+    key = MinioClient.build_object_key(org_id, ks_id, doc_id, "   ")
+    assert key == f"{org_id}/{ks_id}/{doc_id}/file"
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_minio_put_object_success_and_failure() -> None:
+    client = MinioClient(MinioSettings())
+    mock = MagicMock()
+    client._client = mock
+
+    await client.put_object("org/ks/doc/file.txt", b"hello", 5, "text/plain")
+    mock.put_object.assert_called_once()
+
+    mock.put_object.side_effect = RuntimeError("boom")
+    with pytest.raises(ObjectStorageError):
+        await client.put_object("org/ks/doc/file.txt", b"hello", 5, "text/plain")
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_minio_get_object_success_and_failure() -> None:
+    client = MinioClient(MinioSettings())
+    mock = MagicMock()
+    response = MagicMock()
+    response.read.return_value = b"hello world"
+    mock.get_object.return_value = response
+    client._client = mock
+
+    data = await client.get_object("org/ks/doc/file.txt")
+    assert data == b"hello world"
+    response.close.assert_called_once()
+    response.release_conn.assert_called_once()
+
+    mock.get_object.side_effect = RuntimeError("boom")
+    with pytest.raises(ObjectStorageError):
+        await client.get_object("org/ks/doc/file.txt")
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_minio_remove_object_success_and_failure() -> None:
+    client = MinioClient(MinioSettings())
+    mock = MagicMock()
+    client._client = mock
+
+    await client.remove_object("org/ks/doc/file.txt")
+    mock.remove_object.assert_called_once()
+
+    mock.remove_object.side_effect = RuntimeError("boom")
+    with pytest.raises(ObjectStorageError):
+        await client.remove_object("org/ks/doc/file.txt")
 
 
 @pytest.mark.unit

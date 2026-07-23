@@ -362,6 +362,7 @@ make type-check
 | POST/GET/PATCH | `/api/v1/projects`, `/{id}`, `/{id}/archive` | Project lifecycle |
 | POST/GET/PATCH | `/api/v1/knowledge-spaces`, `/{id}`, `/{id}/archive` | Knowledge space lifecycle |
 | POST/GET/PATCH/DELETE | `/api/v1/knowledge-spaces/{id}/memberships`, `/{ks_membership_id}` | Knowledge-space membership |
+| POST/GET/PATCH/PUT/DELETE | `/api/v1/documents`, `/{id}`, `/{id}/content`, `/{id}/download` | Document upload, metadata, content replace, download, delete |
 | GET | `/api/v1/audit` | Query the append-only audit trail (`audit:read`) |
 
 All endpoints above (except `/health/*` and `/system/info`) require
@@ -379,7 +380,7 @@ Example system info capabilities (implemented in this commit vs. still planned):
   "projects": true,
   "knowledge_spaces": true,
   "audit_log": true,
-  "document_ingestion": false,
+  "document_ingestion": true,
   "rag": false,
   "chat": false,
   "multilingual_answers": false
@@ -397,11 +398,11 @@ own custom roles with any subset of permissions via `POST /api/v1/roles`.
 | --- | --- |
 | `platform_admin` | Bypasses every check; set directly on `User.is_platform_admin`, never assigned via the role API |
 | `organization_admin` | Every permission below — full control of their organization |
-| `project_manager` | Create/manage projects and knowledge spaces; read customers |
-| `knowledge_manager` | Create/manage knowledge spaces; read customers/projects |
-| `developer` | Read-only: customers, projects, knowledge spaces |
-| `support_agent` | Read-only: customers, projects, knowledge spaces |
-| `viewer` | Read-only: customers, projects, knowledge spaces |
+| `project_manager` | Create/manage projects, knowledge spaces, and documents; read customers |
+| `knowledge_manager` | Create/manage knowledge spaces and documents; read customers/projects |
+| `developer` | Read-only: customers, projects, knowledge spaces; create/read/update documents (no delete) |
+| `support_agent` | Read-only: customers, projects, knowledge spaces, documents |
+| `viewer` | Read-only: customers, projects, knowledge spaces, documents |
 
 | Permission | Meaning |
 | --- | --- |
@@ -411,6 +412,7 @@ own custom roles with any subset of permissions via `POST /api/v1/roles`.
 | `customer:create/read/update/archive` | Customers |
 | `project:create/read/update/archive/manage_members` | Projects |
 | `knowledge_space:create/read/update/archive/manage_members` | Knowledge spaces |
+| `document:create/read/update/delete` | Documents |
 | `audit:read` | The audit trail |
 
 Every user can always read/update their *own* profile (`GET`/`PATCH /users/{their own id}`)

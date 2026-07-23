@@ -41,6 +41,10 @@ PERMISSIONS: tuple[tuple[str, str], ...] = (
     (PermissionCode.KNOWLEDGE_SPACE_UPDATE, "Update knowledge spaces"),
     (PermissionCode.KNOWLEDGE_SPACE_ARCHIVE, "Archive knowledge spaces"),
     (PermissionCode.KNOWLEDGE_SPACE_MANAGE_MEMBERS, "Manage knowledge-space memberships"),
+    (PermissionCode.DOCUMENT_CREATE, "Create documents"),
+    (PermissionCode.DOCUMENT_READ, "Read documents"),
+    (PermissionCode.DOCUMENT_UPDATE, "Update documents"),
+    (PermissionCode.DOCUMENT_DELETE, "Delete documents"),
     (PermissionCode.AUDIT_READ, "Read audit events"),
 )
 
@@ -68,12 +72,23 @@ _PROJECT_MANAGER_PERMS = (
     PermissionCode.KNOWLEDGE_SPACE_UPDATE,
     PermissionCode.KNOWLEDGE_SPACE_ARCHIVE,
     PermissionCode.KNOWLEDGE_SPACE_MANAGE_MEMBERS,
+    PermissionCode.DOCUMENT_CREATE,
+    PermissionCode.DOCUMENT_READ,
+    PermissionCode.DOCUMENT_UPDATE,
+    PermissionCode.DOCUMENT_DELETE,
 )
 
 _READ_PERMS = (
     PermissionCode.CUSTOMER_READ,
     PermissionCode.PROJECT_READ,
     PermissionCode.KNOWLEDGE_SPACE_READ,
+    PermissionCode.DOCUMENT_READ,
+)
+
+_DEVELOPER_PERMS = (
+    *_READ_PERMS,
+    PermissionCode.DOCUMENT_CREATE,
+    PermissionCode.DOCUMENT_UPDATE,
 )
 
 _KNOWLEDGE_MANAGER_PERMS = (
@@ -84,13 +99,17 @@ _KNOWLEDGE_MANAGER_PERMS = (
     PermissionCode.KNOWLEDGE_SPACE_UPDATE,
     PermissionCode.KNOWLEDGE_SPACE_ARCHIVE,
     PermissionCode.KNOWLEDGE_SPACE_MANAGE_MEMBERS,
+    PermissionCode.DOCUMENT_CREATE,
+    PermissionCode.DOCUMENT_READ,
+    PermissionCode.DOCUMENT_UPDATE,
+    PermissionCode.DOCUMENT_DELETE,
 )
 
 ROLE_PERMISSIONS: dict[str, tuple[str, ...]] = {
     SystemRoleCode.PLATFORM_ADMIN: (),
     SystemRoleCode.ORGANIZATION_ADMIN: _ORG_ADMIN_PERMS,
     SystemRoleCode.PROJECT_MANAGER: _PROJECT_MANAGER_PERMS,
-    SystemRoleCode.DEVELOPER: _READ_PERMS,
+    SystemRoleCode.DEVELOPER: _DEVELOPER_PERMS,
     SystemRoleCode.SUPPORT_AGENT: _READ_PERMS,
     SystemRoleCode.KNOWLEDGE_MANAGER: _KNOWLEDGE_MANAGER_PERMS,
     SystemRoleCode.VIEWER: _READ_PERMS,
