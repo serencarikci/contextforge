@@ -1,5 +1,3 @@
-"""Retention policy and retention run ORM models."""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -16,8 +14,6 @@ from contextforge.shared.utilities.datetime import utc_now
 
 
 class RetentionPolicyModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
-    """How long one resource family is kept for an organization (or globally)."""
-
     __tablename__ = "retention_policies"
     __table_args__ = (
         Index(
@@ -53,8 +49,6 @@ class RetentionPolicyModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
 
 
 class RetentionRunModel(Base, UUIDPrimaryKeyMixin):
-    """One execution of a retention policy."""
-
     __tablename__ = "retention_runs"
     __table_args__ = (Index("ix_retention_runs_policy_id_started_at", "policy_id", "started_at"),)
 

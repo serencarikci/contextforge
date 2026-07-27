@@ -1,10 +1,3 @@
-"""Create document_chunks table for CFG-004 semantic chunking pipeline.
-
-Revision ID: 20260723_0005
-Revises: 20260723_0004
-Create Date: 2026-07-23 00:00:00
-"""
-
 from __future__ import annotations
 
 from collections.abc import Sequence

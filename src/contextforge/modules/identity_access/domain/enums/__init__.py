@@ -1,5 +1,3 @@
-"""Shared domain enums for identity and knowledge modules."""
-
 from __future__ import annotations
 
 from enum import StrEnum

@@ -1,5 +1,3 @@
-"""Application service for searching conversations by title or message content."""
-
 from __future__ import annotations
 
 from contextforge.application.context.request_context import RequestContext
@@ -12,13 +10,6 @@ _MIN_QUERY_LENGTH = 2
 
 
 class ConversationSearchService:
-    """Full-text-ish search over conversation titles and message content.
-
-    Uses a portable ``ILIKE`` fallback (see the repository implementation);
-    the underlying tables also carry generated ``tsvector`` columns for a
-    future native full-text search upgrade.
-    """
-
     async def search(
         self,
         uow: SqlAlchemyUnitOfWork,

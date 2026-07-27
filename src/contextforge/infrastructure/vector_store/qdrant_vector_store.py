@@ -1,5 +1,3 @@
-"""Qdrant-backed vector store for document chunk embeddings."""
-
 from __future__ import annotations
 
 import asyncio
@@ -20,8 +18,6 @@ logger = get_logger(__name__)
 
 
 class QdrantVectorStore:
-    """Stores multilingual chunk embeddings in Qdrant."""
-
     def __init__(self, settings: QdrantSettings) -> None:
         self._settings = settings
         api_key = None

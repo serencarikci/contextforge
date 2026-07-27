@@ -1,5 +1,3 @@
-"""Health and readiness aggregation service."""
-
 from __future__ import annotations
 
 import asyncio
@@ -12,21 +10,16 @@ from contextforge.application.ports.health import DependencyCheckResult, HealthC
 
 @dataclass(frozen=True, slots=True)
 class ReadinessReport:
-    """Aggregated readiness report across mandatory dependencies."""
-
     status: Literal["ready", "not_ready"]
     checks: dict[str, DependencyCheckResult]
     total_latency_ms: float
 
 
 class HealthService:
-    """Aggregates concurrent dependency readiness checks."""
-
     def __init__(self, checkers: list[HealthCheckPort]) -> None:
         self._checkers = checkers
 
     async def check_readiness(self) -> ReadinessReport:
-        """Run all dependency checks concurrently and aggregate results."""
         started = time.perf_counter()
         results = await asyncio.gather(
             *[checker.check() for checker in self._checkers],

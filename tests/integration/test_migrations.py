@@ -1,5 +1,3 @@
-"""Integration tests for Alembic migrations."""
-
 from __future__ import annotations
 
 from pathlib import Path

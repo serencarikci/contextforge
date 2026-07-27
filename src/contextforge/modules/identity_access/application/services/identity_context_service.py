@@ -1,5 +1,3 @@
-"""Build RequestContext from validated identity and RBAC data."""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -40,7 +38,6 @@ async def build_request_context(
     project_id: UUID | None = None,
     knowledge_space_id: UUID | None = None,
 ) -> RequestContext:
-    """Load and validate identity, then assemble authorization context."""
     if not development_identity_enabled(settings):
         raise InvalidDevelopmentIdentityError(
             "Development identity is disabled in this environment. "

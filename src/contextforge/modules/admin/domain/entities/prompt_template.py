@@ -1,5 +1,3 @@
-"""Versioned prompt template entity backing the database prompt registry."""
-
 from __future__ import annotations
 
 import re
@@ -17,7 +15,6 @@ _PLACEHOLDER_RE = re.compile(r"\{\{([a-z_][a-z0-9_]*)\}\}")
 
 
 def normalize_prompt_version(version: str) -> str:
-    """Validate a prompt version label such as ``v1`` or ``v2.1``."""
     cleaned = version.strip().lower()
     if not _VERSION_RE.fullmatch(cleaned):
         msg = "Prompt version must look like 'v1' or 'v2.1'"
@@ -26,19 +23,11 @@ def normalize_prompt_version(version: str) -> str:
 
 
 def extract_placeholders(content: str) -> list[str]:
-    """List the ``{{placeholder}}`` names referenced by a template."""
     return sorted(set(_PLACEHOLDER_RE.findall(content)))
 
 
 @dataclass(slots=True)
 class PromptTemplate:
-    """One prompt slot for a (organization, name, version, language) tuple.
-
-    ``organization_id is None`` marks a global template shared by every tenant;
-    ``is_system`` marks a template that ships with the platform and cannot be
-    edited or deleted through the admin API.
-    """
-
     name: PromptTemplateName
     version: str
     language: PromptLanguage
@@ -84,7 +73,6 @@ class PromptTemplate:
         self.updated_at = utc_now()
 
     def render(self, values: dict[str, str]) -> str:
-        """Substitute ``{{key}}`` placeholders, leaving unknown ones intact."""
         rendered = self.content
         for key, value in values.items():
             rendered = rendered.replace(f"{{{{{key}}}}}", value)

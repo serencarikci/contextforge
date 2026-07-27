@@ -1,5 +1,3 @@
-"""Port for splitting parsed document text into semantic chunks."""
-
 from __future__ import annotations
 
 from typing import Protocol
@@ -10,17 +8,13 @@ from contextforge.shared.types.aliases import JSONValue
 
 
 class DocumentChunkerPort(Protocol):
-    """Splits extracted text into overlapping semantic chunks."""
-
     def chunk(
         self,
         *,
         text: str,
         format: DocumentFormat,
         document_metadata: dict[str, JSONValue],
-    ) -> list[ChunkDraft]:
-        """Return ordered chunk drafts for embedding and retrieval."""
-        ...
+    ) -> list[ChunkDraft]: ...
 
 
 __all__ = ["DocumentChunkerPort"]

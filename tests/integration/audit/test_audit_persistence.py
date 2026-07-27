@@ -1,12 +1,3 @@
-"""Integration tests that audit events are actually persisted on write.
-
-These exercise the full application-service write path (not just the
-repository) against the real database: organization creation and customer
-creation should each leave exactly one durable, queryable audit event row
-behind, with the fields the audit trail promises (actor, organization,
-resource, action).
-"""
-
 from __future__ import annotations
 
 from uuid import uuid4

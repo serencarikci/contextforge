@@ -1,5 +1,3 @@
-"""Standalone message endpoints: lookup and feedback."""
-
 from __future__ import annotations
 
 from typing import Annotated

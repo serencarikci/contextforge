@@ -1,5 +1,3 @@
-"""Sliding-window rate limiting for ``/api/v1`` routes."""
-
 from __future__ import annotations
 
 import time
@@ -15,8 +13,6 @@ from contextforge.shared.config.settings import RateLimitSettings, Settings
 
 
 class _MemorySlidingWindow:
-    """Process-local sliding window limiter."""
-
     def __init__(self, limit: int, window_seconds: int) -> None:
         self._limit = limit
         self._window = float(window_seconds)
@@ -38,8 +34,6 @@ class _MemorySlidingWindow:
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
-    """Reject excess requests to ``/api/v1`` with HTTP 429."""
-
     def __init__(self, app: object, settings: Settings) -> None:
         super().__init__(app)  # type: ignore[arg-type]
         self._config: RateLimitSettings = settings.rate_limit

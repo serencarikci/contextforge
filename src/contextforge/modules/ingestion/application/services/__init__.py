@@ -1,5 +1,3 @@
-"""Ingestion application services."""
-
 from contextforge.modules.ingestion.application.services.ingestion_job_service import (
     IngestionJobService,
 )

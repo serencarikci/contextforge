@@ -1,5 +1,3 @@
-"""Retention policy administration and cleanup execution."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass

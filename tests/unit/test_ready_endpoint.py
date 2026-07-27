@@ -1,5 +1,3 @@
-"""Unit tests for readiness router behavior with stubbed health service."""
-
 from __future__ import annotations
 
 import pytest

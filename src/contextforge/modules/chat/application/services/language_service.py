@@ -1,10 +1,3 @@
-"""Lightweight Turkish/English language detection heuristic.
-
-This is intentionally not a full statistical language identifier: chat
-messages are short, and the goal is a fast, dependency-free heuristic that is
-"good enough" to pick a prompt language and a citation/suggestion language.
-"""
-
 from __future__ import annotations
 
 import re
@@ -100,13 +93,10 @@ _WORD_RE = re.compile(r"[^\W\d_]+", re.UNICODE)
 
 
 class LanguageService:
-    """Detects tr/en for chat messages and resolves conversation language."""
-
     def __init__(self, settings: ChatSettings) -> None:
         self._settings = settings
 
     def detect(self, text: str) -> str:
-        """Return ``"tr"`` or ``"en"`` for ``text`` using a cheap heuristic."""
         if _TURKISH_CHARS.search(text):
             return "tr"
 
@@ -129,7 +119,6 @@ class LanguageService:
         preference: ChatLanguagePreference,
         message_text: str,
     ) -> str:
-        """Resolve the effective language for a message given user preference."""
         if preference == ChatLanguagePreference.TR:
             return "tr"
         if preference == ChatLanguagePreference.EN:

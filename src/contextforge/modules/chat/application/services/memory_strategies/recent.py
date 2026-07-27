@@ -1,5 +1,3 @@
-"""Recent-messages memory strategy: include the last N turns verbatim."""
-
 from __future__ import annotations
 
 from contextforge.modules.chat.application.services.memory_strategies import format_turn
@@ -8,8 +6,6 @@ from contextforge.modules.chat.domain.entities.message import ChatMessage
 
 
 class RecentMessagesStrategy:
-    """Includes the last ``max_messages`` turns, formatted chronologically."""
-
     def __init__(self, *, max_messages: int) -> None:
         self._max_messages = max_messages
 

@@ -1,5 +1,3 @@
-"""Unit tests for in-memory ingestion job queue and failure handling."""
-
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock

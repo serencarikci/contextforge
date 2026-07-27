@@ -1,5 +1,3 @@
-"""Administration domain entities."""
-
 from __future__ import annotations
 
 from contextforge.modules.admin.domain.entities.feature_flag import (

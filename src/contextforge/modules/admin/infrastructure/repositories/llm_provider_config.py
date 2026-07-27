@@ -1,5 +1,3 @@
-"""SQLAlchemy repository for LLM provider configurations."""
-
 from __future__ import annotations
 
 from uuid import UUID

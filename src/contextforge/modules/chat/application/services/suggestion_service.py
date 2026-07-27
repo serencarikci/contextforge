@@ -1,10 +1,3 @@
-"""Application service for generating follow-up question suggestions.
-
-Uses a deterministic, template-based fallback (no LLM call) so suggestions
-are always available and never add latency or cost to a chat turn. Templates
-are localized for Turkish and English.
-"""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -37,8 +30,6 @@ _DOCUMENT_TEMPLATE_TR = '"{title}" bu konuda başka neler söylüyor?'
 
 
 class SuggestionService:
-    """Generates a short list of follow-up questions for a conversation."""
-
     def __init__(self, settings: ChatSettings) -> None:
         self._settings = settings
 

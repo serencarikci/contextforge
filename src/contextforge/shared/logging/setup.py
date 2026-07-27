@@ -1,5 +1,3 @@
-"""Logging configuration and helpers."""
-
 from __future__ import annotations
 
 import logging
@@ -9,7 +7,6 @@ from contextforge.shared.logging.formatters import ConsoleFormatter, JsonFormatt
 
 
 def configure_logging(settings: LoggingSettings, *, environment: str) -> None:
-    """Configure root logging handlers based on settings."""
     root = logging.getLogger()
     root.handlers.clear()
     root.setLevel(settings.level)
@@ -31,5 +28,4 @@ def configure_logging(settings: LoggingSettings, *, environment: str) -> None:
 
 
 def get_logger(name: str) -> logging.Logger:
-    """Return a named logger."""
     return logging.getLogger(name)

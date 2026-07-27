@@ -1,5 +1,3 @@
-"""Canonical system permission/role seed definitions."""
-
 from __future__ import annotations
 
 import uuid
@@ -10,12 +8,10 @@ RBAC_UUID_NAMESPACE = uuid.UUID("6f2a9b4e-2c3f-4b8a-9d1e-8a2b6f4c1e3a")
 
 
 def permission_id(code: str) -> uuid.UUID:
-    """Deterministic UUID for a permission code."""
     return uuid.uuid5(RBAC_UUID_NAMESPACE, f"permission:{code}")
 
 
 def system_role_id(code: str) -> uuid.UUID:
-    """Deterministic UUID for a system role code."""
     return uuid.uuid5(RBAC_UUID_NAMESPACE, f"role:{code}")
 
 

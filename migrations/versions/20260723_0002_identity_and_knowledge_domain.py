@@ -1,47 +1,3 @@
-"""Create identity and knowledge domain tables; seed RBAC reference data.
-
-Revision ID: 20260723_0002
-Revises: 20260723_0001
-Create Date: 2026-07-23 00:00:00
-
-Creates the core tenancy/identity/knowledge schema:
-
-- ``users``, ``organizations``, ``organization_memberships``
-- ``permissions``, ``roles``, ``role_permissions``, ``role_assignments``
-- ``customers``, ``projects``
-- ``knowledge_spaces``, ``knowledge_space_memberships``
-- ``audit_events``
-
-All foreign keys to tenant business data use ``ondelete="RESTRICT"`` -- there
-is no cascading delete of business entities in this schema.
-
-Seed data (upgrade only)
--------------------------
-This migration seeds the RBAC reference catalog:
-
-- every permission in ``contextforge.shared.constants.rbac.PERMISSIONS``
-- every system role in ``contextforge.shared.constants.rbac.SYSTEM_ROLES``
-  (``organization_id IS NULL``, ``is_system = true``)
-- the ``role_permissions`` mappings for assignable system roles, per
-  ``contextforge.shared.constants.rbac.ROLE_PERMISSIONS`` (``platform_admin``
-  intentionally has no rows -- it is not assignable through org-scoped APIs)
-
-Permission and system role primary keys are deterministic: they are derived
-with ``uuid.uuid5`` over a fixed namespace and the permission/role code (see
-``contextforge.shared.constants.rbac.permission_id`` / ``system_role_id``), so
-the same code always resolves to the same UUID across environments and test
-runs. If the application package cannot be imported in the migration's
-execution context, the same data and ID-derivation scheme are hardcoded below
-as a fallback.
-
-Downgrade
----------
-Downgrade drops every table created here in reverse dependency order. The
-seeded reference data (permissions, system roles, and their
-``role_permissions`` mappings) lives only inside these tables, so dropping the
-tables implicitly removes the seed data -- there is no separate "unseed" step.
-"""
-
 from __future__ import annotations
 
 import uuid as _uuid
@@ -590,7 +546,6 @@ def upgrade() -> None:
 
 
 def _seed_rbac_reference_data() -> None:
-    """Insert the canonical permission/system-role catalog and mappings."""
     permissions_table = sa.table(
         "permissions",
         sa.column("id", postgresql.UUID(as_uuid=True)),

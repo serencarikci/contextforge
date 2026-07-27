@@ -1,37 +1,14 @@
-"""API tests for document parsing endpoints."""
-
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
-from tests.helpers import create_knowledge_space
+from tests.helpers import create_knowledge_space, upload_document
 
 if TYPE_CHECKING:
     from tests.conftest import TenantScenario
-
-USER_ID_HEADER = "X-ContextForge-User-ID"
-ORGANIZATION_ID_HEADER = "X-ContextForge-Organization-ID"
-
-
-def _upload(
-    api_client: TestClient,
-    headers: dict[str, str],
-    knowledge_space_id: object,
-    *,
-    filename: str,
-    content: bytes,
-    content_type: str,
-    title: str = "Parse Me",
-) -> Any:
-    return api_client.post(
-        "/api/v1/documents",
-        data={"knowledge_space_id": str(knowledge_space_id), "title": title},
-        files={"file": (filename, content, content_type)},
-        headers=headers,
-    )
 
 
 @pytest.mark.api
@@ -41,7 +18,7 @@ class TestDocumentParsingApi:
     ) -> None:
         headers = tenant_scenario.admin_headers()
         ks_id = create_knowledge_space(api_client, headers)
-        upload = _upload(
+        upload = upload_document(
             api_client,
             headers,
             ks_id,
@@ -70,7 +47,7 @@ class TestDocumentParsingApi:
     ) -> None:
         headers = tenant_scenario.admin_headers()
         ks_id = create_knowledge_space(api_client, headers)
-        upload = _upload(
+        upload = upload_document(
             api_client,
             headers,
             ks_id,
@@ -90,7 +67,7 @@ class TestDocumentParsingApi:
     ) -> None:
         headers = tenant_scenario.admin_headers()
         ks_id = create_knowledge_space(api_client, headers)
-        upload = _upload(
+        upload = upload_document(
             api_client,
             headers,
             ks_id,
@@ -119,7 +96,7 @@ class TestDocumentParsingApi:
     ) -> None:
         headers = tenant_scenario.admin_headers()
         ks_id = create_knowledge_space(api_client, headers)
-        upload = _upload(
+        upload = upload_document(
             api_client,
             headers,
             ks_id,

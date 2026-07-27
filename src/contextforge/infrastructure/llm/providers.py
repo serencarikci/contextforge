@@ -1,5 +1,3 @@
-"""LLM provider implementations (mock, OpenAI, Azure, OpenAI-compatible)."""
-
 from __future__ import annotations
 
 import json
@@ -103,8 +101,6 @@ async def _iter_sse_deltas(response: httpx.Response) -> AsyncIterator[str]:
 
 
 class MockLlmProvider:
-    """Deterministic offline LLM used for local/test environments."""
-
     def __init__(self, settings: LlmSettings) -> None:
         self._settings = settings
 
@@ -117,7 +113,6 @@ class MockLlmProvider:
 
     @staticmethod
     def _extract_question(user_content: str) -> str:
-        """Pull the user question without echoing untrusted document wrappers."""
         text = user_content or ""
         lower = text.lower()
         start = lower.find("question:")
@@ -186,8 +181,6 @@ class MockLlmProvider:
 
 
 class OpenAICompatibleLlmProvider:
-    """Chat Completions client for OpenAI-compatible HTTP APIs (incl. local)."""
-
     def __init__(self, settings: LlmSettings, *, base_url: str | None = None) -> None:
         self._settings = settings
         self._base_url = (base_url or settings.base_url).rstrip("/")
@@ -278,8 +271,6 @@ class OpenAICompatibleLlmProvider:
 
 
 class AzureOpenAILlmProvider:
-    """Azure OpenAI chat completions provider."""
-
     def __init__(self, settings: LlmSettings) -> None:
         self._settings = settings
         endpoint = settings.azure_endpoint.rstrip("/")

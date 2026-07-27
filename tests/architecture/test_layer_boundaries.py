@@ -1,5 +1,3 @@
-"""Architecture boundary tests."""
-
 from __future__ import annotations
 
 import ast
@@ -30,7 +28,6 @@ MODULES_ROOT = ROOT / "modules"
 
 
 def _module_domain_dirs() -> list[Path]:
-    """Every `src/contextforge/modules/<module>/domain` directory that exists."""
     if not MODULES_ROOT.is_dir():
         return []
     return sorted(
@@ -41,7 +38,6 @@ def _module_domain_dirs() -> list[Path]:
 
 
 def _module_application_dirs() -> list[Path]:
-    """Every `src/contextforge/modules/<module>/application` directory that exists."""
     if not MODULES_ROOT.is_dir():
         return []
     return sorted(
@@ -73,7 +69,6 @@ def test_domain_does_not_import_sqlalchemy() -> None:
 
 @pytest.mark.architecture
 def test_module_domain_directories_are_discovered() -> None:
-    """Guard against this test file silently scanning zero module domains."""
     assert len(_module_domain_dirs()) >= 5, (
         "Expected to discover domain packages under src/contextforge/modules/*/domain; "
         "if modules were renamed/removed, update this assertion accordingly."
@@ -82,7 +77,6 @@ def test_module_domain_directories_are_discovered() -> None:
 
 @pytest.mark.architecture
 def test_application_does_not_import_concrete_infrastructure() -> None:
-    """Application may define ports but must not import infrastructure adapters."""
     forbidden_prefixes = (
         "contextforge.infrastructure.database",
         "contextforge.infrastructure.repositories",
@@ -114,7 +108,6 @@ def test_application_does_not_import_concrete_infrastructure() -> None:
 
 @pytest.mark.architecture
 def test_application_does_not_import_api_modules() -> None:
-    """Application (use cases/ports) must not depend on the HTTP transport layer."""
     forbidden_prefix = "contextforge.api"
     application_dirs = [ROOT / "application", *_module_application_dirs()]
     for application_dir in application_dirs:

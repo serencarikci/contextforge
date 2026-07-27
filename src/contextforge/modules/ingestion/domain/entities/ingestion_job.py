@@ -1,5 +1,3 @@
-"""Ingestion job entity for background document processing."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -12,8 +10,6 @@ from contextforge.shared.utilities.datetime import utc_now
 
 @dataclass(slots=True)
 class IngestionJob:
-    """Durable background job that drives parse -> chunk -> embed."""
-
     organization_id: UUID
     document_id: UUID
     knowledge_space_id: UUID
@@ -112,7 +108,6 @@ class IngestionJob:
         self.updated_at = utc_now()
 
     def cancel(self) -> None:
-        """Alias used by administration surfaces."""
         self.mark_cancelled()
 
 

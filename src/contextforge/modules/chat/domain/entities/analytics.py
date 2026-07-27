@@ -1,5 +1,3 @@
-"""Append-only chat analytics event entity."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -13,8 +11,6 @@ from contextforge.shared.utilities.datetime import utc_now
 
 @dataclass(slots=True)
 class ChatAnalyticsEvent:
-    """A single notable chat-domain occurrence, recorded for reporting."""
-
     organization_id: UUID
     event_type: AnalyticsEventType
     id: UUID = field(default_factory=uuid4)

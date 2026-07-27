@@ -1,5 +1,3 @@
-"""Streaming helpers shared by the chat application service."""
-
 from __future__ import annotations
 
 import asyncio
@@ -10,13 +8,6 @@ from collections.abc import AsyncIterator
 async def iterate_with_heartbeat(
     source: AsyncIterator[str], *, interval: float
 ) -> AsyncIterator[tuple[str, str]]:
-    """Wrap ``source`` so idle periods emit ``("heartbeat", "")`` items.
-
-    Yields ``("token", delta)`` for each item produced by ``source``, or
-    ``("heartbeat", "")`` whenever more than ``interval`` seconds elapse
-    without a new item. If ``source`` raises, this yields
-    ``("error", str(exc))`` once and stops.
-    """
     queue: asyncio.Queue[tuple[str, str] | None] = asyncio.Queue()
 
     async def _pump() -> None:

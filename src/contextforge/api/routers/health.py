@@ -1,5 +1,3 @@
-"""Health and readiness endpoints."""
-
 from __future__ import annotations
 
 from typing import Annotated
@@ -18,7 +16,6 @@ router = APIRouter(prefix="/health")
 async def liveness(
     settings: Annotated[Settings, Depends(get_settings_dependency)],
 ) -> LivenessResponse:
-    """Liveness probe that does not depend on external infrastructure."""
     return LivenessResponse(
         status="ok",
         service=settings.app.name,
@@ -35,7 +32,6 @@ async def readiness(
     response: Response,
     health_service: Annotated[HealthService, Depends(get_health_service)],
 ) -> ReadinessResponse:
-    """Readiness probe that checks PostgreSQL, Redis, Qdrant, and MinIO."""
     report = await health_service.check_readiness()
     payload = ReadinessResponse(
         status=report.status,

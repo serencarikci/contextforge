@@ -1,5 +1,3 @@
-"""API tests for the enterprise chat endpoints: conversations and messages."""
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

@@ -1,5 +1,3 @@
-"""Redis client used for readiness checks and future caching."""
-
 from __future__ import annotations
 
 import time
@@ -14,8 +12,6 @@ logger = get_logger(__name__)
 
 
 class RedisClient:
-    """Async Redis client wrapper."""
-
     name = "redis"
 
     def __init__(self, settings: RedisSettings) -> None:

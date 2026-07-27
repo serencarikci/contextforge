@@ -1,10 +1,3 @@
-"""Seed rag:query permission and role mappings for Phase 2 RAG.
-
-Revision ID: 20260724_0008
-Revises: 20260723_0007
-Create Date: 2026-07-24 00:00:00
-"""
-
 from __future__ import annotations
 
 import uuid as _uuid

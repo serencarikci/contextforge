@@ -1,5 +1,3 @@
-"""Shared test doubles for outbound ports."""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -8,8 +6,6 @@ from contextforge.application.ports.vector_store import ChunkVectorPoint, Vector
 
 
 class FakeVectorStore:
-    """In-memory vector store stub for API and security tests."""
-
     def __init__(self, hits: list[VectorSearchHit] | None = None) -> None:
         self.hits = hits or []
         self.upserted: list[ChunkVectorPoint] = []

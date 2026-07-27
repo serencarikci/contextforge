@@ -1,5 +1,3 @@
-"""Versioned prompt template administration."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -125,7 +123,6 @@ class PromptAdminService:
     async def rollback(
         self, uow: SqlAlchemyUnitOfWork, ctx: RequestContext, template_id: UUID
     ) -> PromptTemplate:
-        """Activate a prior template version, deactivating its siblings."""
         return await self.activate(uow, ctx, template_id)
 
     async def delete(

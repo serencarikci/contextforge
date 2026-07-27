@@ -1,5 +1,3 @@
-"""Document chunk ORM model."""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -16,8 +14,6 @@ from contextforge.modules.documents.domain.enums import ChunkEmbeddingStatus
 
 
 class DocumentChunkModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
-    """Semantic chunk ready for embedding generation and retrieval."""
-
     __tablename__ = "document_chunks"
     __table_args__ = (
         UniqueConstraint(

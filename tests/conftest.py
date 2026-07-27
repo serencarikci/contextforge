@@ -1,5 +1,3 @@
-"""Shared pytest fixtures."""
-
 from __future__ import annotations
 
 import os
@@ -89,8 +87,6 @@ ORGANIZATION_ID_HEADER = "X-ContextForge-Organization-ID"
 
 @dataclass(frozen=True, slots=True)
 class TenantScenario:
-    """Ids for a small authorization/tenancy test fixture."""
-
     organization_id: UUID
     admin_user_id: UUID
     viewer_user_id: UUID

@@ -1,13 +1,3 @@
-"""Security test: there is no client-supplied role/permission header.
-
-Authorization is derived exclusively from the caller's identity
-(`X-ContextForge-User-ID`/`X-ContextForge-Organization-ID`) resolved against
-the database -- role assignments, not request headers. This test proves that
-sending a forged `X-ContextForge-Role`-style header cannot escalate a
-viewer's privileges: the API must still enforce the DB-backed permission set
-and must not read/trust any role/permission header.
-"""
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -69,9 +59,6 @@ def test_forged_role_header_does_not_bypass_archive_permission(
 
 @pytest.mark.security
 def test_identity_dependency_only_declares_uuid_headers() -> None:
-    """The identity dependency's own header contract is fixed and minimal --
-    there is no role/permission header parameter to (mis)trust in the first
-    place, independent of what the caller sends over the wire."""
     assert {
         "X-ContextForge-User-ID",
         "X-ContextForge-Organization-ID",

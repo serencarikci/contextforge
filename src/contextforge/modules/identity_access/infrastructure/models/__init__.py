@@ -1,5 +1,3 @@
-"""Identity & access ORM models."""
-
 from contextforge.modules.identity_access.infrastructure.models.membership import (
     OrganizationMembershipModel,
 )

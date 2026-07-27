@@ -1,5 +1,3 @@
-"""Unit tests for infrastructure readiness helpers with mocked clients."""
-
 from __future__ import annotations
 
 from typing import Any

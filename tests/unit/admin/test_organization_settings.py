@@ -1,5 +1,3 @@
-"""Unit tests for organization settings quota and defaults validation."""
-
 from __future__ import annotations
 
 from uuid import uuid4

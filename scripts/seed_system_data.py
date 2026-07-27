@@ -1,17 +1,4 @@
 #!/usr/bin/env python
-"""Verify that the RBAC reference catalog (permissions/system roles) exists.
-
-The canonical permission and system-role catalog is seeded declaratively by
-the ``20260723_0002`` Alembic migration (see
-``contextforge.shared.constants.rbac``), not by application code. This script
-exists as an explicit, named verification step (``make seed-system-data``)
-for local/CI workflows that want to fail fast with a clear message if
-migrations have not been applied, rather than discovering it later as a
-confusing foreign-key or "role not found" error.
-
-It performs no writes: if the expected rows are already present (the normal
-case after ``alembic upgrade head``) it is a no-op that only prints counts.
-"""
 
 from __future__ import annotations
 
@@ -28,7 +15,6 @@ _NO_SUCH_ORGANIZATION_ID = uuid.UUID("00000000-0000-0000-0000-000000000000")
 
 
 async def verify_system_data(uow: SqlAlchemyUnitOfWork) -> tuple[int, int]:
-    """Return (permission_count, system_role_count). Raises if either is missing."""
     async with uow:
         permissions = await uow.rbac.list_permissions()
         roles = await uow.rbac.list_roles(_NO_SUCH_ORGANIZATION_ID)

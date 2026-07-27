@@ -1,5 +1,3 @@
-"""Organization membership endpoints."""
-
 from __future__ import annotations
 
 from typing import Annotated
@@ -30,7 +28,6 @@ async def add_member(
     uow: Annotated[SqlAlchemyUnitOfWork, Depends(get_uow)],
     ctx: Annotated[RequestContext, Depends(get_request_context)],
 ) -> MembershipResponse:
-    """Add an existing user as a member of the caller's organization."""
     membership = await _service.add_member(uow, ctx, user_id=payload.user_id)
     return MembershipResponse.model_validate(membership)
 

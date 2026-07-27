@@ -1,5 +1,3 @@
-"""Lightweight language helpers for multilingual embedding metadata."""
-
 from __future__ import annotations
 
 import re
@@ -10,17 +8,11 @@ _LATIN_WORD_RE = re.compile(r"[A-Za-zÀ-ÖØ-öø-ÿĞÜŞİÖÇğüşıöç]+",
 
 
 def normalize_multilingual_text(text: str) -> str:
-    """Normalize unicode text before embedding."""
     cleaned = unicodedata.normalize("NFKC", text)
     return " ".join(cleaned.split()).strip()
 
 
 def detect_language(text: str) -> str:
-    """Detect a coarse document language code for embedding metadata.
-
-    Returns ``tr`` when Turkish-specific characters dominate Latin tokens,
-    otherwise ``en``. Empty text yields ``und``.
-    """
     normalized = normalize_multilingual_text(text)
     if not normalized:
         return "und"

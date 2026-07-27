@@ -1,5 +1,3 @@
-"""Organization endpoints."""
-
 from __future__ import annotations
 
 from typing import Annotated
@@ -37,7 +35,6 @@ async def create_organization(
     uow: Annotated[SqlAlchemyUnitOfWork, Depends(get_uow)],
     creator_user_id: Annotated[UUID, Depends(get_active_user_id)],
 ) -> OrganizationResponse:
-    """Create a new organization. The caller becomes its organization admin."""
     organization = await _service.create(
         uow, name=payload.name, slug=payload.slug, creator_user_id=creator_user_id
     )
@@ -50,7 +47,6 @@ async def list_organizations(
     user_id: Annotated[UUID, Depends(get_active_user_id)],
     pagination: Annotated[PaginationParams, Depends(get_pagination)],
 ) -> PaginationResponse[OrganizationResponse]:
-    """List organizations the caller is a member of."""
     page = await _service.list_for_user(uow, user_id=user_id, pagination=pagination)
     return PaginationResponse(
         items=[OrganizationResponse.model_validate(item) for item in page.items],

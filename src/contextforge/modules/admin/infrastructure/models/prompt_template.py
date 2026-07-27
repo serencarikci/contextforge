@@ -1,10 +1,3 @@
-"""Prompt template ORM model.
-
-Global templates have ``organization_id IS NULL``. As with roles and feature
-flags, uniqueness uses two partial unique indexes so NULL tenant ids cannot
-produce duplicate global rows.
-"""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -17,8 +10,6 @@ from contextforge.infrastructure.database.base import Base, TimestampMixin, UUID
 
 
 class PromptTemplateModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
-    """One versioned prompt slot for a language and (optional) organization."""
-
     __tablename__ = "prompt_templates"
     __table_args__ = (
         Index(

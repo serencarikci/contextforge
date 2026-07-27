@@ -1,5 +1,3 @@
-"""Unit tests for multilingual language detection and hashing embeddings."""
-
 from __future__ import annotations
 
 import pytest

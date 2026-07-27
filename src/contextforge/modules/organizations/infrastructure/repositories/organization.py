@@ -1,5 +1,3 @@
-"""SQLAlchemy implementation of the organization repository."""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -16,8 +14,6 @@ from contextforge.modules.organizations.infrastructure.models.organization impor
 
 
 class SqlAlchemyOrganizationRepository:
-    """Persists Organization aggregates using an explicit AsyncSession."""
-
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

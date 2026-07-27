@@ -1,4 +1,3 @@
-# Byte-compiled / cache
 __pycache__/
 *.py[cod]
 *$py.class
@@ -20,13 +19,11 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual environments
 .venv/
 venv/
 ENV/
 env/
 
-# Environment and secrets
 .env
 .env.local
 .env.*.local
@@ -35,7 +32,6 @@ env/
 secrets/
 credentials.json
 
-# Testing / coverage
 .coverage
 .coverage.*
 htmlcov/
@@ -48,7 +44,6 @@ coverage.xml
 .tox/
 .nox/
 
-# IDE
 .idea/
 *.swp
 *.swo
@@ -57,11 +52,9 @@ coverage.xml
 !.vscode/settings.json
 !.vscode/extensions.json
 
-# OS
 .DS_Store
 Thumbs.db
 
-# Local data volumes / infrastructure data
 data/
 *.db
 *.sqlite3
@@ -70,12 +63,16 @@ infrastructure/minio/data/
 infrastructure/redis/data/
 infrastructure/qdrant/data/
 
-# Logs
 *.log
 logs/
 
-# uv
-.uv/
+frontend/web/node_modules/
+frontend/web/.next/
+frontend/web/coverage/
+frontend/web/playwright-report/
+frontend/web/test-results/
+frontend/web/.env
+frontend/web/.env.local
 
-# pre-commit
+
 .pre-commit-cache/

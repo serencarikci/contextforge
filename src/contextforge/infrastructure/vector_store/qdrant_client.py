@@ -1,5 +1,3 @@
-"""Qdrant health client for readiness checks."""
-
 from __future__ import annotations
 
 import asyncio
@@ -15,8 +13,6 @@ logger = get_logger(__name__)
 
 
 class QdrantHealthClient:
-    """Qdrant client used for readiness probes."""
-
     name = "qdrant"
 
     def __init__(self, settings: QdrantSettings) -> None:

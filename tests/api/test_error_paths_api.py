@@ -1,5 +1,3 @@
-"""API tests for not-found/validation error branches not hit by happy paths."""
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

@@ -1,5 +1,3 @@
-"""Unit tests for the semantic text chunker."""
-
 from __future__ import annotations
 
 import pytest

@@ -1,5 +1,3 @@
-"""Application entrypoint."""
-
 from __future__ import annotations
 
 import uvicorn
@@ -11,7 +9,6 @@ app = create_app()
 
 
 def run() -> None:
-    """Run the API server using application settings."""
     settings = get_settings()
     uvicorn.run(
         "contextforge.main:app",

@@ -1,5 +1,3 @@
-"""JSON and console log formatters."""
-
 from __future__ import annotations
 
 import json
@@ -12,8 +10,6 @@ from contextforge.shared.logging.context import get_correlation_id
 
 
 class JsonFormatter(logging.Formatter):
-    """Emit structured JSON log records."""
-
     def __init__(self, *, service_name: str, environment: str) -> None:
         super().__init__()
         self._service_name = service_name
@@ -49,8 +45,6 @@ class JsonFormatter(logging.Formatter):
 
 
 class ConsoleFormatter(logging.Formatter):
-    """Human-readable formatter for local development."""
-
     def __init__(self, *, service_name: str, environment: str) -> None:
         super().__init__(
             fmt=(

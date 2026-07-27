@@ -1,5 +1,3 @@
-"""SQLAlchemy implementation of the organization membership repository."""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -18,8 +16,6 @@ from contextforge.modules.identity_access.infrastructure.models.user import User
 
 
 class SqlAlchemyMembershipRepository:
-    """Persists OrganizationMembership aggregates using an explicit AsyncSession."""
-
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

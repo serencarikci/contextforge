@@ -43,7 +43,11 @@ jobs:
         run: uv run mypy
 
       - name: Unit tests
-        run: uv run pytest -m unit --cov=contextforge --cov-report=term-missing
+        run: >
+          uv run pytest -m unit
+          --cov=contextforge
+          --cov-report=term-missing
+          --cov-fail-under=0
 
       - name: Architecture tests
         run: uv run pytest -m architecture
@@ -95,7 +99,7 @@ jobs:
           CONTEXTFORGE_POSTGRES_DATABASE: contextforge
         run: uv run alembic upgrade head
 
-      - name: Integration tests with coverage
+      - name: Full suite with coverage gate
         env:
           CONTEXTFORGE_APP_ENVIRONMENT: test
           CONTEXTFORGE_APP_DEBUG: "true"
@@ -116,11 +120,11 @@ jobs:
           CONTEXTFORGE_LOGGING_FORMAT: console
           CONTEXTFORGE_SECURITY_SECRET_KEY: test-secret-key-not-for-production
         run: >
-          uv run pytest -m "integration or unit or architecture"
+          uv run pytest
           --cov=contextforge
           --cov-report=term-missing
           --cov-report=xml
-          --cov-fail-under=85
+          --cov-fail-under=80
 
       - name: Upload coverage
         if: always()

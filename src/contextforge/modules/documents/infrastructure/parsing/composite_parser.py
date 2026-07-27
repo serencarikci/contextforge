@@ -1,5 +1,3 @@
-"""Composite document parser dispatching by detected format."""
-
 from __future__ import annotations
 
 from contextforge.modules.documents.domain.entities.document_parse_result import (
@@ -14,8 +12,6 @@ from contextforge.modules.documents.infrastructure.parsing.pdf_parser import par
 
 
 class CompositeDocumentParser:
-    """Routes parse requests to the matching format-specific extractor."""
-
     def parse(
         self,
         *,

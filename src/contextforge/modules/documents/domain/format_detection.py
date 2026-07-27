@@ -1,5 +1,3 @@
-"""Format detection helpers for the document parsing pipeline."""
-
 from __future__ import annotations
 
 from pathlib import PurePosixPath
@@ -27,11 +25,6 @@ _CONTENT_TYPE_TO_FORMAT: dict[str, DocumentFormat] = {
 
 
 def detect_document_format(*, filename: str, content_type: str) -> DocumentFormat:
-    """Detect a supported document format from filename and content type.
-
-    Extension takes precedence when present; content type is the fallback.
-    Raises ``UnsupportedDocumentFormatError`` when neither maps to a known format.
-    """
     suffix = PurePosixPath(filename.strip()).suffix.lower()
     if suffix in _EXTENSION_TO_FORMAT:
         return _EXTENSION_TO_FORMAT[suffix]

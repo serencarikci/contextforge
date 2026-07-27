@@ -1,5 +1,3 @@
-"""Security response headers middleware."""
-
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -12,8 +10,6 @@ from contextforge.shared.config.settings import Environment, Settings
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
-    """Attach standard browser security headers to every response."""
-
     def __init__(self, app: object, settings: Settings) -> None:
         super().__init__(app)  # type: ignore[arg-type]
         self._settings = settings

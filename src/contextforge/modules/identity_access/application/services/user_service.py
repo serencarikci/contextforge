@@ -1,5 +1,3 @@
-"""Application service for user lifecycle use cases."""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -7,7 +5,6 @@ from uuid import UUID
 from sqlalchemy.exc import IntegrityError
 
 from contextforge.application.context.request_context import RequestContext
-from contextforge.application.pagination import Page, PaginationParams
 from contextforge.application.services.command_support import (
     build_audit_event,
     build_audit_event_for_actor,
@@ -16,12 +13,10 @@ from contextforge.application.services.command_support import (
 from contextforge.application.uow.sqlalchemy_uow import SqlAlchemyUnitOfWork
 from contextforge.domain.exceptions.identity import ResourceNotFoundError
 from contextforge.modules.identity_access.domain.entities.user import User
-from contextforge.modules.identity_access.domain.enums import PreferredLanguage, UserStatus
+from contextforge.modules.identity_access.domain.enums import PreferredLanguage
 
 
 class UserService:
-    """Use cases for provisioning and managing users."""
-
     async def create(
         self,
         uow: SqlAlchemyUnitOfWork,
@@ -31,13 +26,6 @@ class UserService:
         preferred_language: PreferredLanguage = PreferredLanguage.EN,
         ctx: RequestContext | None = None,
     ) -> User:
-        """Provision a new user.
-
-        When ``ctx`` is provided the caller must hold ``user:manage`` (this is
-        the normal API path: an organization admin provisioning a new user).
-        When ``ctx`` is ``None`` this behaves as local/dev bootstrap
-        provisioning with no tenant attached to the audit trail.
-        """
         async with uow:
             if ctx is not None:
                 ctx.require_permission("user:manage")
@@ -82,31 +70,6 @@ class UserService:
             if user is None:
                 raise ResourceNotFoundError("User not found.")
             return user
-
-    async def list_for_organization(
-        self,
-        uow: SqlAlchemyUnitOfWork,
-        ctx: RequestContext,
-        pagination: PaginationParams,
-        *,
-        search: str | None = None,
-        status: UserStatus | None = None,
-    ) -> Page[User]:
-        async with uow:
-            ctx.require_permission("admin:users")
-            items, total = await uow.users.list_for_organization(
-                ctx.organization_id,
-                limit=pagination.limit,
-                offset=pagination.offset,
-                search=search,
-                status=status,
-            )
-            return Page(
-                items=items,
-                limit=pagination.limit,
-                offset=pagination.offset,
-                total=total,
-            )
 
     async def update(
         self,
@@ -184,11 +147,6 @@ class UserService:
     async def _require_same_organization_membership(
         uow: SqlAlchemyUnitOfWork, ctx: RequestContext, user_id: UUID
     ) -> None:
-        """Ensure ``user_id`` is a member of the caller's organization.
-
-        Raised as ``ResourceNotFoundError`` so callers cannot distinguish
-        "does not exist" from "exists in another organization".
-        """
         membership = await uow.memberships.get_by_org_and_user(ctx.organization_id, user_id)
         if membership is None:
             raise ResourceNotFoundError("User not found.")

@@ -1,5 +1,3 @@
-"""Additional unit tests to cover logging, settings edge cases, and helpers."""
-
 from __future__ import annotations
 
 import json

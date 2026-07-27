@@ -1,5 +1,3 @@
-"""Unit tests for format detection and format-specific parsers."""
-
 from __future__ import annotations
 
 import base64

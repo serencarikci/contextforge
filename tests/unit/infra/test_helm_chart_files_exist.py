@@ -1,5 +1,3 @@
-"""Static infra artifact presence and optional compose/helm validation."""
-
 from __future__ import annotations
 
 import os

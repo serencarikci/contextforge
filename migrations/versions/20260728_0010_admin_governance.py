@@ -1,31 +1,3 @@
-"""Create Phase 4 admin/governance tables; seed admin:* permissions.
-
-Revision ID: 20260728_0010
-Revises: 20260727_0009
-Create Date: 2026-07-28 00:00:00
-
-Creates the administration and governance schema:
-
-- ``organization_settings`` -- per-tenant quotas, defaults, feature overrides
-- ``feature_flags`` -- global and organization-scoped toggles
-- ``prompt_templates`` -- versioned prompt slots (org or global)
-- ``llm_provider_configs`` -- provider/model configs with encrypted API keys
-- ``token_pricing`` -- time-bounded price rows per provider/model
-- ``token_usage_daily`` -- additive daily token/cost rollups
-- ``retention_policies`` / ``retention_runs`` -- cleanup policies and executions
-
-Also adds ``roles.archived_at`` so custom organization roles can be soft-archived
-without losing historical role-assignment rows.
-
-Seed data (upgrade only)
--------------------------
-Seeds the ``admin:*`` permissions and their ``role_permissions`` mappings per
-``contextforge.shared.constants.rbac.ROLE_PERMISSIONS``:
-``organization_admin`` receives every admin permission; ``knowledge_manager``
-receives ``admin:knowledge_spaces``, ``admin:documents``, and
-``admin:ingestion``. Inserts use ``ON CONFLICT DO NOTHING``.
-"""
-
 from __future__ import annotations
 
 import uuid as _uuid

@@ -1,5 +1,3 @@
-"""Markdown text extraction with optional YAML-like front matter."""
-
 from __future__ import annotations
 
 import re
@@ -17,7 +15,6 @@ _FRONT_MATTER_RE = re.compile(
 
 
 def parse_markdown(data: bytes) -> ExtractedDocumentContent:
-    """Decode Markdown bytes and extract optional front-matter metadata."""
     if not data:
         raise DocumentParseError("Markdown content is empty.")
 
@@ -46,7 +43,6 @@ def parse_markdown(data: bytes) -> ExtractedDocumentContent:
 
 
 def _parse_simple_front_matter(block: str) -> dict[str, JSONValue]:
-    """Parse simple ``key: value`` front-matter lines (no nested YAML)."""
     result: dict[str, JSONValue] = {}
     for raw_line in block.splitlines():
         line = raw_line.strip()

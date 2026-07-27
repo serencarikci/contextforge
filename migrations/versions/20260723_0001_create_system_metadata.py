@@ -1,10 +1,3 @@
-"""Create system_metadata table.
-
-Revision ID: 20260723_0001
-Revises:
-Create Date: 2026-07-23 00:00:00
-"""
-
 from __future__ import annotations
 
 from collections.abc import Sequence

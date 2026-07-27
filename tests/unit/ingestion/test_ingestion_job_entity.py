@@ -1,5 +1,3 @@
-"""Unit tests for ingestion job domain entity."""
-
 from __future__ import annotations
 
 from uuid import uuid4

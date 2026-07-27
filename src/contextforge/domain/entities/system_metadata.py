@@ -1,5 +1,3 @@
-"""System metadata domain entity."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -12,8 +10,6 @@ from contextforge.shared.utilities.datetime import utc_now
 
 @dataclass(slots=True)
 class SystemMetadata:
-    """Represents a system-level key/value metadata record."""
-
     key: str
     value: dict[str, Any]
     id: UUID = field(default_factory=uuid4)
@@ -27,6 +23,5 @@ class SystemMetadata:
         self.key = self.key.strip()
 
     def update_value(self, value: dict[str, Any]) -> None:
-        """Replace the metadata value and refresh updated_at."""
         self.value = value
         self.updated_at = utc_now()

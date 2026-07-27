@@ -1,5 +1,3 @@
-"""Unit tests for LLM providers and rerankers."""
-
 from __future__ import annotations
 
 from uuid import uuid4

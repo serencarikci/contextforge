@@ -1,12 +1,3 @@
-"""Security tests for enterprise chat: tenancy, ownership, and KS revalidation.
-
-Chat delegates all retrieval/LLM interaction to ``RagQueryService``, so the
-prompt-injection resistance already covered by
-``tests/security/test_rag_security.py`` applies transitively. These tests
-focus on chat-specific boundaries: cross-tenant isolation, conversation
-ownership/participation, and per-message knowledge-space revalidation.
-"""
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -19,19 +10,12 @@ from tests.helpers import create_conversation, create_knowledge_space, seed_grou
 
 from contextforge.application.uow.sqlalchemy_uow import SqlAlchemyUnitOfWork
 from contextforge.bootstrap.app_factory import create_app
-from contextforge.modules.identity_access.application.services.user_service import UserService
-from contextforge.modules.organizations.application.services.organization_service import (
-    OrganizationService,
-)
 from contextforge.shared.config.settings import Settings, clear_settings_cache
 
 if TYPE_CHECKING:
     from tests.conftest import TenantScenario
 
     from contextforge.infrastructure.database.session import DatabaseManager
-
-USER_ID_HEADER = "X-ContextForge-User-ID"
-ORGANIZATION_ID_HEADER = "X-ContextForge-Organization-ID"
 
 
 @pytest_asyncio.fixture
@@ -40,13 +24,6 @@ async def _admin_granted_restricted_ks_access(
     integration_settings: Settings,
     tenant_scenario: TenantScenario,
 ) -> None:
-    """Grant the org admin an explicit, KS-scoped role assignment.
-
-    Mirrors the only real way to gain access to a *restricted* knowledge
-    space (see ``tests/security/test_restricted_knowledge_space_access.py``):
-    an explicit role assignment or knowledge-space membership. Without this,
-    not even the organization admin who created the space can read it.
-    """
     from contextforge.modules.identity_access.application.services.identity_context_service import (
         build_request_context,
     )
@@ -81,24 +58,6 @@ async def _admin_granted_restricted_ks_access(
     )
 
 
-@pytest_asyncio.fixture
-async def other_org_headers(db_manager: DatabaseManager) -> dict[str, str]:
-    """Headers for an admin in a completely independent organization."""
-    suffix = uuid4().hex[:12]
-    uow = SqlAlchemyUnitOfWork(db_manager.session_factory)
-    admin = await UserService().create(
-        uow, email=f"chat-other-admin-{suffix}@example.com", display_name="Other Org Admin"
-    )
-    uow = SqlAlchemyUnitOfWork(db_manager.session_factory)
-    organization = await OrganizationService().create(
-        uow,
-        name=f"Other Chat Org {suffix}",
-        slug=f"other-chat-org-{suffix}",
-        creator_user_id=admin.id,
-    )
-    return {USER_ID_HEADER: str(admin.id), ORGANIZATION_ID_HEADER: str(organization.id)}
-
-
 @pytest.mark.security
 def test_conversation_requires_identity(api_client: TestClient) -> None:
     response = api_client.get(f"/api/v1/conversations/{uuid4()}")
@@ -109,7 +68,6 @@ def test_conversation_requires_identity(api_client: TestClient) -> None:
 def test_cross_tenant_conversation_access_is_not_found(
     integration_settings: Settings,
     tenant_scenario: TenantScenario,
-    other_org_headers: dict[str, str],
 ) -> None:
     clear_settings_cache()
     app = create_app(integration_settings)
@@ -117,7 +75,8 @@ def test_cross_tenant_conversation_access_is_not_found(
         conversation_id = create_conversation(api_client, tenant_scenario.admin_headers())["id"]
 
         response = api_client.get(
-            f"/api/v1/conversations/{conversation_id}", headers=other_org_headers
+            f"/api/v1/conversations/{conversation_id}",
+            headers=tenant_scenario.other_org_admin_headers(),
         )
         assert response.status_code == 404
         assert response.json()["error"]["code"] == "RESOURCE_NOT_FOUND"
@@ -127,7 +86,6 @@ def test_cross_tenant_conversation_access_is_not_found(
 def test_non_owner_non_participant_cannot_read_conversation(
     integration_settings: Settings, tenant_scenario: TenantScenario
 ) -> None:
-    """The viewer has ``chat:use`` but is neither owner nor participant."""
     clear_settings_cache()
     app = create_app(integration_settings)
     with TestClient(app) as api_client:
@@ -177,7 +135,6 @@ def test_participant_gains_and_loses_access(
 def test_non_owner_cannot_manage_participants(
     integration_settings: Settings, tenant_scenario: TenantScenario
 ) -> None:
-    """A regular participant cannot add/remove other participants (owner-only)."""
     clear_settings_cache()
     app = create_app(integration_settings)
     admin_headers = tenant_scenario.admin_headers()
@@ -204,9 +161,6 @@ def test_message_fails_gracefully_when_linked_knowledge_space_becomes_inaccessib
     tenant_scenario: TenantScenario,
     _admin_granted_restricted_ks_access: None,
 ) -> None:
-    """Every message revalidates KS access -- a participant without access to a
-    conversation's *restricted* knowledge space gets a persisted failed answer,
-    never a silent fallback to a broader set of knowledge spaces."""
     clear_settings_cache()
     app = create_app(integration_settings)
     admin_headers = tenant_scenario.admin_headers()

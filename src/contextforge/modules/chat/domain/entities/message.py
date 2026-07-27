@@ -1,5 +1,3 @@
-"""Chat message and citation entities."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -15,8 +13,6 @@ MAX_CONTENT_LENGTH = 32_000
 
 @dataclass(slots=True)
 class ChatMessage:
-    """A single turn in a conversation."""
-
     conversation_id: UUID
     organization_id: UUID
     role: MessageRole
@@ -97,8 +93,6 @@ class ChatMessage:
 
 @dataclass(slots=True)
 class MessageCitation:
-    """A single grounding citation attached to an assistant message."""
-
     message_id: UUID
     organization_id: UUID
     document_id: UUID

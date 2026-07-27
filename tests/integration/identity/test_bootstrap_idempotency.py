@@ -1,12 +1,3 @@
-"""Integration tests that `scripts/bootstrap_dev.bootstrap` is safe to re-run.
-
-Running the bootstrap function twice against the same database must:
-
-* return the exact same deterministic ids both times
-* not create duplicate rows (unique constraints would otherwise raise)
-* not fail with an integrity error the second time around
-"""
-
 from __future__ import annotations
 
 import sys

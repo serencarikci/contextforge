@@ -1,11 +1,3 @@
-"""Integration tests for repository filter/lookup paths not covered elsewhere.
-
-These exercise the SQLAlchemy repository implementations directly (not
-through the API/application layers) to cover slug/key/code lookups,
-listing filters, and knowledge-space membership CRUD that the
-authorization-focused API/security tests don't happen to exercise.
-"""
-
 from __future__ import annotations
 
 from uuid import uuid4

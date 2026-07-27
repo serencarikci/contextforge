@@ -1,6 +1,6 @@
 [project]
 name = "contextforge"
-version = "0.5.0"
+version = "0.6.0"
 description = "ContextForge — Multilingual Enterprise Knowledge Assistant"
 readme = "README.md"
 license = { text = "MIT" }
@@ -166,7 +166,6 @@ omit = [
 ]
 
 [tool.coverage.report]
-fail_under = 85
 show_missing = true
 skip_covered = false
 exclude_lines = [

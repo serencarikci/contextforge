@@ -1,5 +1,3 @@
-"""API tests: requests without development identity headers are rejected."""
-
 from __future__ import annotations
 
 from uuid import uuid4
@@ -42,7 +40,6 @@ def test_malformed_user_id_header_returns_401(api_client: TestClient) -> None:
 
 @pytest.mark.api
 def test_create_organization_requires_user_identity(api_client: TestClient) -> None:
-    """Organization creation only needs an active user, not an org context yet."""
     response = api_client.post(
         "/api/v1/organizations", json={"name": "No Identity Org", "slug": "no-identity-org"}
     )

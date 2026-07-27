@@ -1,5 +1,3 @@
-"""Chat analytics event ORM model."""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -16,8 +14,6 @@ from contextforge.shared.utilities.datetime import utc_now
 
 
 class ChatAnalyticsEventModel(Base, UUIDPrimaryKeyMixin):
-    """An append-only record of a notable chat-domain occurrence."""
-
     __tablename__ = "chat_analytics_events"
     __table_args__ = (
         Index(

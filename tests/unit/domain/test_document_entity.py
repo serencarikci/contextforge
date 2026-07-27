@@ -1,5 +1,3 @@
-"""Unit tests for the Document entity: validation, lifecycle, and size limits."""
-
 from __future__ import annotations
 
 from uuid import uuid4

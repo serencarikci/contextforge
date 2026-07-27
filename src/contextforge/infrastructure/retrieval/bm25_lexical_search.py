@@ -1,5 +1,3 @@
-"""BM25 lexical search adapters."""
-
 from __future__ import annotations
 
 import re
@@ -67,8 +65,6 @@ def bm25_search(
 
 
 class InMemoryLexicalSearch:
-    """Process-local BM25 index used by unit/API tests."""
-
     def __init__(self, documents: list[LexicalDocument] | None = None) -> None:
         self._documents = list(documents or [])
 
@@ -95,8 +91,6 @@ class InMemoryLexicalSearch:
 
 
 class PostgresBm25LexicalSearch:
-    """Loads authorized chunks from PostgreSQL and ranks them with Okapi BM25."""
-
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
 

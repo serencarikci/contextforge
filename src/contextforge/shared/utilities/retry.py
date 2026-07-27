@@ -1,5 +1,3 @@
-"""Shared async retry helper."""
-
 from __future__ import annotations
 
 import asyncio
@@ -13,7 +11,6 @@ async def retry_async[T](
     backoff_seconds: float,
     retry_on: tuple[type[BaseException], ...] = (Exception,),
 ) -> T:
-    """Retry ``operation`` with exponential backoff for selected exceptions."""
     attempt = 0
     while True:
         try:

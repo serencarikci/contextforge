@@ -1,10 +1,3 @@
-"""Per-organization (or global) LLM provider configuration entity.
-
-The API key is never stored in plaintext: the application layer encrypts it
-through :class:`SecretCipherPort` before constructing this entity, and the
-entity only ever exposes a masked hint plus an ``api_key_set`` boolean.
-"""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -18,7 +11,6 @@ MASKED_API_KEY = "***"
 
 
 def mask_api_key(api_key: str | None) -> str | None:
-    """Return a non-reversible display hint for an API key."""
     if api_key is None:
         return None
     cleaned = api_key.strip()
@@ -31,8 +23,6 @@ def mask_api_key(api_key: str | None) -> str | None:
 
 @dataclass(slots=True)
 class LlmProviderConfig:
-    """Connection and generation parameters for one provider/model pair."""
-
     provider: LlmProviderKind
     model: str
     id: UUID = field(default_factory=uuid4)
@@ -95,15 +85,10 @@ class LlmProviderConfig:
             raise ValueError(msg)
 
     @property
-    def is_global(self) -> bool:
-        return self.organization_id is None
-
-    @property
     def api_key_set(self) -> bool:
         return bool(self.api_key_ciphertext)
 
     def set_api_key(self, *, ciphertext: str | None, hint: str | None) -> None:
-        """Replace the stored secret. ``None`` ciphertext clears it."""
         self.api_key_ciphertext = ciphertext or None
         self.api_key_hint = hint if ciphertext else None
         self.updated_at = utc_now()

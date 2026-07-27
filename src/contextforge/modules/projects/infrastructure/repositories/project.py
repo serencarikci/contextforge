@@ -1,5 +1,3 @@
-"""SQLAlchemy implementation of the project repository."""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -13,8 +11,6 @@ from contextforge.modules.projects.infrastructure.models.project import ProjectM
 
 
 class SqlAlchemyProjectRepository:
-    """Persists Project aggregates using an explicit AsyncSession."""
-
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

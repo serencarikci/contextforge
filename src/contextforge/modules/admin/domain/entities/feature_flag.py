@@ -1,5 +1,3 @@
-"""Feature flag entity with global rows and per-organization overrides."""
-
 from __future__ import annotations
 
 import re
@@ -15,7 +13,6 @@ MAX_FLAG_KEY_LENGTH = 120
 
 
 def normalize_flag_key(key: str) -> str:
-    """Normalize and validate a feature flag key."""
     cleaned = key.strip().lower()
     if len(cleaned) > MAX_FLAG_KEY_LENGTH:
         msg = f"Feature flag key must be at most {MAX_FLAG_KEY_LENGTH} characters"
@@ -30,13 +27,6 @@ def normalize_flag_key(key: str) -> str:
 
 @dataclass(slots=True)
 class FeatureFlag:
-    """A named toggle, either global (``organization_id is None``) or per-tenant.
-
-    ``value`` carries optional structured configuration for the flag (for
-    example a variant name or a numeric threshold); ``enabled_globally`` is the
-    boolean the resolver reads.
-    """
-
     key: str
     id: UUID = field(default_factory=uuid4)
     organization_id: UUID | None = None
@@ -50,10 +40,6 @@ class FeatureFlag:
         self.key = normalize_flag_key(self.key)
         if self.description is not None:
             self.description = self.description.strip() or None
-
-    @property
-    def is_global(self) -> bool:
-        return self.organization_id is None
 
     def update(
         self,
@@ -77,12 +63,6 @@ def resolve_flags(
     organization_flags: list[FeatureFlag],
     settings_overrides: dict[str, bool] | None = None,
 ) -> dict[str, bool]:
-    """Collapse global rows, org rows, and org settings into one boolean map.
-
-    Precedence, lowest to highest: global flag row, organization flag row,
-    ``organization_settings.feature_overrides``. Organization settings win so a
-    tenant-level kill switch always beats a stale flag row.
-    """
     resolved = {flag.key: flag.enabled_globally for flag in global_flags}
     for flag in organization_flags:
         resolved[flag.key] = flag.enabled_globally

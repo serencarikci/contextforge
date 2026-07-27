@@ -1,11 +1,3 @@
-"""Integration tests for the document upload/get/download/delete lifecycle.
-
-Exercises the full application-service write path against a real database
-and a real MinIO instance: bytes are actually written to and read back from
-object storage, and metadata is actually persisted/soft-deleted in
-PostgreSQL.
-"""
-
 from __future__ import annotations
 
 from uuid import UUID, uuid4
@@ -35,15 +27,6 @@ from contextforge.shared.config.settings import Settings
 
 
 class _Tenant:
-    """A freshly-created organization/admin pair plus a context refresher.
-
-    A single ``RequestContext`` snapshot only knows about knowledge spaces
-    that existed when it was built (just like a real HTTP request). Tests
-    that create a knowledge space and then immediately act on it need a
-    freshly rebuilt context, exactly as ``get_request_context`` rebuilds one
-    per request in the real API.
-    """
-
     def __init__(
         self,
         db_manager: DatabaseManager,

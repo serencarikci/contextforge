@@ -1,5 +1,3 @@
-"""SQLAlchemy repository for document chunks."""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -14,8 +12,6 @@ from contextforge.shared.types.aliases import JSONValue
 
 
 class SqlAlchemyDocumentChunkRepository:
-    """Persists DocumentChunk rows using an explicit AsyncSession."""
-
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

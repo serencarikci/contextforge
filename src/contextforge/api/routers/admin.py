@@ -1,5 +1,3 @@
-"""Administration and governance endpoints."""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -289,23 +287,6 @@ async def update_organization_settings(
         is_active=payload.is_active,
     )
     return _org_settings_response(settings)
-
-
-@router.get("/settings", response_model=OrganizationSettingsResponse)
-async def get_settings_alias(
-    uow: Annotated[SqlAlchemyUnitOfWork, Depends(get_uow)],
-    ctx: Annotated[RequestContext, Depends(get_request_context)],
-) -> OrganizationSettingsResponse:
-    return await get_organization_settings(uow, ctx)
-
-
-@router.patch("/settings", response_model=OrganizationSettingsResponse)
-async def update_settings_alias(
-    payload: OrganizationSettingsUpdateRequest,
-    uow: Annotated[SqlAlchemyUnitOfWork, Depends(get_uow)],
-    ctx: Annotated[RequestContext, Depends(get_request_context)],
-) -> OrganizationSettingsResponse:
-    return await update_organization_settings(payload, uow, ctx)
 
 
 @router.get("/roles/{role_id}/permissions", response_model=RolePermissionsResponse)

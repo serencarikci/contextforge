@@ -1,12 +1,3 @@
-"""Role assignment ORM model.
-
-A role assignment grants a role to a membership at exactly one scope:
-organization-wide (both ``project_id`` and ``knowledge_space_id`` are NULL),
-project-scoped, or knowledge-space-scoped. The uniqueness index coalesces the
-nullable scope columns to a sentinel UUID so PostgreSQL's NULL-distinctness
-rules don't allow duplicate assignments at the same scope.
-"""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -23,8 +14,6 @@ _NULL_SCOPE_SENTINEL = "00000000-0000-0000-0000-000000000000"
 
 
 class RoleAssignmentModel(Base, UUIDPrimaryKeyMixin):
-    """Assigns a role to a membership, optionally scoped to a project or knowledge space."""
-
     __tablename__ = "role_assignments"
     __table_args__ = (
         CheckConstraint(

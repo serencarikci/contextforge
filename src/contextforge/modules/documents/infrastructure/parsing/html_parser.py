@@ -1,5 +1,3 @@
-"""HTML text extraction using BeautifulSoup."""
-
 from __future__ import annotations
 
 from bs4 import BeautifulSoup, Tag
@@ -12,7 +10,6 @@ from contextforge.shared.types.aliases import JSONValue
 
 
 def parse_html(data: bytes) -> ExtractedDocumentContent:
-    """Extract visible text and basic metadata from an HTML byte payload."""
     if not data:
         raise DocumentParseError("HTML content is empty.")
 

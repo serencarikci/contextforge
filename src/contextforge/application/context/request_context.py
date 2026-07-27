@@ -1,5 +1,3 @@
-"""Typed request context for authorization decisions."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -11,8 +9,6 @@ from contextforge.modules.identity_access.domain.enums import PreferredLanguage
 
 @dataclass(frozen=True, slots=True)
 class RequestContext:
-    """Application-level identity and authorization context."""
-
     correlation_id: str
     user_id: UUID
     organization_id: UUID

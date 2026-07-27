@@ -1,5 +1,3 @@
-"""Document parse result ORM model."""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -16,8 +14,6 @@ from contextforge.modules.documents.domain.enums import DocumentParseStatus
 
 
 class DocumentParseResultModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
-    """Persisted parse outcome for a stored document (one row per document)."""
-
     __tablename__ = "document_parse_results"
     __table_args__ = (
         UniqueConstraint("document_id", name="uq_document_parse_results_document_id"),

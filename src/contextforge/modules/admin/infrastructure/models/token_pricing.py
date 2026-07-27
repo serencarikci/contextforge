@@ -1,5 +1,3 @@
-"""Token pricing ORM model."""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -12,8 +10,6 @@ from contextforge.infrastructure.database.base import Base, TimestampMixin, UUID
 
 
 class TokenPricingModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
-    """Price per 1,000 tokens for one provider/model pair over a time window."""
-
     __tablename__ = "token_pricing"
     __table_args__ = (
         Index(

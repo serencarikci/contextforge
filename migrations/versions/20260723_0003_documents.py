@@ -1,46 +1,3 @@
-"""Create documents table; seed document permissions and role mappings.
-
-Revision ID: 20260723_0003
-Revises: 20260723_0002
-Create Date: 2026-07-23 00:00:00
-
-Creates the ``documents`` table: metadata for files whose bytes live in
-object storage (MinIO). Foreign keys to ``organizations``, ``knowledge_spaces``,
-and ``users`` all use ``ondelete="RESTRICT"``, consistent with the rest of the
-tenant-scoped schema.
-
-Seed data (upgrade only)
--------------------------
-This migration seeds only the *new* RBAC reference rows introduced for
-documents -- it does not touch the reference data seeded by
-``20260723_0002``:
-
-- the four ``document:*`` permissions (``document:create``, ``document:read``,
-  ``document:update``, ``document:delete``)
-- the corresponding ``role_permissions`` mappings for system roles that
-  receive document permissions (``organization_admin`` gets all four via the
-  "org admin has every permission" convention; ``project_manager`` and
-  ``knowledge_manager`` get all four; ``developer`` gets create/read/update;
-  ``support_agent`` and ``viewer`` get read only; ``platform_admin`` gets
-  none, matching ``20260723_0002``)
-
-Inserts use ``INSERT ... ON CONFLICT DO NOTHING`` so this migration is safe
-to re-run against a database that already has these rows (e.g. if seeded
-out-of-band), matching the "idempotent insert" requirement for additive
-migrations.
-
-Permission ids are deterministic (``uuid.uuid5`` over the same fixed
-namespace as ``20260723_0002`` -- see
-``contextforge.shared.constants.rbac.permission_id`` / ``system_role_id``).
-
-Downgrade
----------
-Downgrade removes exactly what upgrade added: the seeded ``role_permissions``
-rows for the new document permission codes, the four ``document:*``
-permissions themselves, and the ``documents`` table. It does not touch any
-other RBAC reference data.
-"""
-
 from __future__ import annotations
 
 import uuid as _uuid
@@ -165,11 +122,6 @@ def upgrade() -> None:
 
 
 def _seed_document_rbac_reference_data() -> None:
-    """Insert the four ``document:*`` permissions and their role mappings.
-
-    Idempotent: uses ``ON CONFLICT DO NOTHING`` so re-running against a
-    database that already has these rows is a no-op.
-    """
     permissions_table = sa.table(
         "permissions",
         sa.column("id", postgresql.UUID(as_uuid=True)),

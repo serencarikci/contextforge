@@ -1,5 +1,3 @@
-"""Document chunk entity prepared for embedding and retrieval."""
-
 from __future__ import annotations
 
 import hashlib
@@ -13,21 +11,17 @@ from contextforge.shared.utilities.datetime import utc_now
 
 
 def estimate_token_count(text: str) -> int:
-    """Approximate token count for embedding planning (chars / 4)."""
     if not text:
         return 0
     return max(1, (len(text) + 3) // 4)
 
 
 def content_sha256(text: str) -> str:
-    """Stable hash used later for embedding deduplication."""
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
 @dataclass(frozen=True, slots=True)
 class ChunkDraft:
-    """In-memory chunk produced by a text chunker before persistence."""
-
     index: int
     content: str
     char_start: int
@@ -45,8 +39,6 @@ class ChunkDraft:
 
 @dataclass(slots=True)
 class DocumentChunk:
-    """Persisted semantic chunk ready for embedding generation."""
-
     organization_id: UUID
     document_id: UUID
     parse_result_id: UUID

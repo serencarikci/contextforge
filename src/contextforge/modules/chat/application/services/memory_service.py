@@ -1,11 +1,3 @@
-"""Conversation memory service: prompt history context + rolling summaries.
-
-All methods expect to be called from *inside* an already-open
-``SqlAlchemyUnitOfWork`` context (``async with uow:``) -- typically from
-``ChatService`` -- since they read/write conversation and message repositories
-as part of a larger unit of work.
-"""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -34,8 +26,6 @@ _SUMMARY_MAX_CHARS = 4000
 
 
 class MemoryService:
-    """Builds prompt-ready conversation history and maintains rolling summaries."""
-
     def __init__(self, settings: ChatSettings) -> None:
         self._settings = settings
 
@@ -56,7 +46,6 @@ class MemoryService:
         organization_id: UUID,
         conversation_id: UUID,
     ) -> str | None:
-        """Return prompt-ready history text, or ``None`` if there is none yet."""
         strategy = self._strategy()
         if isinstance(strategy, SummaryStrategy):
             memory = await uow.conversations.get_memory(organization_id, conversation_id)
@@ -79,14 +68,6 @@ class MemoryService:
         organization_id: UUID,
         conversation_id: UUID,
     ) -> ConversationMemory | None:
-        """Fold older turns into the rolling summary once enough have accumulated.
-
-        No-op unless ``memory_strategy`` is ``"summary"``. Uses deterministic,
-        extractive summarization (each folded turn is compacted to a single
-        short line) rather than an LLM call, so memory maintenance never
-        depends on LLM availability and never performs a second LLM round-trip
-        per message.
-        """
         if self._settings.memory_strategy != "summary":
             return None
 

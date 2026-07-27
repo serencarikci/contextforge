@@ -1,8 +1,3 @@
-"""SQLAlchemy implementation of the chat message repository.
-
-Owns two related tables: ``chat_messages`` and ``message_citations``.
-"""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -22,8 +17,6 @@ from contextforge.modules.chat.infrastructure.models.message import (
 
 @dataclass(frozen=True, slots=True)
 class MessageStats:
-    """Aggregate counters computed over a set of chat messages."""
-
     total_messages: int
     assistant_messages: int
     failed_messages: int
@@ -34,8 +27,6 @@ class MessageStats:
 
 
 class SqlAlchemyChatMessageRepository:
-    """Persists chat messages and their citations."""
-
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
@@ -173,7 +164,6 @@ class SqlAlchemyChatMessageRepository:
     async def list_recent_for_context(
         self, organization_id: UUID, conversation_id: UUID, *, limit: int
     ) -> list[ChatMessage]:
-        """Return the most recent completed messages, oldest first."""
         statement = (
             select(ChatMessageModel)
             .where(

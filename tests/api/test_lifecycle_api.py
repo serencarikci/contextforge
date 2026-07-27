@@ -1,11 +1,3 @@
-"""API tests exercising broader CRUD lifecycles as an organization admin.
-
-These complement the narrower authorization-focused tests
-(`test_customers_api.py`, `test_tenant_isolation_api.py`,
-`tests/security/`) by walking each resource type through its normal
-create/read/update/list/terminal-state lifecycle via real HTTP requests.
-"""
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

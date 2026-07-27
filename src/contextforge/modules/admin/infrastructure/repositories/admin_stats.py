@@ -1,5 +1,3 @@
-"""Cross-module read-model queries for administration dashboards."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass

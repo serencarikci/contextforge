@@ -1,5 +1,3 @@
-"""SQLAlchemy implementation of the message feedback repository."""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -14,8 +12,6 @@ from contextforge.modules.chat.infrastructure.models.feedback import MessageFeed
 
 
 class SqlAlchemyMessageFeedbackRepository:
-    """Persists per-user feedback on assistant messages."""
-
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

@@ -1,5 +1,3 @@
-"""Typed application settings loaded from environment variables."""
-
 from __future__ import annotations
 
 from enum import StrEnum
@@ -11,8 +9,6 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Environment(StrEnum):
-    """Supported runtime environments."""
-
     LOCAL = "local"
     TEST = "test"
     DEVELOPMENT = "development"
@@ -21,8 +17,6 @@ class Environment(StrEnum):
 
 
 class AppSettings(BaseSettings):
-    """Core application settings."""
-
     model_config = SettingsConfigDict(extra="ignore")
 
     name: str = "contextforge-api"
@@ -39,8 +33,6 @@ class AppSettings(BaseSettings):
 
 
 class APISettings(BaseSettings):
-    """HTTP API settings."""
-
     model_config = SettingsConfigDict(extra="ignore")
 
     host: str = "0.0.0.0"  # noqa: S104
@@ -70,8 +62,6 @@ class APISettings(BaseSettings):
 
 
 class PostgresSettings(BaseSettings):
-    """PostgreSQL connection settings."""
-
     model_config = SettingsConfigDict(extra="ignore")
 
     host: str = "localhost"
@@ -93,8 +83,6 @@ class PostgresSettings(BaseSettings):
 
 
 class RedisSettings(BaseSettings):
-    """Redis connection settings."""
-
     model_config = SettingsConfigDict(extra="ignore")
 
     url: str = "redis://localhost:6379/0"
@@ -102,8 +90,6 @@ class RedisSettings(BaseSettings):
 
 
 class QdrantSettings(BaseSettings):
-    """Qdrant connection settings."""
-
     model_config = SettingsConfigDict(extra="ignore")
 
     url: str = "http://localhost:6333"
@@ -113,8 +99,6 @@ class QdrantSettings(BaseSettings):
 
 
 class EmbeddingSettings(BaseSettings):
-    """Embedding generation settings for multilingual chunk vectors."""
-
     model_config = SettingsConfigDict(extra="ignore")
 
     provider: Literal["hashing", "openai_compatible"] = "hashing"
@@ -129,8 +113,6 @@ class EmbeddingSettings(BaseSettings):
 
 
 class MinioSettings(BaseSettings):
-    """MinIO / S3-compatible object storage settings."""
-
     model_config = SettingsConfigDict(extra="ignore")
 
     endpoint: str = "localhost:9000"
@@ -143,8 +125,6 @@ class MinioSettings(BaseSettings):
 
 
 class LoggingSettings(BaseSettings):
-    """Logging configuration."""
-
     model_config = SettingsConfigDict(extra="ignore")
 
     level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
@@ -153,8 +133,6 @@ class LoggingSettings(BaseSettings):
 
 
 class IngestionSettings(BaseSettings):
-    """Background document ingestion worker settings."""
-
     model_config = SettingsConfigDict(extra="ignore")
 
     enabled: bool = True
@@ -166,8 +144,6 @@ class IngestionSettings(BaseSettings):
 
 
 class RagSettings(BaseSettings):
-    """Hybrid retrieval and RAG pipeline settings."""
-
     model_config = SettingsConfigDict(extra="ignore")
 
     dense_weight: float = Field(default=0.6, ge=0.0, le=1.0)
@@ -183,8 +159,6 @@ class RagSettings(BaseSettings):
 
 
 class RerankSettings(BaseSettings):
-    """Document reranking settings."""
-
     model_config = SettingsConfigDict(extra="ignore")
 
     provider: Literal["noop", "hashing", "openai_compatible"] = "hashing"
@@ -198,8 +172,6 @@ class RerankSettings(BaseSettings):
 
 
 class LlmSettings(BaseSettings):
-    """LLM provider settings for answer generation."""
-
     model_config = SettingsConfigDict(extra="ignore")
 
     provider: Literal["mock", "openai", "azure_openai", "openai_compatible"] = "mock"
@@ -217,8 +189,6 @@ class LlmSettings(BaseSettings):
 
 
 class PromptSettings(BaseSettings):
-    """Versioned prompt template settings."""
-
     model_config = SettingsConfigDict(extra="ignore")
 
     active_version: str = "v1"
@@ -226,8 +196,6 @@ class PromptSettings(BaseSettings):
 
 
 class ChatSettings(BaseSettings):
-    """Enterprise chat conversation, messaging, and streaming settings."""
-
     model_config = SettingsConfigDict(extra="ignore")
 
     max_message_length: int = Field(default=8000, ge=1, le=32000)
@@ -244,13 +212,6 @@ class ChatSettings(BaseSettings):
 
 
 class AdminSettings(BaseSettings):
-    """Administration, governance, retention, and cost-analytics settings.
-
-    Env keys follow the single-underscore nested delimiter, e.g.
-    ``CONTEXTFORGE_ADMIN_RETENTION_ENABLED`` and
-    ``CONTEXTFORGE_ADMIN_CACHE_TTL_SECONDS``.
-    """
-
     model_config = SettingsConfigDict(extra="ignore")
 
     retention_enabled: bool = True
@@ -271,8 +232,6 @@ class AdminSettings(BaseSettings):
 
 
 class SecuritySettings(BaseSettings):
-    """JWT and related auth settings reserved for real authentication."""
-
     model_config = SettingsConfigDict(extra="ignore")
 
     secret_key: SecretStr = SecretStr("change-me-local-only-not-for-production")
@@ -281,13 +240,6 @@ class SecuritySettings(BaseSettings):
 
 
 class RateLimitSettings(BaseSettings):
-    """HTTP rate limiting for ``/api/v1`` routes.
-
-    Env keys: ``CONTEXTFORGE_RATE_LIMIT_ENABLED``,
-    ``CONTEXTFORGE_RATE_LIMIT_REQUESTS``, ``CONTEXTFORGE_RATE_LIMIT_WINDOW_SECONDS``,
-    ``CONTEXTFORGE_RATE_LIMIT_BACKEND`` (``memory`` | ``redis``).
-    """
-
     model_config = SettingsConfigDict(extra="ignore")
 
     enabled: bool = True
@@ -320,12 +272,6 @@ class RateLimitSettings(BaseSettings):
 
 
 class ObservabilitySettings(BaseSettings):
-    """Metrics and observability settings.
-
-    Env keys: ``CONTEXTFORGE_OBSERVABILITY_METRICS_ENABLED``,
-    ``CONTEXTFORGE_OBSERVABILITY_METRICS_PATH``.
-    """
-
     model_config = SettingsConfigDict(extra="ignore")
 
     metrics_enabled: bool = True
@@ -334,8 +280,6 @@ class ObservabilitySettings(BaseSettings):
 
 
 class Settings(BaseSettings):
-    """Root settings aggregating all nested configuration sections."""
-
     model_config = SettingsConfigDict(
         env_prefix="CONTEXTFORGE_",
         env_nested_delimiter="_",
@@ -389,10 +333,8 @@ class Settings(BaseSettings):
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
-    """Load and cache application settings."""
     return Settings()
 
 
 def clear_settings_cache() -> None:
-    """Clear the settings cache (useful for tests)."""
     get_settings.cache_clear()

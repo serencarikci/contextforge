@@ -1,5 +1,3 @@
-"""Knowledge space membership ORM model."""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -13,8 +11,6 @@ from contextforge.modules.identity_access.domain.enums import KnowledgeSpaceAcce
 
 
 class KnowledgeSpaceMembershipModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
-    """Grants an organization membership access to a knowledge space."""
-
     __tablename__ = "knowledge_space_memberships"
     __table_args__ = (
         UniqueConstraint(

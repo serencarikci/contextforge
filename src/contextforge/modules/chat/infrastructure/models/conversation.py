@@ -1,5 +1,3 @@
-"""Conversation, participant, and knowledge-space link ORM models."""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -19,8 +17,6 @@ from contextforge.modules.chat.domain.enums import (
 
 
 class ConversationModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
-    """A multi-turn chat session scoped to an organization."""
-
     __tablename__ = "conversations"
     __table_args__ = (
         Index(
@@ -60,8 +56,6 @@ class ConversationModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
 
 
 class ConversationParticipantModel(Base):
-    """A user granted access to a conversation."""
-
     __tablename__ = "conversation_participants"
     __table_args__ = (
         UniqueConstraint(
@@ -97,8 +91,6 @@ class ConversationParticipantModel(Base):
 
 
 class ConversationKnowledgeSpaceModel(Base):
-    """Associates a conversation with a knowledge space used for grounding."""
-
     __tablename__ = "conversation_knowledge_spaces"
 
     conversation_id: Mapped[UUID] = mapped_column(

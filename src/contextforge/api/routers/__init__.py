@@ -1,5 +1,3 @@
-"""API routers."""
-
 from fastapi import APIRouter
 
 from contextforge.api.routers import (

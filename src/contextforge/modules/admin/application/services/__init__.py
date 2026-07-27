@@ -1,5 +1,3 @@
-"""Administration application services."""
-
 from __future__ import annotations
 
 from contextforge.modules.admin.application.services.admin_role_service import AdminRoleService

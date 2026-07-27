@@ -1,5 +1,3 @@
-"""Security tests for RAG tenant isolation and injection resistance."""
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

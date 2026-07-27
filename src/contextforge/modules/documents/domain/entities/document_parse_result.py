@@ -1,5 +1,3 @@
-"""Parsed document content and persisted parse-result aggregate."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -13,8 +11,6 @@ from contextforge.shared.utilities.datetime import utc_now
 
 @dataclass(frozen=True, slots=True)
 class ExtractedDocumentContent:
-    """In-memory result produced by a format-specific parser."""
-
     text: str
     metadata: dict[str, JSONValue] = field(default_factory=dict)
     page_count: int | None = None
@@ -22,8 +18,6 @@ class ExtractedDocumentContent:
 
 @dataclass(slots=True)
 class DocumentParseResult:
-    """Persisted outcome of parsing a stored document."""
-
     organization_id: UUID
     document_id: UUID
     format: DocumentFormat

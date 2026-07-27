@@ -1,5 +1,3 @@
-"""DOCX text extraction using python-docx."""
-
 from __future__ import annotations
 
 from io import BytesIO
@@ -14,7 +12,6 @@ from contextforge.shared.types.aliases import JSONValue
 
 
 def parse_docx(data: bytes) -> ExtractedDocumentContent:
-    """Extract text and core properties from a DOCX byte payload."""
     if not data:
         raise DocumentParseError("DOCX content is empty.")
 

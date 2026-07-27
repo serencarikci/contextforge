@@ -1,5 +1,3 @@
-"""Application service for document lifecycle use cases."""
-
 from __future__ import annotations
 
 import hashlib
@@ -25,8 +23,6 @@ logger = get_logger(__name__)
 
 
 class DocumentService:
-    """Use cases for uploading, reading, and managing documents."""
-
     async def upload(
         self,
         uow: SqlAlchemyUnitOfWork,

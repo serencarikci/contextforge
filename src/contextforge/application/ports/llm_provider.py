@@ -1,5 +1,3 @@
-"""Port for large language model completion and streaming."""
-
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
@@ -9,16 +7,12 @@ from typing import Protocol
 
 @dataclass(frozen=True, slots=True)
 class LlmMessage:
-    """One chat message exchanged with an LLM provider."""
-
     role: str
     content: str
 
 
 @dataclass(frozen=True, slots=True)
 class LlmUsage:
-    """Token accounting for an LLM call."""
-
     prompt_tokens: int
     completion_tokens: int
     total_tokens: int
@@ -26,8 +20,6 @@ class LlmUsage:
 
 @dataclass(frozen=True, slots=True)
 class LlmCompletion:
-    """Non-streaming completion result."""
-
     content: str
     model: str
     usage: LlmUsage
@@ -35,8 +27,6 @@ class LlmCompletion:
 
 
 class LlmProviderError(Exception):
-    """Base LLM provider failure."""
-
     def __init__(self, message: str, *, code: str = "LLM_PROVIDER_ERROR") -> None:
         super().__init__(message)
         self.message = message
@@ -44,30 +34,20 @@ class LlmProviderError(Exception):
 
 
 class TransientLlmError(LlmProviderError):
-    """Retryable LLM provider failure."""
-
     def __init__(self, message: str) -> None:
         super().__init__(message, code="LLM_PROVIDER_TRANSIENT")
 
 
 class PermanentLlmError(LlmProviderError):
-    """Non-retryable LLM provider failure."""
-
     def __init__(self, message: str) -> None:
         super().__init__(message, code="LLM_PROVIDER_ERROR")
 
 
 class LlmProviderPort(Protocol):
-    """Vendor-neutral LLM completion interface."""
-
     @property
-    def model(self) -> str:
-        """Configured model or deployment name."""
-        ...
+    def model(self) -> str: ...
 
-    def count_tokens(self, text: str) -> int:
-        """Estimate token count for budgeting and observability."""
-        ...
+    def count_tokens(self, text: str) -> int: ...
 
     async def complete(
         self,
@@ -75,9 +55,7 @@ class LlmProviderPort(Protocol):
         *,
         temperature: float | None = None,
         max_output_tokens: int | None = None,
-    ) -> LlmCompletion:
-        """Generate a full completion."""
-        ...
+    ) -> LlmCompletion: ...
 
     def stream(
         self,
@@ -85,9 +63,7 @@ class LlmProviderPort(Protocol):
         *,
         temperature: float | None = None,
         max_output_tokens: int | None = None,
-    ) -> AsyncIterator[str]:
-        """Stream completion text deltas."""
-        ...
+    ) -> AsyncIterator[str]: ...
 
 
 __all__ = [

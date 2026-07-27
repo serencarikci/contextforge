@@ -1,5 +1,3 @@
-"""Async retry helper for transient embedding provider failures."""
-
 from __future__ import annotations
 
 from contextforge.modules.documents.domain.exceptions import (

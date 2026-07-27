@@ -1,5 +1,3 @@
-"""Audit event ORM model."""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -16,8 +14,6 @@ from contextforge.shared.utilities.datetime import utc_now
 
 
 class AuditEventModel(Base, UUIDPrimaryKeyMixin):
-    """An append-only record of a notable action taken in the system."""
-
     __tablename__ = "audit_events"
     __table_args__ = (
         Index("ix_audit_events_organization_id_occurred_at", "organization_id", "occurred_at"),

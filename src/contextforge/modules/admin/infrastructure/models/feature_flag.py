@@ -1,11 +1,3 @@
-"""Feature flag ORM model.
-
-Global flags have ``organization_id IS NULL``; organization overrides carry the
-tenant id. Uniqueness is enforced with two partial unique indexes rather than a
-single composite constraint because PostgreSQL treats every NULL as distinct,
-which would otherwise allow duplicate global rows for the same key.
-"""
-
 from __future__ import annotations
 
 from typing import Any
@@ -20,8 +12,6 @@ from contextforge.infrastructure.database.base import Base, TimestampMixin, UUID
 
 
 class FeatureFlagModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
-    """A named toggle resolved per organization."""
-
     __tablename__ = "feature_flags"
     __table_args__ = (
         Index(

@@ -1,5 +1,3 @@
-"""Validated domain value objects."""
-
 from __future__ import annotations
 
 import re
@@ -13,19 +11,23 @@ _PERMISSION_CODE_RE = re.compile(r"^[a-z][a-z0-9_]*(?:[:][a-z][a-z0-9_]*)+$")
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
+def _normalize_slug(value: str, *, label: str) -> str:
+    raw = value.strip().lower()
+    if not _SLUG_RE.fullmatch(raw):
+        msg = (
+            f"{label} must use lowercase letters, digits, and hyphens, "
+            "and must not begin or end with a hyphen"
+        )
+        raise ValueError(msg)
+    return raw
+
+
 @dataclass(frozen=True, slots=True)
 class OrganizationSlug:
     value: str
 
     def __post_init__(self) -> None:
-        raw = self.value.strip().lower()
-        if not _SLUG_RE.fullmatch(raw):
-            msg = (
-                "Organization slug must use lowercase letters, digits, and hyphens, "
-                "and must not begin or end with a hyphen"
-            )
-            raise ValueError(msg)
-        object.__setattr__(self, "value", raw)
+        object.__setattr__(self, "value", _normalize_slug(self.value, label="Organization slug"))
 
     def __str__(self) -> str:
         return self.value
@@ -36,14 +38,7 @@ class KnowledgeSpaceSlug:
     value: str
 
     def __post_init__(self) -> None:
-        raw = self.value.strip().lower()
-        if not _SLUG_RE.fullmatch(raw):
-            msg = (
-                "Knowledge space slug must use lowercase letters, digits, and hyphens, "
-                "and must not begin or end with a hyphen"
-            )
-            raise ValueError(msg)
-        object.__setattr__(self, "value", raw)
+        object.__setattr__(self, "value", _normalize_slug(self.value, label="Knowledge space slug"))
 
     def __str__(self) -> str:
         return self.value

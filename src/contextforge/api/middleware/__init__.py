@@ -1,5 +1,3 @@
-"""HTTP middleware registration."""
-
 from __future__ import annotations
 
 from fastapi import FastAPI
@@ -14,7 +12,6 @@ from contextforge.shared.config.settings import Settings
 
 
 def register_middleware(app: FastAPI, settings: Settings) -> None:
-    """Register middleware in the correct order (last added runs first)."""
 
     app.add_middleware(RequestLoggingMiddleware)
     app.add_middleware(CorrelationIdMiddleware)
@@ -41,5 +38,14 @@ def register_middleware(app: FastAPI, settings: Settings) -> None:
             allow_origins=settings.api.cors_origins,
             allow_credentials=False,
             allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-            allow_headers=["Authorization", "Content-Type", "X-Correlation-ID"],
+            allow_headers=[
+                "Authorization",
+                "Content-Type",
+                "X-Correlation-ID",
+                "X-ContextForge-User-ID",
+                "X-ContextForge-Organization-ID",
+                "X-ContextForge-Project-ID",
+                "X-ContextForge-Knowledge-Space-ID",
+                "Idempotency-Key",
+            ],
         )

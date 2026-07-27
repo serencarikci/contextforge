@@ -1,5 +1,3 @@
-"""FastAPI application factory."""
-
 from __future__ import annotations
 
 from fastapi import FastAPI
@@ -12,7 +10,6 @@ from contextforge.shared.config.settings import Settings, get_settings
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
-    """Create and configure the FastAPI application."""
     resolved = settings or get_settings()
     docs_url = "/docs" if resolved.api.docs_enabled else None
     redoc_url = "/redoc" if resolved.api.docs_enabled else None

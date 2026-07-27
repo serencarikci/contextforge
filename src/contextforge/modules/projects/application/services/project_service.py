@@ -1,5 +1,3 @@
-"""Application service for project lifecycle use cases."""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -23,8 +21,6 @@ from contextforge.modules.projects.domain.entities.project import Project
 
 
 class ProjectService:
-    """Use cases for creating, reading, and managing projects."""
-
     async def create(
         self,
         uow: SqlAlchemyUnitOfWork,

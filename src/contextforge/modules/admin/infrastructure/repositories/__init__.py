@@ -1,5 +1,3 @@
-"""Administration repositories."""
-
 from __future__ import annotations
 
 from contextforge.modules.admin.infrastructure.repositories.admin_stats import (

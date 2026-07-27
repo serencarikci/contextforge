@@ -1,5 +1,3 @@
-"""Application service for enqueueing and querying ingestion jobs."""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -19,8 +17,6 @@ logger = get_logger(__name__)
 
 
 class IngestionJobService:
-    """Creates and manages durable document ingestion jobs."""
-
     def __init__(self, settings: IngestionSettings) -> None:
         self._settings = settings
 

@@ -1,5 +1,3 @@
-"""Retrieval infrastructure package."""
-
 from contextforge.infrastructure.retrieval.bm25_lexical_search import (
     InMemoryLexicalSearch,
     PostgresBm25LexicalSearch,

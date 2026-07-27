@@ -1,5 +1,3 @@
-"""Admin cache adapters."""
-
 from __future__ import annotations
 
 from contextforge.modules.admin.infrastructure.cache.in_memory import InMemoryAdminCache

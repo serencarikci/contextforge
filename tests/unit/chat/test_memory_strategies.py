@@ -1,5 +1,3 @@
-"""Unit tests for conversation memory strategies."""
-
 from __future__ import annotations
 
 from uuid import uuid4

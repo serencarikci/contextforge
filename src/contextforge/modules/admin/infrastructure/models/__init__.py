@@ -1,5 +1,3 @@
-"""admin/infrastructure/models package."""
-
 from __future__ import annotations
 
 from contextforge.modules.admin.infrastructure.models.feature_flag import FeatureFlagModel

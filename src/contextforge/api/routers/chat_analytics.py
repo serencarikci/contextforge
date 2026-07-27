@@ -1,5 +1,3 @@
-"""Chat analytics aggregation endpoints (requires chat:manage)."""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -25,15 +23,4 @@ async def get_chat_analytics_overview(
     since: Annotated[datetime | None, Query()] = None,
 ) -> ChatAnalyticsOverviewResponse:
     overview = await service.get_overview(uow, ctx, since=since)
-    return ChatAnalyticsOverviewResponse(
-        total_messages=overview.total_messages,
-        assistant_messages=overview.assistant_messages,
-        failed_messages=overview.failed_messages,
-        avg_latency_ms=overview.avg_latency_ms,
-        avg_retrieval_ms=overview.avg_retrieval_ms,
-        total_prompt_tokens=overview.total_prompt_tokens,
-        total_completion_tokens=overview.total_completion_tokens,
-        feedback_up_count=overview.feedback_up_count,
-        feedback_down_count=overview.feedback_down_count,
-        events_by_type=overview.events_by_type,
-    )
+    return ChatAnalyticsOverviewResponse.model_validate(overview, from_attributes=True)

@@ -1,5 +1,3 @@
-"""Usage overview and trend analytics for administrators."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass

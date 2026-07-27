@@ -1,5 +1,3 @@
-"""System information endpoints."""
-
 from __future__ import annotations
 
 from typing import Annotated
@@ -17,7 +15,6 @@ router = APIRouter(prefix="/system")
 async def system_info(
     service: Annotated[SystemInfoService, Depends(get_system_info_service)],
 ) -> SystemInfoResponse:
-    """Return safe system information and explicit capability flags."""
     info = service.get_info()
     caps = info.capabilities
     return SystemInfoResponse(

@@ -1,5 +1,3 @@
-"""Port for BM25 / lexical keyword search over document chunks."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -9,8 +7,6 @@ from uuid import UUID
 
 @dataclass(frozen=True, slots=True)
 class LexicalSearchHit:
-    """One lexical search hit."""
-
     chunk_id: UUID
     organization_id: UUID
     document_id: UUID
@@ -26,8 +22,6 @@ class LexicalSearchHit:
 
 @dataclass(frozen=True, slots=True)
 class LexicalDocument:
-    """Chunk text available for BM25 indexing."""
-
     chunk_id: UUID
     organization_id: UUID
     document_id: UUID
@@ -41,8 +35,6 @@ class LexicalDocument:
 
 
 class LexicalSearchPort(Protocol):
-    """Keyword search over authorized document chunks."""
-
     async def search(
         self,
         *,
@@ -51,9 +43,7 @@ class LexicalSearchPort(Protocol):
         knowledge_space_ids: list[UUID],
         top_k: int,
         corpus_limit: int,
-    ) -> list[LexicalSearchHit]:
-        """Return BM25-ranked chunk hits for the given tenant scope."""
-        ...
+    ) -> list[LexicalSearchHit]: ...
 
 
 __all__ = ["LexicalDocument", "LexicalSearchHit", "LexicalSearchPort"]

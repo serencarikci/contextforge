@@ -1,52 +1,3 @@
-"""Create Phase 3 enterprise chat tables; seed chat:* permissions.
-
-Revision ID: 20260727_0009
-Revises: 20260724_0008
-Create Date: 2026-07-27 00:00:00
-
-Creates the enterprise chat schema:
-
-- ``conversations`` -- a multi-turn chat session owned by a user
-- ``conversation_participants`` -- users granted access to a conversation
-- ``conversation_knowledge_spaces`` -- knowledge spaces used for grounding
-- ``chat_messages`` -- individual turns (system/user/assistant/tool)
-- ``message_citations`` -- grounding citations attached to assistant messages
-- ``conversation_memories`` -- rolling summaries used for long-context chat
-- ``message_feedback`` -- per-user thumbs up/down + structured feedback
-- ``chat_analytics_events`` -- append-only chat analytics/telemetry events
-
-All foreign keys to tenant business data use ``ondelete="RESTRICT"``, matching
-every other table in this schema (no cascading delete of business entities;
-soft-delete/status columns model lifecycle instead).
-
-Full-text search
------------------
-``chat_messages.content`` and ``conversations.title`` each get a generated
-``tsvector`` column (``simple`` configuration, since chat content is
-multilingual tr/en) with a GIN index, for future full-text search use cases.
-The current conversation search service uses portable ``ILIKE`` queries and
-does not depend on these columns; they exist so Postgres-native full-text
-search can be adopted later without another migration.
-
-Seed data (upgrade only)
--------------------------
-Seeds the two new chat permissions (``chat:use``, ``chat:manage``) and their
-``role_permissions`` mappings, per
-``contextforge.shared.constants.rbac.ROLE_PERMISSIONS``: ``chat:use`` is
-granted to every role that already receives ``rag:query``
-(``organization_admin``, ``project_manager``, ``developer``,
-``support_agent``, ``knowledge_manager``, ``viewer``); ``chat:manage`` is
-granted to ``organization_admin`` and ``knowledge_manager`` only.
-Inserts use ``INSERT ... ON CONFLICT DO NOTHING`` so this migration is safe
-to re-run against a database that already has these rows.
-
-Downgrade
----------
-Downgrade removes exactly what upgrade added: the seeded ``role_permissions``
-rows for the new chat permission codes, the two ``chat:*`` permissions
-themselves, and every table created here, in reverse dependency order.
-"""
-
 from __future__ import annotations
 
 import uuid as _uuid
@@ -519,14 +470,6 @@ def _create_chat_analytics_events() -> None:
 
 
 def _create_full_text_search_columns() -> None:
-    """Add generated ``tsvector`` search columns and GIN indexes.
-
-    Uses the ``simple`` text search configuration (no stemming) since chat
-    content is multilingual (Turkish/English) and a single stemmer would
-    degrade recall for the other language. Application-level search
-    currently falls back to portable ``ILIKE`` queries; these columns exist
-    for future native full-text search adoption.
-    """
     op.execute(
         "ALTER TABLE chat_messages "
         "ADD COLUMN content_tsv tsvector "

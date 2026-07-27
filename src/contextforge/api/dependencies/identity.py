@@ -1,12 +1,3 @@
-"""FastAPI dependencies for identity, tenancy, and authorization context.
-
-Authentication in this release is "development identity": the caller
-supplies a validated ``X-ContextForge-User-ID`` (and, for tenant-scoped
-routes, ``X-ContextForge-Organization-ID``) header. Real authentication is
-not yet implemented; :func:`development_identity_enabled` gates this mode to
-non-production environments.
-"""
-
 from __future__ import annotations
 
 from typing import Annotated
@@ -61,11 +52,6 @@ def _optional_uuid_header(value: str | None, header_name: str) -> UUID | None:
 async def get_uow(
     database: Annotated[DatabaseManager, Depends(get_database)],
 ) -> SqlAlchemyUnitOfWork:
-    """Provide a fresh, unopened unit of work bound to the request's engine.
-
-    Services own the transaction boundary themselves (``async with uow:``),
-    so this dependency only constructs the object -- it never opens a session.
-    """
     return SqlAlchemyUnitOfWork(database.session_factory)
 
 
@@ -74,12 +60,6 @@ async def get_active_user_id(
     uow: Annotated[SqlAlchemyUnitOfWork, Depends(get_uow)],
     x_contextforge_user_id: Annotated[str | None, Header(alias=USER_ID_HEADER)] = None,
 ) -> UUID:
-    """Validate the acting user for routes that have no organization context yet.
-
-    Used by "bootstrap-like" endpoints such as creating an organization or
-    provisioning a user, where the caller is not necessarily a member of any
-    organization yet.
-    """
     if not development_identity_enabled(settings):
         raise InvalidDevelopmentIdentityError(
             "Development identity is disabled in this environment. "
@@ -107,7 +87,6 @@ async def get_request_context(
         str | None, Header(alias=KNOWLEDGE_SPACE_ID_HEADER)
     ] = None,
 ) -> RequestContext:
-    """Build the authorization context for tenant-scoped routes."""
     user_id = _require_uuid_header(x_contextforge_user_id, USER_ID_HEADER)
     organization_id = _require_uuid_header(x_contextforge_organization_id, ORGANIZATION_ID_HEADER)
     project_id = _optional_uuid_header(x_contextforge_project_id, PROJECT_ID_HEADER)

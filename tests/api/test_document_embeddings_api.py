@@ -1,5 +1,3 @@
-"""API tests for document embedding generation."""
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -8,7 +6,7 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 from tests.fakes import FakeVectorStore
-from tests.helpers import create_knowledge_space
+from tests.helpers import create_knowledge_space, ingest_markdown_document
 
 from contextforge.bootstrap.app_factory import create_app
 from contextforge.shared.config.settings import Settings, clear_settings_cache
@@ -17,7 +15,7 @@ if TYPE_CHECKING:
     from tests.conftest import TenantScenario
 
 
-def _upload_and_prepare(api_client: TestClient, headers: dict[str, str]) -> str:
+def _prepare_document(api_client: TestClient, headers: dict[str, str]) -> str:
     ks_id = create_knowledge_space(api_client, headers)
     turkish = "Bu belge Turkce ozel karakterler icerir: " + "\u011f\u00fc\u015f\u0131\u00f6\u00e7"
     body = "\n\n".join(
@@ -28,18 +26,14 @@ def _upload_and_prepare(api_client: TestClient, headers: dict[str, str]) -> str:
             " ".join(f"token{i}" for i in range(80)),
         ]
     )
-    upload = api_client.post(
-        "/api/v1/documents",
-        data={"knowledge_space_id": str(ks_id), "title": "Multilingual Doc"},
-        files={"file": ("guide.md", body.encode("utf-8"), "text/markdown")},
-        headers=headers,
+    document_id, _, _ = ingest_markdown_document(
+        api_client,
+        headers,
+        ks_id,
+        title="Multilingual Doc",
+        content=body.encode("utf-8"),
+        filename="guide.md",
     )
-    assert upload.status_code == 201
-    document_id = upload.json()["id"]
-    parse_response = api_client.post(f"/api/v1/documents/{document_id}/parse", headers=headers)
-    assert parse_response.status_code == 200
-    chunk_response = api_client.post(f"/api/v1/documents/{document_id}/chunks", headers=headers)
-    assert chunk_response.status_code == 200
     return str(document_id)
 
 
@@ -54,7 +48,7 @@ def test_embed_document_stores_vectors_and_updates_chunks(
 
     with TestClient(app) as api_client:
         headers = tenant_scenario.admin_headers()
-        document_id = _upload_and_prepare(api_client, headers)
+        document_id = _prepare_document(api_client, headers)
 
         response = api_client.post(
             f"/api/v1/documents/{document_id}/embeddings",

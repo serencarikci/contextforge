@@ -1,13 +1,3 @@
-"""Security test: development identity must never work in production.
-
-`build_request_context` is the single choke point that turns
-`X-ContextForge-User-ID`/`X-ContextForge-Organization-ID` headers into a
-trusted `RequestContext`. It must refuse to do so whenever
-`settings.app.environment == Environment.PRODUCTION`, and it must refuse
-*before* touching the database (a misconfigured production deployment
-should fail closed even if the database happens to contain matching rows).
-"""
-
 from __future__ import annotations
 
 from uuid import uuid4
@@ -70,9 +60,6 @@ async def test_build_request_context_raises_in_staging_too() -> None:
 def test_production_app_rejects_development_identity_headers_over_http(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """End-to-end: a request with valid-looking dev identity headers still
-    gets 401 once the app is running with `environment=production`, without
-    ever needing a real database connection (the check happens first)."""
     monkeypatch.setenv("CONTEXTFORGE_APP_ENVIRONMENT", "production")
     monkeypatch.setenv("CONTEXTFORGE_SECURITY_SECRET_KEY", "prod-secret-not-a-real-secret")
     clear_settings_cache()

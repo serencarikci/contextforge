@@ -1,5 +1,3 @@
-"""Unit tests for the append-only AuditEvent entity and metadata sanitization."""
-
 from __future__ import annotations
 
 from uuid import uuid4

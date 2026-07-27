@@ -1,5 +1,3 @@
-"""Shared HTTP helpers for API and security tests."""
-
 from __future__ import annotations
 
 from uuid import UUID, uuid4
@@ -27,6 +25,24 @@ def create_knowledge_space(
     )
     assert response.status_code == 201, response.text
     return UUID(response.json()["id"])
+
+
+def upload_document(
+    api_client: TestClient,
+    headers: dict[str, str],
+    knowledge_space_id: object,
+    *,
+    title: str = "Test Doc",
+    filename: str = "test.txt",
+    content: bytes = b"hello world",
+    content_type: str = "text/plain",
+):
+    return api_client.post(
+        "/api/v1/documents",
+        data={"knowledge_space_id": str(knowledge_space_id), "title": title},
+        files={"file": (filename, content, content_type)},
+        headers=headers,
+    )
 
 
 async def acreate_knowledge_space(
@@ -59,7 +75,6 @@ def seed_retrieval_stubs(
     score: float = 0.91,
     include_vector: bool = True,
 ) -> tuple[UUID, UUID]:
-    """Plant in-memory lexical/vector hits without uploading a real document."""
     chunk_id = uuid4()
     document_id = uuid4()
     app.state.lexical_search = InMemoryLexicalSearch(  # type: ignore[attr-defined]
@@ -199,4 +214,5 @@ __all__ = [
     "ingest_markdown_document",
     "seed_grounding_content",
     "seed_retrieval_stubs",
+    "upload_document",
 ]

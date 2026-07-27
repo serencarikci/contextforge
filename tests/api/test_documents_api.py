@@ -1,72 +1,16 @@
-"""API tests for document endpoints: authentication, RBAC, and tenant isolation."""
-
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 import pytest
-import pytest_asyncio
 from fastapi.testclient import TestClient
-from tests.helpers import create_knowledge_space
+from tests.helpers import create_knowledge_space, upload_document
 
-from contextforge.application.uow.sqlalchemy_uow import SqlAlchemyUnitOfWork
 from contextforge.modules.documents.domain.entities.document import MAX_DOCUMENT_SIZE_BYTES
-from contextforge.modules.identity_access.application.services.user_service import UserService
-from contextforge.modules.organizations.application.services.organization_service import (
-    OrganizationService,
-)
 
 if TYPE_CHECKING:
     from tests.conftest import TenantScenario
-
-    from contextforge.infrastructure.database.session import DatabaseManager
-
-USER_ID_HEADER = "X-ContextForge-User-ID"
-ORGANIZATION_ID_HEADER = "X-ContextForge-Organization-ID"
-
-
-def _upload_document(
-    api_client: TestClient,
-    headers: dict[str, str],
-    knowledge_space_id: object,
-    *,
-    title: str = "Test Doc",
-    filename: str = "test.txt",
-    content: bytes = b"hello world",
-    content_type: str = "text/plain",
-) -> Any:
-    return api_client.post(
-        "/api/v1/documents",
-        data={"knowledge_space_id": str(knowledge_space_id), "title": title},
-        files={"file": (filename, content, content_type)},
-        headers=headers,
-    )
-
-
-@pytest_asyncio.fixture
-async def other_org_admin_headers(db_manager: DatabaseManager) -> dict[str, str]:
-    """Headers for an admin in a completely independent organization.
-
-    Used to assert that document access is scoped by ``organization_id`` and
-    not just by "the caller has *some* valid identity".
-    """
-    suffix = uuid4().hex[:12]
-    uow = SqlAlchemyUnitOfWork(db_manager.session_factory)
-    admin = await UserService().create(
-        uow, email=f"doc-other-admin-{suffix}@example.com", display_name="Other Org Admin"
-    )
-    uow = SqlAlchemyUnitOfWork(db_manager.session_factory)
-    organization = await OrganizationService().create(
-        uow,
-        name=f"Other Doc Org {suffix}",
-        slug=f"other-doc-org-{suffix}",
-        creator_user_id=admin.id,
-    )
-    return {
-        USER_ID_HEADER: str(admin.id),
-        ORGANIZATION_ID_HEADER: str(organization.id),
-    }
 
 
 @pytest.mark.api
@@ -92,7 +36,7 @@ class TestDocumentLifecycle:
         headers = tenant_scenario.admin_headers()
         ks_id = create_knowledge_space(api_client, headers)
 
-        upload_response = _upload_document(api_client, headers, ks_id)
+        upload_response = upload_document(api_client, headers, ks_id)
         assert upload_response.status_code == 201
         body = upload_response.json()
         assert body["title"] == "Test Doc"
@@ -144,8 +88,8 @@ class TestDocumentLifecycle:
     ) -> None:
         headers = tenant_scenario.admin_headers()
         ks_id = create_knowledge_space(api_client, headers)
-        _upload_document(api_client, headers, ks_id, title="Doc One")
-        _upload_document(api_client, headers, ks_id, title="Doc Two")
+        upload_document(api_client, headers, ks_id, title="Doc One")
+        upload_document(api_client, headers, ks_id, title="Doc Two")
 
         response = api_client.get(
             "/api/v1/documents",
@@ -165,7 +109,7 @@ class TestDocumentLifecycle:
         ks_id = create_knowledge_space(api_client, headers)
         oversized = b"x" * (MAX_DOCUMENT_SIZE_BYTES + 1)
 
-        response = _upload_document(api_client, headers, ks_id, content=oversized)
+        response = upload_document(api_client, headers, ks_id, content=oversized)
         assert response.status_code == 400
         assert response.json()["error"]["code"] == "INVALID_RESOURCE_STATE"
 
@@ -173,7 +117,7 @@ class TestDocumentLifecycle:
         self, api_client: TestClient, tenant_scenario: TenantScenario
     ) -> None:
         headers = tenant_scenario.admin_headers()
-        response = _upload_document(api_client, headers, str(uuid4()))
+        response = upload_document(api_client, headers, str(uuid4()))
         assert response.status_code == 404
 
 
@@ -184,14 +128,14 @@ class TestDocumentAuthorization:
     ) -> None:
         admin_headers = tenant_scenario.admin_headers()
         ks_id = create_knowledge_space(api_client, admin_headers)
-        upload_response = _upload_document(api_client, admin_headers, ks_id)
+        upload_response = upload_document(api_client, admin_headers, ks_id)
         document_id = upload_response.json()["id"]
 
         viewer_headers = tenant_scenario.viewer_headers()
         get_response = api_client.get(f"/api/v1/documents/{document_id}", headers=viewer_headers)
         assert get_response.status_code == 200
 
-        viewer_upload = _upload_document(api_client, viewer_headers, ks_id, title="Viewer Doc")
+        viewer_upload = upload_document(api_client, viewer_headers, ks_id, title="Viewer Doc")
         assert viewer_upload.status_code == 403
         assert viewer_upload.json()["error"]["code"] == "PERMISSION_DENIED"
 
@@ -200,7 +144,7 @@ class TestDocumentAuthorization:
     ) -> None:
         admin_headers = tenant_scenario.admin_headers()
         ks_id = create_knowledge_space(api_client, admin_headers)
-        upload_response = _upload_document(api_client, admin_headers, ks_id)
+        upload_response = upload_document(api_client, admin_headers, ks_id)
         document_id = upload_response.json()["id"]
 
         viewer_headers = tenant_scenario.viewer_headers()
@@ -216,7 +160,7 @@ class TestDocumentAuthorization:
     ) -> None:
         admin_headers = tenant_scenario.admin_headers()
         ks_id = create_knowledge_space(api_client, admin_headers)
-        upload_response = _upload_document(api_client, admin_headers, ks_id)
+        upload_response = upload_document(api_client, admin_headers, ks_id)
         document_id = upload_response.json()["id"]
 
         viewer_headers = tenant_scenario.viewer_headers()
@@ -228,26 +172,23 @@ class TestDocumentAuthorization:
 def test_cross_tenant_document_access_returns_404(
     api_client: TestClient,
     tenant_scenario: TenantScenario,
-    other_org_admin_headers: dict[str, str],
 ) -> None:
-    """A document that belongs to one organization is invisible to another."""
     admin_headers = tenant_scenario.admin_headers()
     ks_id = create_knowledge_space(api_client, admin_headers)
-    upload_response = _upload_document(api_client, admin_headers, ks_id)
+    upload_response = upload_document(api_client, admin_headers, ks_id)
     document_id = upload_response.json()["id"]
+    other_org_headers = tenant_scenario.other_org_admin_headers()
 
-    get_response = api_client.get(
-        f"/api/v1/documents/{document_id}", headers=other_org_admin_headers
-    )
+    get_response = api_client.get(f"/api/v1/documents/{document_id}", headers=other_org_headers)
     assert get_response.status_code == 404
     assert get_response.json()["error"]["code"] == "RESOURCE_NOT_FOUND"
 
     download_response = api_client.get(
-        f"/api/v1/documents/{document_id}/download", headers=other_org_admin_headers
+        f"/api/v1/documents/{document_id}/download", headers=other_org_headers
     )
     assert download_response.status_code == 404
 
     delete_response = api_client.delete(
-        f"/api/v1/documents/{document_id}", headers=other_org_admin_headers
+        f"/api/v1/documents/{document_id}", headers=other_org_headers
     )
     assert delete_response.status_code == 404

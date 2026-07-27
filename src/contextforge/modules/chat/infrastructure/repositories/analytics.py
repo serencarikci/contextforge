@@ -1,5 +1,3 @@
-"""SQLAlchemy implementation of the chat analytics event repository."""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -14,8 +12,6 @@ from contextforge.modules.chat.infrastructure.models.analytics import ChatAnalyt
 
 
 class SqlAlchemyChatAnalyticsRepository:
-    """Persists append-only chat analytics events."""
-
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

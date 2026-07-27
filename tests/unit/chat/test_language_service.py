@@ -1,5 +1,3 @@
-"""Unit tests for the heuristic Turkish/English language detector."""
-
 from __future__ import annotations
 
 import pytest

@@ -1,5 +1,3 @@
-"""Organization settings and quotas administration."""
-
 from __future__ import annotations
 
 from typing import Any

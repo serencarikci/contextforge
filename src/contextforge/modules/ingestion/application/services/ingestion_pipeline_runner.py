@@ -1,5 +1,3 @@
-"""Background pipeline runner: parse -> chunk -> embed with failure handling."""
-
 from __future__ import annotations
 
 import asyncio
@@ -36,8 +34,6 @@ logger = get_logger(__name__)
 
 
 class IngestionPipelineRunner:
-    """Processes one ingestion job end-to-end for a background worker."""
-
     def __init__(
         self,
         *,

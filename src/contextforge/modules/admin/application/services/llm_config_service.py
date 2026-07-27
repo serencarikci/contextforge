@@ -1,5 +1,3 @@
-"""LLM provider configuration administration with masked secrets."""
-
 from __future__ import annotations
 
 from uuid import UUID
