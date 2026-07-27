@@ -76,11 +76,6 @@ class TokenPricing:
             raise ValueError(msg)
         return cleaned
 
-    def is_effective_at(self, moment: datetime) -> bool:
-        if moment < self.effective_from:
-            return False
-        return self.effective_to is None or moment < self.effective_to
-
     def estimate_cost(self, *, prompt_tokens: int, completion_tokens: int) -> Decimal:
         """Cost for a token split, rounded to the persisted precision."""
         if prompt_tokens < 0 or completion_tokens < 0:

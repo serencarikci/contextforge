@@ -8,8 +8,9 @@ answers grounded in authorized company documents.
 > **Current scope:** identity, multi-tenancy, RBAC, audit logging, document upload/storage,
 > parsing, semantic chunking, multilingual embeddings (Qdrant), background ingestion
 > workers, hybrid RAG answering, multi-turn enterprise chat (streaming, memory,
-> feedback, and analytics), and Phase 4 administration/governance (dashboard, quotas,
-> feature flags, prompt/LLM admin, token cost, retention) are implemented.
+> feedback, and analytics), Phase 4 administration/governance, and Phase 5 production
+> engineering (Docker/Helm/Terraform, metrics, rate limits, CI/CD, backups, runbooks)
+> are implemented.
 >
 > **Authentication:** identity is resolved via development-only HTTP headers (see
 > [Development identity headers](#development-identity-headers)), gated off in
@@ -58,8 +59,12 @@ answers grounded in authorized company documents.
  usage/token cost analytics, prompt versioning, LLM provider configs (masked secrets),
  feature flags (Redis cache), ops overview, and retention policies/worker
  (`contextforge-retention-worker`)
+* **Production engineering (Phase 5)** — hardened Docker/Compose (incl. retention +
+ `obs` profile), security headers, rate limiting, Prometheus `/metrics`, Helm chart,
+ provider-neutral Terraform stubs, CD to GHCR, backups/DR scripts, k6 scenarios, and
+ ops runbooks under `ops/runbooks/`
 * Pytest (unit, integration, architecture, authorization, security, API)
-* Ruff, mypy, pre-commit, GitHub Actions CI
+* Ruff, mypy, pre-commit, GitHub Actions CI/CD
 
 ## Architecture overview
 
@@ -609,9 +614,11 @@ See [Planned roadmap](#planned-roadmap) below for the rest of the product roadma
 2. ~~Document upload, parsing, chunking, embeddings, and ingestion workers~~ — done
 3. ~~Hybrid retrieval, reranking, and RAG answering~~ — done
 4. ~~Multilingual chat experience (Turkish / English) with session memory~~ — done
-   (conversations, streaming, memory, feedback, export, analytics)
-5. Real authentication (OIDC/SSO) replacing development identity
-6. Admin tooling on top of the audit trail
+5. ~~Administration & governance~~ — done (Phase 4)
+6. ~~Production engineering (Docker/Helm/Terraform, observability, CI/CD, DR)~~ — done
+   (Phase 5)
+7. Real authentication (OIDC/SSO) replacing development identity
+8. Deeper admin UX and org-level SSO configuration
 
 ## License
 
@@ -669,4 +676,160 @@ CONTEXTFORGE_ADMIN_CACHE_TTL_SECONDS=30
 CONTEXTFORGE_ADMIN_TOKEN_USAGE_ROLLUP_ENABLED=true
 CONTEXTFORGE_ADMIN_TOKEN_PRICING_CURRENCY=USD
 CONTEXTFORGE_ADMIN_LLM_TEST_TIMEOUT_SECONDS=5.0
+```
+
+## Phase 5 — Production Engineering
+
+Phase 5 hardens operations without rewriting Phase 1–4 product features. Version
+**0.5.0** ships security headers, rate limiting, Prometheus metrics, retention worker
+in Compose, Helm/Terraform deploy stubs, CD, backups, load tests, and runbooks.
+
+```mermaid
+flowchart TB
+  Dev[Developer / CI] --> GHCR[GHCR image]
+  GHCR --> Helm[Helm chart]
+  Helm --> API[API Deployment]
+  Helm --> Ingest[Ingestion Worker]
+  Helm --> Retain[Retention Worker]
+  API --> Prom[Prometheus /metrics]
+  Prom --> Graf[Grafana dashboards]
+  API --> PG[(Postgres)]
+  API --> Redis[(Redis)]
+  Cron[Backup CronJobs] --> PG
+  Cron --> MinIO[(Object storage)]
+  Cron --> Qdrant[(Qdrant)]
+```
+
+### Docker & Compose
+
+| Artifact | Purpose |
+| --- | --- |
+| `Dockerfile` | Multi-stage, non-root, OCI labels, `STOPSIGNAL`, worker-friendly healthcheck skip via `CONTEXTFORGE_SKIP_HEALTHCHECK` |
+| `docker-compose.yml` | Dev stack + `retention-worker` + optional `--profile obs` (Prometheus/Grafana/Loki) |
+| `docker-compose.prod.yml` | Resource limits, `env_file: .env`, restart policies, no unnecessary host binds |
+| `docker-compose.obs.yml` | Observability overlay (same profile) |
+
+```bash
+docker compose config
+docker compose -f docker-compose.yml -f docker-compose.prod.yml config
+docker compose --profile obs up -d
+make compose-prod-config
+```
+
+### App hardening
+
+* Security headers: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`,
+  `Permissions-Policy`; HSTS when not `local`/`test`/`development`
+* Rate limit: sliding window for `/api/v1` (`memory` or `redis`), health paths excluded
+* Metrics: `GET /metrics` (Prometheus text) with request counters, latency histogram,
+  dependency-up gauges
+
+```bash
+CONTEXTFORGE_RATE_LIMIT_ENABLED=true
+CONTEXTFORGE_RATE_LIMIT_REQUESTS=120
+CONTEXTFORGE_RATE_LIMIT_WINDOW_SECONDS=60
+CONTEXTFORGE_RATE_LIMIT_BACKEND=memory
+CONTEXTFORGE_OBSERVABILITY_METRICS_ENABLED=true
+CONTEXTFORGE_OBSERVABILITY_METRICS_PATH=/metrics
+```
+
+### Helm
+
+Chart: `deploy/helm/contextforge/` with values for dev/staging/prod. Templates cover
+namespace, SA, ConfigMap, ExternalSecret stub, API/ingestion/retention Deployments,
+migrate Job, Service, Ingress, HPA, PDB, NetworkPolicy, optional ServiceMonitor,
+and backup CronJob.
+
+```bash
+make helm-lint
+# or
+./scripts/validate-helm.sh
+```
+
+### Terraform
+
+Provider-neutral stubs under `deploy/terraform/modules/` (`networking`, `kubernetes`,
+`postgres`, `redis`, `object_storage`, `dns`) composed by
+`deploy/terraform/environments/{staging,production}`.
+
+```bash
+make terraform-validate
+# or
+./scripts/validate-terraform.sh
+cd deploy/terraform/environments/staging
+terraform init -backend=false
+terraform validate
+```
+
+Wire real cloud providers in forks; modules intentionally avoid vendor lock-in.
+
+### CI/CD
+
+| Workflow | Trigger | What it does |
+| --- | --- | --- |
+| `.github/workflows/ci.yml` | push/PR | lint, mypy, unit/arch, migration SQL check, helm/terraform, secret scan, SBOM soft-fail, docker build |
+| `.github/workflows/cd.yml` | `v*` tag / dispatch | build/push GHCR, staging deploy render + smoke, production environment (approval) |
+| `.github/workflows/release.yml` | `v*` tag | changelog stub + GitHub Release |
+
+Default workflow permissions are least-privilege (`contents: read` unless release needs write).
+
+### Secrets
+
+* Never commit `.env` or live credentials
+* Example ExternalSecret: `deploy/secrets/external-secrets.example.yaml`
+* Helm references `existingSecret` / External Secrets only (no secret values in values files)
+* Rotation: update secret manager → refresh ExternalSecret → restart API/workers — see
+  `ops/runbooks/secret-compromise.md`
+
+### Observability & SLOs
+
+Configs live under `deploy/observability/`. Scrape `api:8000/metrics`, alert rules include
+`severity`, `description`, and `runbook_url` labels. Grafana dashboard:
+`contextforge-overview.json`.
+
+| SLO (initial goals — not claimed achieved) | Target |
+| --- | --- |
+| Availability (monthly) | 99.9% |
+| API readiness success | 99.5% |
+| HTTP request success (non-5xx) | 99.0% |
+| Latency p95 (read paths) | < 1.0s |
+| Latency p95 (RAG/chat) | < 5.0s |
+| Backup success rate | 99% |
+
+### Backup / DR
+
+Scripts: `scripts/backup/backup_postgres.sh`, `backup_minio.sh`, `backup_qdrant.sh`,
+`restore_postgres.sh`, `verify_backup.sh`. CronJob examples under
+`deploy/k8s/cronjobs/` and Helm `backupCronJob`.
+
+| DR goal (documented targets) | Value |
+| --- | --- |
+| RPO | ≤ 24h (daily backups) |
+| RTO | ≤ 4h (restore + verify + cutover) |
+
+### Load testing
+
+k6 scenarios (document thresholds in scripts; requires `k6` installed):
+
+```bash
+make load-test-smoke
+k6 run perf/k6/load_chat.js
+k6 run perf/k6/load_rag.js
+```
+
+### Ops runbooks
+
+Concise runbooks under `ops/runbooks/`: deploy-failure, api-outage, postgres-outage,
+redis-outage, queue-backlog, llm-outage, rollback, backup-restore, secret-compromise.
+Production checklist: `ops/production-readiness-checklist.md`.
+
+### Makefile targets (Phase 5)
+
+```bash
+make validate-infra
+make helm-lint
+make terraform-validate
+make backup-postgres
+make load-test-smoke
+make compose-prod-config
 ```

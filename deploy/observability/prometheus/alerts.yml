@@ -1,0 +1,45 @@
+groups:
+  - name: contextforge
+    rules:
+      - alert: ContextForgeApiDown
+        expr: up{job="contextforge-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          runbook_url: https://github.com/serencarikci/contextforge-enterprise-ai/blob/main/ops/runbooks/api-outage.md
+        annotations:
+          summary: ContextForge API scrape target is down
+          description: Prometheus cannot scrape contextforge-api for more than 2 minutes.
+
+      - alert: ContextForgeHighErrorRate
+        expr: |
+          sum(rate(contextforge_http_requests_total{status=~"5.."}[5m]))
+          /
+          clamp_min(sum(rate(contextforge_http_requests_total[5m])), 0.001) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          runbook_url: https://github.com/serencarikci/contextforge-enterprise-ai/blob/main/ops/runbooks/api-outage.md
+        annotations:
+          summary: Elevated 5xx rate on ContextForge API
+          description: More than 5% of requests are failing over 5 minutes.
+
+      - alert: ContextForgeHighLatency
+        expr: histogram_quantile(0.95, sum(rate(contextforge_http_request_duration_seconds_bucket[5m])) by (le)) > 2
+        for: 10m
+        labels:
+          severity: warning
+          runbook_url: https://github.com/serencarikci/contextforge-enterprise-ai/blob/main/ops/runbooks/api-outage.md
+        annotations:
+          summary: High API latency (p95 > 2s)
+          description: Request latency p95 exceeds 2 seconds for 10 minutes.
+
+      - alert: ContextForgeDependencyDown
+        expr: contextforge_dependency_up == 0
+        for: 3m
+        labels:
+          severity: critical
+          runbook_url: https://github.com/serencarikci/contextforge-enterprise-ai/blob/main/ops/runbooks/postgres-outage.md
+        annotations:
+          summary: Dependency {{ $labels.dependency }} is down
+          description: ContextForge reports dependency {{ $labels.dependency }} as unavailable.

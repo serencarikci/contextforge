@@ -1,0 +1,147 @@
+name: CD
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        default: staging
+        type: choice
+        options:
+          - staging
+          - production
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-push:
+    name: Build and push image
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.meta.outputs.image }}
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Resolve image tag
+        id: meta
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF_NAME}"
+          else
+            TAG="sha-${GITHUB_SHA::8}"
+          fi
+          IMAGE="${REGISTRY}/$(echo "${IMAGE_NAME}" | tr '[:upper:]' '[:lower:]')"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.tag }}
+            ${{ steps.meta.outputs.image }}:latest
+          build-args: |
+            VERSION=${{ steps.meta.outputs.tag }}
+            VCS_REF=${{ github.sha }}
+            BUILD_DATE=${{ github.event.head_commit.timestamp || github.event.repository.updated_at }}
+
+  deploy-staging:
+    name: Deploy staging
+    needs: build-push
+    runs-on: ubuntu-latest
+    environment: staging
+    if: github.event_name == 'push' || inputs.environment == 'staging'
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.16.2
+
+      - name: Render staging manifests
+        run: |
+          helm template contextforge deploy/helm/contextforge \
+            -f deploy/helm/contextforge/values-staging.yaml \
+            --set image.repository=${{ needs.build-push.outputs.image }} \
+            --set image.tag=${{ needs.build-push.outputs.tag }} \
+            > /tmp/staging.yaml
+          echo "Rendered staging manifests ($(wc -l < /tmp/staging.yaml) lines)"
+
+      - name: Smoke health (optional endpoint)
+        continue-on-error: true
+        env:
+          STAGING_URL: ${{ secrets.STAGING_BASE_URL }}
+        run: |
+          if [ -z "${STAGING_URL}" ]; then
+            echo "STAGING_BASE_URL not set — skipping live smoke"
+            exit 0
+          fi
+          curl -fsS "${STAGING_URL}/api/v1/health/live"
+          curl -fsS "${STAGING_URL}/api/v1/health/ready"
+
+  deploy-production:
+    name: Deploy production
+    needs: [build-push, deploy-staging]
+    runs-on: ubuntu-latest
+    environment: production
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.environment == 'production'
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.16.2
+
+      - name: Render production manifests
+        run: |
+          helm template contextforge deploy/helm/contextforge \
+            -f deploy/helm/contextforge/values-prod.yaml \
+            --set image.repository=${{ needs.build-push.outputs.image }} \
+            --set image.tag=${{ needs.build-push.outputs.tag }} \
+            > /tmp/production.yaml
+          echo "Rendered production manifests ($(wc -l < /tmp/production.yaml) lines)"
+
+      - name: Smoke health (optional endpoint)
+        continue-on-error: true
+        env:
+          PROD_URL: ${{ secrets.PRODUCTION_BASE_URL }}
+        run: |
+          if [ -z "${PROD_URL}" ]; then
+            echo "PRODUCTION_BASE_URL not set — skipping live smoke"
+            exit 0
+          fi
+          curl -fsS "${PROD_URL}/api/v1/health/live"
+          curl -fsS "${PROD_URL}/api/v1/health/ready"

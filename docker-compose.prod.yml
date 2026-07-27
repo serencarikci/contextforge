@@ -1,0 +1,117 @@
+
+services:
+  postgres:
+    restart: always
+    ports: []
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+
+  redis:
+    restart: always
+    ports: []
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+
+  qdrant:
+    restart: always
+    ports: []
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+
+  minio:
+    restart: always
+    ports: []
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+
+  migrate:
+    env_file:
+      - .env
+    environment:
+      CONTEXTFORGE_APP_ENVIRONMENT: production
+      CONTEXTFORGE_APP_DEBUG: "false"
+      CONTEXTFORGE_API_DOCS_ENABLED: "false"
+      CONTEXTFORGE_LOGGING_FORMAT: json
+      CONTEXTFORGE_SKIP_HEALTHCHECK: "true"
+
+  api:
+    env_file:
+      - .env
+    restart: always
+    environment:
+      CONTEXTFORGE_APP_ENVIRONMENT: production
+      CONTEXTFORGE_APP_DEBUG: "false"
+      CONTEXTFORGE_API_DOCS_ENABLED: "false"
+      CONTEXTFORGE_LOGGING_FORMAT: json
+      CONTEXTFORGE_RATE_LIMIT_ENABLED: "true"
+      CONTEXTFORGE_RATE_LIMIT_BACKEND: redis
+      CONTEXTFORGE_OBSERVABILITY_METRICS_ENABLED: "true"
+      CONTEXTFORGE_SKIP_HEALTHCHECK: "false"
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    ports:
+      - "8000:8000"
+
+  ingestion-worker:
+    env_file:
+      - .env
+    restart: always
+    environment:
+      CONTEXTFORGE_APP_ENVIRONMENT: production
+      CONTEXTFORGE_SKIP_HEALTHCHECK: "true"
+      CONTEXTFORGE_LOGGING_FORMAT: json
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+
+  retention-worker:
+    env_file:
+      - .env
+    restart: always
+    environment:
+      CONTEXTFORGE_APP_ENVIRONMENT: production
+      CONTEXTFORGE_SKIP_HEALTHCHECK: "true"
+      CONTEXTFORGE_LOGGING_FORMAT: json
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 128M

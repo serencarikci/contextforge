@@ -74,11 +74,6 @@ class PromptTemplate:
         if self.is_system:
             raise InvalidResourceStateError("System prompt templates cannot be modified.")
 
-    def update_content(self, content: str) -> None:
-        self._ensure_editable()
-        self.content = self._validate_content(content)
-        self.updated_at = utc_now()
-
     def activate(self) -> None:
         self.is_active = True
         self.updated_at = utc_now()

@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: contextforge-postgres-backup
+  namespace: contextforge
+spec:
+  schedule: "0 2 * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: backup
+              image: postgres:17-alpine
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -eu
+                  apk add --no-cache curl >/dev/null
+                  STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+                  pg_dump -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -d "$POSTGRES_DB" | gzip -c > "/tmp/backup-$STAMP.sql.gz"
+                  echo "Created /tmp/backup-$STAMP.sql.gz — upload to durable object storage in your environment."
+              envFrom:
+                - secretRef:
+                    name: contextforge-app

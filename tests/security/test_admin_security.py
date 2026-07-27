@@ -37,7 +37,6 @@ def test_viewer_cannot_access_admin_surface(
 def test_admin_cannot_read_other_tenant_knowledge_space_stats(
     api_client: TestClient, tenant_scenario: TenantScenario
 ) -> None:
-    # Create a knowledge space in the other org is not directly available; use a random id.
     response = api_client.get(
         f"/api/v1/admin/knowledge-spaces/{uuid4()}/stats",
         headers=tenant_scenario.admin_headers(),
@@ -75,7 +74,6 @@ def test_llm_provider_response_never_includes_ciphertext(
 def test_cross_tenant_admin_headers_do_not_leak_dashboard(
     api_client: TestClient, tenant_scenario: TenantScenario
 ) -> None:
-    # Admin of org A using org B's organization header without membership must fail.
     response = api_client.get(
         "/api/v1/admin/dashboard",
         headers={

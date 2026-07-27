@@ -1,0 +1,144 @@
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: ghcr.io/serencarikci/contextforge
+  tag: "0.5.0"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+api:
+  replicaCount: 2
+  port: 8000
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: "2"
+      memory: 1Gi
+  env:
+    CONTEXTFORGE_APP_ENVIRONMENT: production
+    CONTEXTFORGE_APP_VERSION: "0.5.0"
+    CONTEXTFORGE_LOGGING_FORMAT: json
+    CONTEXTFORGE_OBSERVABILITY_METRICS_ENABLED: "true"
+    CONTEXTFORGE_RATE_LIMIT_ENABLED: "true"
+    CONTEXTFORGE_RATE_LIMIT_BACKEND: redis
+
+ingestionWorker:
+  enabled: true
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+retentionWorker:
+  enabled: true
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+migrate:
+  enabled: true
+  backoffLimit: 3
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: contextforge.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+pdb:
+  enabled: true
+  minAvailable: 1
+
+networkPolicy:
+  enabled: true
+
+serviceMonitor:
+  enabled: false
+  interval: 30s
+  path: /metrics
+
+config:
+  CONTEXTFORGE_POSTGRES_HOST: postgres
+  CONTEXTFORGE_POSTGRES_PORT: "5432"
+  CONTEXTFORGE_POSTGRES_USER: contextforge
+  CONTEXTFORGE_POSTGRES_DATABASE: contextforge
+  CONTEXTFORGE_REDIS_URL: redis://redis:6379/0
+  CONTEXTFORGE_QDRANT_URL: http://qdrant:6333
+  CONTEXTFORGE_MINIO_ENDPOINT: minio:9000
+  CONTEXTFORGE_MINIO_BUCKET: contextforge-documents
+  CONTEXTFORGE_MINIO_SECURE: "false"
+
+existingSecret: ""
+externalSecret:
+  enabled: false
+  secretStoreRef:
+    name: cluster-secret-store
+    kind: ClusterSecretStore
+  remoteKey: contextforge/app
+
+probes:
+  liveness:
+    path: /api/v1/health/live
+    initialDelaySeconds: 15
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 5
+  readiness:
+    path: /api/v1/health/ready
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 5
+
+backupCronJob:
+  enabled: false
+  schedule: "0 2 * * *"
+  image: postgres:17-alpine

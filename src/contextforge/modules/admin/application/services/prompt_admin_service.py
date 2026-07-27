@@ -145,13 +145,6 @@ class PromptAdminService:
             )
             await uow.audit.add(event)
 
-    async def get_active_overrides(
-        self, uow: SqlAlchemyUnitOfWork, organization_id: UUID, language: str
-    ) -> dict[str, str]:
-        async with uow:
-            rows = await uow.prompt_templates.list_active_overrides(organization_id, language)
-            return {row.name.value: row.content for row in rows}
-
     @staticmethod
     async def _get_owned(
         uow: SqlAlchemyUnitOfWork, ctx: RequestContext, template_id: UUID

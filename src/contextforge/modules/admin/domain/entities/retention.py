@@ -7,15 +7,12 @@ from datetime import datetime, timedelta
 from typing import Any
 from uuid import UUID, uuid4
 
-from contextforge.domain.exceptions.identity import InvalidResourceStateError
 from contextforge.modules.admin.domain.enums import RetentionResourceType, RetentionRunStatus
 from contextforge.shared.utilities.datetime import utc_now
 
 MIN_RETENTION_DAYS = 1
 MAX_RETENTION_DAYS = 36_500
 
-# Resource families whose rows are immutable once written; a retention policy
-# may only *purge* them, never soft-delete them first.
 _PURGE_ONLY_RESOURCES = frozenset(
     {
         RetentionResourceType.AUDIT_EVENTS,
@@ -85,10 +82,6 @@ class RetentionPolicy:
         if enabled is not None:
             self.enabled = enabled
         self.updated_at = utc_now()
-
-    def ensure_runnable(self) -> None:
-        if not self.enabled:
-            raise InvalidResourceStateError("Disabled retention policies cannot be run.")
 
 
 @dataclass(slots=True)

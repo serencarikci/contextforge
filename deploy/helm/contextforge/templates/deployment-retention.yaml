@@ -1,0 +1,53 @@
+{{- if .Values.retentionWorker.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "contextforge.fullname" . }}-retention
+  labels:
+    {{- include "contextforge.labels" . | nindent 4 }}
+    app.kubernetes.io/component: retention-worker
+spec:
+  replicas: {{ .Values.retentionWorker.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "contextforge.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: retention-worker
+  template:
+    metadata:
+      labels:
+        {{- include "contextforge.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: retention-worker
+    spec:
+      serviceAccountName: {{ include "contextforge.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: retention-worker
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["contextforge-retention-worker"]
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "contextforge.fullname" . }}-config
+            {{- if or .Values.existingSecret .Values.externalSecret.enabled }}
+            - secretRef:
+                name: {{ default (printf "%s-app" (include "contextforge.fullname" .)) .Values.existingSecret }}
+            {{- end }}
+          env:
+            - name: CONTEXTFORGE_RUN_MIGRATIONS
+              value: "false"
+            - name: CONTEXTFORGE_SKIP_HEALTHCHECK
+              value: "true"
+            - name: CONTEXTFORGE_LOGGING_SERVICE_NAME
+              value: contextforge-retention-worker
+          resources:
+            {{- toYaml .Values.retentionWorker.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+{{- end }}

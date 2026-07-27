@@ -28,7 +28,7 @@ class AppSettings(BaseSettings):
     name: str = "contextforge-api"
     environment: Environment = Environment.LOCAL
     debug: bool = False
-    version: str = "0.4.0"
+    version: str = "0.5.0"
 
     @field_validator("environment", mode="before")
     @classmethod
@@ -280,6 +280,59 @@ class SecuritySettings(BaseSettings):
     algorithm: str = "HS256"
 
 
+class RateLimitSettings(BaseSettings):
+    """HTTP rate limiting for ``/api/v1`` routes.
+
+    Env keys: ``CONTEXTFORGE_RATE_LIMIT_ENABLED``,
+    ``CONTEXTFORGE_RATE_LIMIT_REQUESTS``, ``CONTEXTFORGE_RATE_LIMIT_WINDOW_SECONDS``,
+    ``CONTEXTFORGE_RATE_LIMIT_BACKEND`` (``memory`` | ``redis``).
+    """
+
+    model_config = SettingsConfigDict(extra="ignore")
+
+    enabled: bool = True
+    requests: int = Field(default=120, ge=1, le=1_000_000)
+    window_seconds: int = Field(default=60, ge=1, le=86_400)
+    backend: Literal["memory", "redis"] = "memory"
+    redis_key_prefix: str = "contextforge:ratelimit"
+    exclude_path_prefixes: Annotated[list[str], NoDecode] = Field(
+        default_factory=lambda: ["/api/v1/health"]
+    )
+
+    @field_validator("exclude_path_prefixes", mode="before")
+    @classmethod
+    def parse_exclude_prefixes(cls, value: object) -> list[str]:
+        if value is None or value == "":
+            return ["/api/v1/health"]
+        if isinstance(value, list):
+            return [str(item) for item in value]
+        if isinstance(value, str):
+            stripped = value.strip()
+            if stripped.startswith("[") and stripped.endswith("]"):
+                import json
+
+                parsed = json.loads(stripped)
+                if isinstance(parsed, list):
+                    return [str(item) for item in parsed]
+            return [item.strip() for item in stripped.split(",") if item.strip()]
+        msg = "exclude_path_prefixes must be a list or comma-separated string"
+        raise TypeError(msg)
+
+
+class ObservabilitySettings(BaseSettings):
+    """Metrics and observability settings.
+
+    Env keys: ``CONTEXTFORGE_OBSERVABILITY_METRICS_ENABLED``,
+    ``CONTEXTFORGE_OBSERVABILITY_METRICS_PATH``.
+    """
+
+    model_config = SettingsConfigDict(extra="ignore")
+
+    metrics_enabled: bool = True
+    metrics_path: str = "/metrics"
+    dependency_gauge_enabled: bool = True
+
+
 class Settings(BaseSettings):
     """Root settings aggregating all nested configuration sections."""
 
@@ -308,6 +361,8 @@ class Settings(BaseSettings):
     security: SecuritySettings = Field(default_factory=SecuritySettings)
     chat: ChatSettings = Field(default_factory=ChatSettings)
     admin: AdminSettings = Field(default_factory=AdminSettings)
+    rate_limit: RateLimitSettings = Field(default_factory=RateLimitSettings)
+    observability: ObservabilitySettings = Field(default_factory=ObservabilitySettings)
 
     @model_validator(mode="after")
     def apply_environment_defaults(self) -> Settings:
@@ -328,6 +383,7 @@ class Settings(BaseSettings):
             object.__setattr__(self.app, "debug", True)
             object.__setattr__(self.llm, "provider", "mock")
             object.__setattr__(self.rerank, "provider", "hashing")
+            object.__setattr__(self.rate_limit, "enabled", False)
         return self
 
 

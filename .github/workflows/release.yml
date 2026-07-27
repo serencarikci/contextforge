@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build changelog stub
+        id: changelog
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          PREV="$(git describe --tags --abbrev=0 "${TAG}^" 2>/dev/null || true)"
+          {
+            echo "## ${TAG}"
+            echo
+            if [ -n "${PREV}" ]; then
+              echo "Changes since ${PREV}:"
+              echo
+              git log --pretty=format:'- %s (%h)' "${PREV}..${TAG}"
+            else
+              echo "Initial tagged release."
+              echo
+              git log --pretty=format:'- %s (%h)' -n 50
+            fi
+            echo
+          } > /tmp/CHANGELOG.md
+          echo "path=/tmp/CHANGELOG.md" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: ${{ steps.changelog.outputs.path }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

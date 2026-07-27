@@ -1,0 +1,12 @@
+apiVersion: v2
+name: contextforge
+description: ContextForge multilingual enterprise knowledge assistant
+type: application
+version: 0.5.0
+appVersion: "0.5.0"
+keywords:
+  - contextforge
+  - rag
+  - enterprise
+maintainers:
+  - name: ContextForge
