@@ -64,5 +64,6 @@ def test_system_info_capabilities(client: TestClient) -> None:
         "rag": True,
         "chat": True,
         "multilingual_answers": True,
+        "admin": True,
     }
     assert body["authentication"] == "development_only"

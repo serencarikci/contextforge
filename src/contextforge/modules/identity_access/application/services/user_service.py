@@ -7,6 +7,7 @@ from uuid import UUID
 from sqlalchemy.exc import IntegrityError
 
 from contextforge.application.context.request_context import RequestContext
+from contextforge.application.pagination import Page, PaginationParams
 from contextforge.application.services.command_support import (
     build_audit_event,
     build_audit_event_for_actor,
@@ -15,7 +16,7 @@ from contextforge.application.services.command_support import (
 from contextforge.application.uow.sqlalchemy_uow import SqlAlchemyUnitOfWork
 from contextforge.domain.exceptions.identity import ResourceNotFoundError
 from contextforge.modules.identity_access.domain.entities.user import User
-from contextforge.modules.identity_access.domain.enums import PreferredLanguage
+from contextforge.modules.identity_access.domain.enums import PreferredLanguage, UserStatus
 
 
 class UserService:
@@ -81,6 +82,31 @@ class UserService:
             if user is None:
                 raise ResourceNotFoundError("User not found.")
             return user
+
+    async def list_for_organization(
+        self,
+        uow: SqlAlchemyUnitOfWork,
+        ctx: RequestContext,
+        pagination: PaginationParams,
+        *,
+        search: str | None = None,
+        status: UserStatus | None = None,
+    ) -> Page[User]:
+        async with uow:
+            ctx.require_permission("admin:users")
+            items, total = await uow.users.list_for_organization(
+                ctx.organization_id,
+                limit=pagination.limit,
+                offset=pagination.offset,
+                search=search,
+                status=status,
+            )
+            return Page(
+                items=items,
+                limit=pagination.limit,
+                offset=pagination.offset,
+                total=total,
+            )
 
     async def update(
         self,

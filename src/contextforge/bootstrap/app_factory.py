@@ -23,7 +23,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         version=resolved.app.version,
         description=(
             "Secure enterprise knowledge platform with document ingestion, "
-            "hybrid retrieval, and RAG answering. Chat sessions are not implemented yet."
+            "hybrid retrieval, RAG answering, enterprise chat, and administration."
         ),
         lifespan=lifespan,
         docs_url=docs_url,

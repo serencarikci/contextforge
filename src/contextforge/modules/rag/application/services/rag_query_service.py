@@ -45,6 +45,8 @@ class RagQueryService:
         prompts: PromptRegistry,
         rag_settings: RagSettings,
         rerank_settings: RerankSettings,
+        token_usage: object | None = None,
+        llm_provider_name: str | None = None,
     ) -> None:
         self._retrieval = retrieval
         self._reranker = reranker
@@ -52,6 +54,8 @@ class RagQueryService:
         self._prompts = prompts
         self._rag_settings = rag_settings
         self._rerank_settings = rerank_settings
+        self._token_usage = token_usage
+        self._llm_provider_name = llm_provider_name or "mock"
 
     @property
     def model_name(self) -> str:
@@ -207,7 +211,9 @@ class RagQueryService:
             max_tokens=self._rag_settings.max_context_tokens,
             max_chunks=self._rag_settings.max_chunks_in_context,
         )
-        bundle = self._prompts.get(language=lang)
+        bundle = await self._prompts.get_for_organization(
+            uow, organization_id=ctx.organization_id, language=lang
+        )
         context_text = format_context(context_chunks)
         citation_hint = self._prompts.render(bundle.citation, chunk_id="CHUNK_ID")
         multilingual = self._prompts.render(bundle.multilingual, language=lang)
@@ -274,6 +280,17 @@ class RagQueryService:
                 },
             )
             await uow.audit.add(event)
+        if self._token_usage is not None:
+            record = getattr(self._token_usage, "record", None)
+            if callable(record):
+                await record(
+                    uow,
+                    organization_id=ctx.organization_id,
+                    provider=self._llm_provider_name,
+                    model=self._llm.model,
+                    prompt_tokens=diagnostics.prompt_tokens,
+                    completion_tokens=diagnostics.completion_tokens,
+                )
         return RagAnswer(
             answer=sanitize_model_answer(completion.content),
             language=lang,
@@ -309,7 +326,9 @@ class RagQueryService:
             max_tokens=self._rag_settings.max_context_tokens,
             max_chunks=self._rag_settings.max_chunks_in_context,
         )
-        bundle = self._prompts.get(language=lang)
+        bundle = await self._prompts.get_for_organization(
+            uow, organization_id=ctx.organization_id, language=lang
+        )
         context_text = format_context(context_chunks)
         citation_hint = self._prompts.render(bundle.citation, chunk_id="CHUNK_ID")
         multilingual = self._prompts.render(bundle.multilingual, language=lang)

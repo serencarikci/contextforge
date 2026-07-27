@@ -40,6 +40,7 @@ async def system_info(
             rag=caps.rag,
             chat=caps.chat,
             multilingual_answers=caps.multilingual_answers,
+            admin=caps.admin,
         ),
         authentication=info.authentication,
     )

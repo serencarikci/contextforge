@@ -31,6 +31,9 @@ class RedisIngestionJobQueue:
         _key, raw_job_id = result
         return UUID(raw_job_id)
 
+    async def depth(self) -> int:
+        return int(await self._redis.llen(self._settings.queue_key))
+
 
 class InMemoryIngestionJobQueue:
     """Process-local queue used by unit/API tests."""
@@ -46,6 +49,9 @@ class InMemoryIngestionJobQueue:
         if not self._items:
             return None
         return self._items.pop(0)
+
+    async def depth(self) -> int:
+        return len(self._items)
 
     @property
     def pending(self) -> list[UUID]:

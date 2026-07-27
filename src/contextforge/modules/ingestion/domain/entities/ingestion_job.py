@@ -102,5 +102,18 @@ class IngestionJob:
         self.queued_at = utc_now()
         self.updated_at = utc_now()
 
+    def mark_cancelled(self) -> None:
+        if self.status not in {IngestionJobStatus.PENDING, IngestionJobStatus.RUNNING}:
+            from contextforge.domain.exceptions.identity import InvalidResourceStateError
+
+            raise InvalidResourceStateError("Only pending or running jobs can be cancelled.")
+        self.status = IngestionJobStatus.CANCELLED
+        self.finished_at = utc_now()
+        self.updated_at = utc_now()
+
+    def cancel(self) -> None:
+        """Alias used by administration surfaces."""
+        self.mark_cancelled()
+
 
 __all__ = ["IngestionJob"]

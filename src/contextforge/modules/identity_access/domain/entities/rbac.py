@@ -35,6 +35,7 @@ class Role:
     id: UUID = field(default_factory=uuid4)
     created_at: datetime = field(default_factory=utc_now)
     updated_at: datetime = field(default_factory=utc_now)
+    archived_at: datetime | None = None
 
     def __post_init__(self) -> None:
         self.code = RoleCode(self.code).value
@@ -52,6 +53,8 @@ class Role:
     def update(self, *, name: str | None = None, description: str | None = None) -> None:
         if self.is_system:
             raise InvalidResourceStateError("System roles cannot be modified.")
+        if self.archived_at is not None:
+            raise InvalidResourceStateError("Archived roles cannot be modified.")
         if name is not None:
             cleaned = name.strip()
             if not cleaned:
@@ -60,6 +63,14 @@ class Role:
             self.name = cleaned
         if description is not None:
             self.description = description
+        self.updated_at = utc_now()
+
+    def archive(self) -> None:
+        if self.is_system:
+            raise InvalidResourceStateError("System roles cannot be archived.")
+        if self.archived_at is not None:
+            raise InvalidResourceStateError("Role is already archived.")
+        self.archived_at = utc_now()
         self.updated_at = utc_now()
 
 

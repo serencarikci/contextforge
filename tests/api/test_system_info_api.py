@@ -32,6 +32,7 @@ def test_system_info_reports_expected_capability_flags(api_client: TestClient) -
         "rag",
         "chat",
         "multilingual_answers",
+        "admin",
     )
     for flag in implemented:
         assert capabilities[flag] is True, f"expected capability '{flag}' to be True"

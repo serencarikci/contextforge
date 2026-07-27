@@ -79,6 +79,8 @@ class ChatService:
         cancellation: StreamCancellationPort,
         chat_settings: ChatSettings,
         rag_settings: RagSettings,
+        token_usage: object | None = None,
+        llm_provider_name: str | None = None,
     ) -> None:
         self._rag = rag_query_service
         self._memory = memory_service
@@ -86,6 +88,37 @@ class ChatService:
         self._cancellation = cancellation
         self._chat_settings = chat_settings
         self._rag_settings = rag_settings
+        self._token_usage = token_usage
+        self._llm_provider_name = llm_provider_name or "mock"
+
+    async def _record_token_usage(
+        self,
+        uow: SqlAlchemyUnitOfWork,
+        *,
+        organization_id: UUID,
+        prompt_tokens: int,
+        completion_tokens: int,
+    ) -> None:
+        if self._token_usage is None:
+            return
+        record = getattr(self._token_usage, "record", None)
+        if not callable(record):
+            return
+        try:
+            await record(
+                uow,
+                organization_id=organization_id,
+                provider=self._llm_provider_name,
+                model=self._rag.model_name,
+                prompt_tokens=prompt_tokens,
+                completion_tokens=completion_tokens,
+            )
+        except Exception:
+            logger.warning(
+                "chat_token_usage_record_failed",
+                extra={"organization_id": str(organization_id)},
+                exc_info=True,
+            )
 
     def _validate_content(self, content: str) -> str:
         cleaned = content.strip()
@@ -579,6 +612,12 @@ class ChatService:
                 await self._memory.maybe_update_summary(
                     uow, organization_id=ctx.organization_id, conversation_id=conversation_id
                 )
+            await self._record_token_usage(
+                uow,
+                organization_id=ctx.organization_id,
+                prompt_tokens=0,
+                completion_tokens=completion_tokens,
+            )
             yield {
                 "event": "generation.completed",
                 "data": {"message_id": str(message_id), "total_tokens": completion_tokens},

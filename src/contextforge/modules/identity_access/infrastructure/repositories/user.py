@@ -4,11 +4,14 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from contextforge.modules.identity_access.domain.entities.user import User
 from contextforge.modules.identity_access.domain.enums import PreferredLanguage, UserStatus
+from contextforge.modules.identity_access.infrastructure.models.membership import (
+    OrganizationMembershipModel,
+)
 from contextforge.modules.identity_access.infrastructure.models.user import UserModel
 
 
@@ -63,6 +66,40 @@ class SqlAlchemyUserRepository:
 
         await self._session.flush()
         return self._to_entity(model)
+
+    async def list_for_organization(
+        self,
+        organization_id: UUID,
+        *,
+        limit: int,
+        offset: int,
+        search: str | None = None,
+        status: UserStatus | None = None,
+    ) -> tuple[list[User], int]:
+        conditions = [OrganizationMembershipModel.organization_id == organization_id]
+        if status is not None:
+            conditions.append(UserModel.status == status.value)
+        if search and search.strip():
+            pattern = f"%{search.strip()}%"
+            conditions.append(
+                or_(UserModel.email.ilike(pattern), UserModel.display_name.ilike(pattern))
+            )
+
+        base = (
+            select(UserModel)
+            .join(
+                OrganizationMembershipModel,
+                OrganizationMembershipModel.user_id == UserModel.id,
+            )
+            .where(and_(*conditions))
+        )
+        total = (
+            await self._session.execute(select(func.count()).select_from(base.subquery()))
+        ).scalar_one()
+        result = await self._session.execute(
+            base.order_by(UserModel.created_at.desc()).limit(limit).offset(offset)
+        )
+        return [self._to_entity(model) for model in result.scalars().all()], int(total)
 
     @staticmethod
     def _to_entity(model: UserModel) -> User:

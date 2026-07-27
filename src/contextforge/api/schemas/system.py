@@ -21,6 +21,7 @@ class CapabilitiesSchema(BaseModel):
     rag: bool = True
     chat: bool = True
     multilingual_answers: bool = True
+    admin: bool = True
 
 
 class SystemInfoResponse(BaseModel):

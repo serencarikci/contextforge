@@ -1,6 +1,6 @@
 [project]
 name = "contextforge"
-version = "0.3.0"
+version = "0.4.0"
 description = "ContextForge — Multilingual Enterprise Knowledge Assistant"
 readme = "README.md"
 license = { text = "MIT" }
@@ -33,6 +33,7 @@ dependencies = [
   "beautifulsoup4>=4.15.0",
   "rank-bm25>=0.2.2",
   "pyyaml>=6.0.2",
+  "cryptography>=44.0.0",
 ]
 
 [dependency-groups]
@@ -52,6 +53,7 @@ dev = [
 [project.scripts]
 contextforge = "contextforge.main:run"
 contextforge-ingestion-worker = "contextforge.workers.ingestion_worker:main"
+contextforge-retention-worker = "contextforge.workers.retention_worker:main"
 
 [build-system]
 requires = ["hatchling"]

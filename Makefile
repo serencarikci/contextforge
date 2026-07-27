@@ -39,6 +39,9 @@ dev:
 worker:
 	$(UV) run contextforge-ingestion-worker
 
+retention-worker:
+	$(UV) run contextforge-retention-worker
+
 up:
 	$(COMPOSE) up --build -d
 
