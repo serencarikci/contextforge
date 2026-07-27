@@ -1,12 +1,22 @@
-"""Versioned prompt registry loaded from YAML files."""
+"""Versioned prompt registry loaded from YAML files with optional DB overrides.
+
+Resolution order for each prompt slot (system/user/citation/multilingual):
+
+1. Active organization-scoped database template
+2. Active global database template
+3. Bundled YAML file under ``modules/rag/prompts``
+"""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
+from typing import Protocol
+from uuid import UUID
 
 import yaml
 
+from contextforge.application.uow.sqlalchemy_uow import SqlAlchemyUnitOfWork
 from contextforge.shared.config.settings import PromptSettings
 
 _PROMPTS_ROOT = Path(__file__).resolve().parents[2] / "prompts"
@@ -22,13 +32,32 @@ class PromptBundle:
     multilingual: str
 
 
+class PromptOverrideSource(Protocol):
+    async def active_slot_contents(
+        self,
+        uow: SqlAlchemyUnitOfWork,
+        *,
+        organization_id: UUID,
+        language: str,
+    ) -> dict[str, str]:
+        """Return active ``{slot_name: content}`` preferring org over global."""
+        ...
+
+
 class PromptRegistry:
     """Loads and renders versioned prompt templates."""
 
-    def __init__(self, settings: PromptSettings, *, root: Path | None = None) -> None:
+    def __init__(
+        self,
+        settings: PromptSettings,
+        *,
+        root: Path | None = None,
+        override_source: PromptOverrideSource | None = None,
+    ) -> None:
         self._settings = settings
         self._root = root or _PROMPTS_ROOT
         self._cache: dict[tuple[str, str], PromptBundle] = {}
+        self._override_source = override_source
 
     def get(self, *, language: str | None = None, version: str | None = None) -> PromptBundle:
         lang = (language or self._settings.default_language).lower()
@@ -55,6 +84,31 @@ class PromptRegistry:
         self._cache[key] = bundle
         return bundle
 
+    async def get_for_organization(
+        self,
+        uow: SqlAlchemyUnitOfWork,
+        *,
+        organization_id: UUID,
+        language: str | None = None,
+        version: str | None = None,
+    ) -> PromptBundle:
+        """YAML bundle with any active database slot overrides applied."""
+        base = self.get(language=language, version=version)
+        if self._override_source is None:
+            return base
+        overrides = await self._override_source.active_slot_contents(
+            uow, organization_id=organization_id, language=base.language
+        )
+        if not overrides:
+            return base
+        return replace(
+            base,
+            system=overrides.get("system", base.system),
+            user=overrides.get("user", base.user),
+            citation=overrides.get("citation", base.citation),
+            multilingual=overrides.get("multilingual", base.multilingual),
+        )
+
     def render(self, template: str, **values: str) -> str:
         rendered = template
         for key, value in values.items():
@@ -62,4 +116,4 @@ class PromptRegistry:
         return rendered.strip()
 
 
-__all__ = ["PromptBundle", "PromptRegistry"]
+__all__ = ["PromptBundle", "PromptOverrideSource", "PromptRegistry"]

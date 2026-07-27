@@ -39,7 +39,8 @@ class SqlAlchemyRbacRepository:
                 or_(
                     RoleModel.organization_id.is_(None),
                     RoleModel.organization_id == organization_id,
-                )
+                ),
+                RoleModel.archived_at.is_(None),
             )
             .order_by(RoleModel.is_system.desc(), RoleModel.code.asc())
         )
@@ -98,10 +99,39 @@ class SqlAlchemyRbacRepository:
 
         model.name = role.name
         model.description = role.description
+        model.archived_at = role.archived_at
         model.updated_at = role.updated_at
 
         await self._session.flush()
         return self._role_to_entity(model)
+
+    async def list_permission_codes_for_role(self, role_id: UUID) -> list[str]:
+        statement = (
+            select(PermissionModel.code)
+            .select_from(RolePermissionModel)
+            .join(PermissionModel, PermissionModel.id == RolePermissionModel.permission_id)
+            .where(RolePermissionModel.role_id == role_id)
+            .order_by(PermissionModel.code.asc())
+        )
+        result = await self._session.execute(statement)
+        return list(result.scalars().all())
+
+    async def replace_role_permissions(self, role_id: UUID, permission_ids: list[UUID]) -> None:
+        existing = await self._session.execute(
+            select(RolePermissionModel).where(RolePermissionModel.role_id == role_id)
+        )
+        for row in existing.scalars().all():
+            await self._session.delete(row)
+        for permission_id in permission_ids:
+            self._session.add(RolePermissionModel(role_id=role_id, permission_id=permission_id))
+        await self._session.flush()
+
+    async def get_permissions_by_codes(self, codes: list[str]) -> list[Permission]:
+        if not codes:
+            return []
+        statement = select(PermissionModel).where(PermissionModel.code.in_(codes))
+        result = await self._session.execute(statement)
+        return [self._permission_to_entity(model) for model in result.scalars().all()]
 
     async def list_permissions(self) -> list[Permission]:
         statement = select(PermissionModel).order_by(PermissionModel.code.asc())
@@ -265,6 +295,7 @@ class SqlAlchemyRbacRepository:
             id=model.id,
             created_at=model.created_at,
             updated_at=model.updated_at,
+            archived_at=model.archived_at,
         )
 
     @staticmethod

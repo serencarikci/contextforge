@@ -28,6 +28,7 @@ class RoleResponse(BaseModel):
     organization_id: UUID | None
     description: str | None
     is_system: bool
+    archived_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
 

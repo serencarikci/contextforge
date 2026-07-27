@@ -28,7 +28,7 @@ class AppSettings(BaseSettings):
     name: str = "contextforge-api"
     environment: Environment = Environment.LOCAL
     debug: bool = False
-    version: str = "0.3.0"
+    version: str = "0.4.0"
 
     @field_validator("environment", mode="before")
     @classmethod
@@ -243,6 +243,33 @@ class ChatSettings(BaseSettings):
     export_max_messages: int = Field(default=5000, ge=1, le=100000)
 
 
+class AdminSettings(BaseSettings):
+    """Administration, governance, retention, and cost-analytics settings.
+
+    Env keys follow the single-underscore nested delimiter, e.g.
+    ``CONTEXTFORGE_ADMIN_RETENTION_ENABLED`` and
+    ``CONTEXTFORGE_ADMIN_CACHE_TTL_SECONDS``.
+    """
+
+    model_config = SettingsConfigDict(extra="ignore")
+
+    retention_enabled: bool = True
+    retention_batch_size: int = Field(default=500, ge=1, le=10000)
+    retention_default_days: int = Field(default=365, ge=1, le=36500)
+    retention_worker_interval_seconds: float = Field(default=3600.0, gt=0)
+    cache_ttl_seconds: int = Field(default=30, ge=0, le=3600)
+    token_usage_rollup_enabled: bool = True
+    token_pricing_currency: str = Field(default="USD", min_length=3, max_length=3)
+    llm_test_timeout_seconds: float = Field(default=5.0, gt=0, le=60.0)
+
+    @field_validator("token_pricing_currency", mode="before")
+    @classmethod
+    def normalize_currency(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip().upper()
+        return value
+
+
 class SecuritySettings(BaseSettings):
     """JWT and related auth settings reserved for real authentication."""
 
@@ -280,6 +307,7 @@ class Settings(BaseSettings):
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
     security: SecuritySettings = Field(default_factory=SecuritySettings)
     chat: ChatSettings = Field(default_factory=ChatSettings)
+    admin: AdminSettings = Field(default_factory=AdminSettings)
 
     @model_validator(mode="after")
     def apply_environment_defaults(self) -> Settings:

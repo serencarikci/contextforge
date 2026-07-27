@@ -99,6 +99,7 @@ class TenantScenario:
     restricted_knowledge_space_id: UUID
     other_organization_id: UUID
     other_organization_customer_id: UUID
+    other_admin_user_id: UUID
 
     def admin_headers(self) -> dict[str, str]:
         return {
@@ -110,6 +111,12 @@ class TenantScenario:
         return {
             USER_ID_HEADER: str(self.viewer_user_id),
             ORGANIZATION_ID_HEADER: str(self.organization_id),
+        }
+
+    def other_org_admin_headers(self) -> dict[str, str]:
+        return {
+            USER_ID_HEADER: str(self.other_admin_user_id),
+            ORGANIZATION_ID_HEADER: str(self.other_organization_id),
         }
 
 
@@ -236,4 +243,5 @@ async def tenant_scenario(
         restricted_knowledge_space_id=restricted_space.id,
         other_organization_id=other_organization.id,
         other_organization_customer_id=other_customer.id,
+        other_admin_user_id=other_admin_user.id,
     )

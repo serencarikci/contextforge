@@ -54,6 +54,12 @@ class User:
         self.status = UserStatus.SUSPENDED
         self.updated_at = utc_now()
 
+    def activate(self) -> None:
+        if self.status == UserStatus.ARCHIVED:
+            raise InvalidResourceStateError("Archived users cannot be activated.")
+        self.status = UserStatus.ACTIVE
+        self.updated_at = utc_now()
+
     def archive(self) -> None:
         self.status = UserStatus.ARCHIVED
         self.updated_at = utc_now()

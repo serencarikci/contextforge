@@ -17,5 +17,9 @@ class IngestionJobQueuePort(Protocol):
         """Pop the next job id, or ``None`` when the timeout elapses."""
         ...
 
+    async def depth(self) -> int:
+        """Return approximate pending queue depth when supported."""
+        ...
+
 
 __all__ = ["IngestionJobQueuePort"]

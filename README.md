@@ -7,8 +7,9 @@ answers grounded in authorized company documents.
 
 > **Current scope:** identity, multi-tenancy, RBAC, audit logging, document upload/storage,
 > parsing, semantic chunking, multilingual embeddings (Qdrant), background ingestion
-> workers, hybrid RAG answering, and multi-turn enterprise chat (streaming, memory,
-> feedback, and analytics) are implemented.
+> workers, hybrid RAG answering, multi-turn enterprise chat (streaming, memory,
+> feedback, and analytics), and Phase 4 administration/governance (dashboard, quotas,
+> feature flags, prompt/LLM admin, token cost, retention) are implemented.
 >
 > **Authentication:** identity is resolved via development-only HTTP headers (see
 > [Development identity headers](#development-identity-headers)), gated off in
@@ -52,6 +53,11 @@ answers grounded in authorized company documents.
  memory strategies, SSE streaming with cooperative cancellation, message idempotency,
  per-message knowledge-space revalidation, feedback, export (JSON/Markdown), and
  usage analytics
+* **Administration & governance (Phase 4)** — `/api/v1/admin/*` dashboard, user list,
+ org quotas/settings, custom role permissions, document/ingestion ops, audit export,
+ usage/token cost analytics, prompt versioning, LLM provider configs (masked secrets),
+ feature flags (Redis cache), ops overview, and retention policies/worker
+ (`contextforge-retention-worker`)
 * Pytest (unit, integration, architecture, authorization, security, API)
 * Ruff, mypy, pre-commit, GitHub Actions CI
 
@@ -428,6 +434,20 @@ make type-check
 | GET/PUT | `/api/v1/messages/{id}`, `/{id}/feedback` | Read a message and submit/update feedback |
 | GET | `/api/v1/chat/analytics/overview` | Chat usage and quality analytics (`chat:manage`) |
 | GET | `/api/v1/audit` | Query the append-only audit trail (`audit:read`) |
+| GET | `/api/v1/admin/dashboard` | Org administration dashboard (`admin:dashboard`) |
+| GET/POST | `/api/v1/admin/users`, `/users/{id}/activate\|deactivate` | Admin user list and activation (`admin:users`) |
+| GET/PATCH | `/api/v1/admin/organizations/settings`, `/settings` | Quotas, defaults, feature overrides (`admin:organizations` / `admin:settings`) |
+| PUT/DELETE | `/api/v1/admin/roles/{id}/permissions`, `/roles/{id}` | Custom role permission replace / archive (`admin:roles`) |
+| GET | `/api/v1/admin/knowledge-spaces/{id}/stats` | Knowledge-space usage stats (`admin:knowledge_spaces`) |
+| GET/POST | `/api/v1/admin/documents/overview`, `/bulk-reprocess`, `/bulk-delete` | Document ops (`admin:documents`) |
+| GET/POST | `/api/v1/admin/ingestion/overview`, `/jobs/{id}/cancel` | Ingestion ops (`admin:ingestion`) |
+| GET | `/api/v1/admin/audit/export` | Audit CSV/JSON export (`admin:audit`) |
+| GET/POST | `/api/v1/admin/usage/*` | Usage trends, token cost, pricing, export (`admin:usage`) |
+| CRUD | `/api/v1/admin/prompts`, `/activate`, `/deactivate`, `/rollback`, `/preview` | Prompt versioning (`admin:prompts`) |
+| CRUD | `/api/v1/admin/llm-providers`, `/{id}/test` | LLM configs with masked secrets (`admin:llm`) |
+| CRUD | `/api/v1/admin/feature-flags` | Feature flags with Redis cache (`admin:settings`) |
+| GET | `/api/v1/admin/ops/overview` | Ops readiness + queue/LLM summary (`admin:ops`) |
+| CRUD/POST | `/api/v1/admin/retention/policies`, `/retention/run` | Retention policies and runs (`admin:retention`) |
 
 All endpoints above (except `/health/*` and `/system/info`) require
 [development identity headers](#development-identity-headers) and are subject to
@@ -451,7 +471,8 @@ Example system info capabilities (implemented in this commit vs. still planned):
  "ingestion_workers": true,
  "rag": true,
  "chat": true,
- "multilingual_answers": true
+ "multilingual_answers": true,
+ "admin": true
 }
 ```
 
@@ -483,6 +504,7 @@ own custom roles with any subset of permissions via `POST /api/v1/roles`.
 | `rag:query` | Hybrid retrieval and grounded RAG answers |
 | `chat:use` | Create/use conversations and send messages (granted to the same roles as `rag:query`) |
 | `chat:manage` | Moderate any conversation and view chat analytics (`organization_admin`, `knowledge_manager`) |
+| `admin:*` | Phase 4 governance (`dashboard`, `users`, `organizations`, `roles`, `knowledge_spaces`, `documents`, `ingestion`, `audit`, `usage`, `prompts`, `llm`, `settings`, `ops`, `retention`). Full set for `organization_admin`; knowledge managers get KS/documents/ingestion |
 | `audit:read` | The audit trail |
 
 Every user can always read/update their *own* profile (`GET`/`PATCH /users/{their own id}`)
@@ -599,3 +621,52 @@ MIT — see [LICENSE](LICENSE).
 
 Built by [serencarikci](https://github.com/serencarikci).
 
+
+
+## Phase 4 — Administration & Governance
+
+Phase 4 adds organization administration under `/api/v1/admin/*` with dedicated
+`admin:*` permissions. Organization admins receive the full set; knowledge managers
+receive knowledge-space/document/ingestion admin permissions.
+
+### Admin capabilities
+
+| Area | Endpoints (prefix `/api/v1/admin`) |
+| --- | --- |
+| Dashboard | `GET /dashboard` |
+| Users | `GET /users`, activate/deactivate |
+| Org settings | `GET|PATCH /organizations/settings`, `GET|PATCH /settings` |
+| Roles | `PUT /roles/{id}/permissions`, `DELETE /roles/{id}` |
+| Knowledge spaces | `GET /knowledge-spaces/{id}/stats` |
+| Documents | `GET /documents/overview`, bulk reprocess/delete |
+| Ingestion | `GET /ingestion/overview`, cancel pending jobs |
+| Audit | `GET /audit/export?format=json|csv` |
+| Usage / tokens | overview, trends, tokens, pricing, export |
+| Prompts | CRUD + activate/deactivate/preview |
+| LLM providers | CRUD + connectivity test (API keys masked) |
+| Feature flags | CRUD + resolved map (cached) |
+| Ops | `GET /ops/overview` |
+| Retention | policies CRUD + `POST /retention/run` |
+
+```mermaid
+flowchart TD
+  Admin[Organization Admin] --> API["/api/v1/admin"]
+  API --> Services[Admin services]
+  Services --> DB[(Postgres admin + tenant tables)]
+  Services --> Redis[(Feature-flag cache)]
+  Worker[contextforge-retention-worker] --> Retention[RetentionCleanupService]
+  Retention --> DB
+```
+
+### Admin environment
+
+```bash
+CONTEXTFORGE_ADMIN_RETENTION_ENABLED=true
+CONTEXTFORGE_ADMIN_RETENTION_BATCH_SIZE=500
+CONTEXTFORGE_ADMIN_RETENTION_DEFAULT_DAYS=365
+CONTEXTFORGE_ADMIN_RETENTION_WORKER_INTERVAL_SECONDS=3600.0
+CONTEXTFORGE_ADMIN_CACHE_TTL_SECONDS=30
+CONTEXTFORGE_ADMIN_TOKEN_USAGE_ROLLUP_ENABLED=true
+CONTEXTFORGE_ADMIN_TOKEN_PRICING_CURRENCY=USD
+CONTEXTFORGE_ADMIN_LLM_TEST_TIMEOUT_SECONDS=5.0
+```

@@ -26,6 +26,7 @@ class SystemCapabilities:
     rag: bool = True
     chat: bool = True
     multilingual_answers: bool = True
+    admin: bool = True
 
 
 @dataclass(frozen=True, slots=True)

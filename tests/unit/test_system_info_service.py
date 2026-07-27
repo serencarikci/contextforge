@@ -42,5 +42,6 @@ def test_system_info_service_implemented_capabilities(monkeypatch: pytest.Monkey
     assert info.capabilities.rag is True
     assert info.capabilities.chat is True
     assert info.capabilities.multilingual_answers is True
+    assert info.capabilities.admin is True
 
     assert info.authentication == "development_only"

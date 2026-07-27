@@ -49,6 +49,20 @@ PERMISSIONS: tuple[tuple[str, str], ...] = (
     (PermissionCode.AUDIT_READ, "Read audit events"),
     (PermissionCode.CHAT_USE, "Use enterprise chat conversations"),
     (PermissionCode.CHAT_MANAGE, "Manage chat conversations, analytics, and moderation"),
+    (PermissionCode.ADMIN_DASHBOARD, "View the administration dashboard"),
+    (PermissionCode.ADMIN_USERS, "Administer users across the organization"),
+    (PermissionCode.ADMIN_ORGANIZATIONS, "Administer organization settings and quotas"),
+    (PermissionCode.ADMIN_ROLES, "Administer custom role permission sets"),
+    (PermissionCode.ADMIN_KNOWLEDGE_SPACES, "View knowledge-space administration statistics"),
+    (PermissionCode.ADMIN_DOCUMENTS, "Run document administration and bulk operations"),
+    (PermissionCode.ADMIN_INGESTION, "Administer the ingestion queue and job lifecycle"),
+    (PermissionCode.ADMIN_AUDIT, "Export the audit trail"),
+    (PermissionCode.ADMIN_USAGE, "View usage, token, and cost analytics"),
+    (PermissionCode.ADMIN_PROMPTS, "Administer versioned prompt templates"),
+    (PermissionCode.ADMIN_LLM, "Administer LLM provider configurations"),
+    (PermissionCode.ADMIN_SETTINGS, "Administer organization settings and feature flags"),
+    (PermissionCode.ADMIN_OPS, "View operational health and worker status"),
+    (PermissionCode.ADMIN_RETENTION, "Administer data retention policies and runs"),
 )
 
 SYSTEM_ROLES: tuple[tuple[str, str, str], ...] = (
@@ -113,6 +127,9 @@ _KNOWLEDGE_MANAGER_PERMS = (
     PermissionCode.RAG_QUERY,
     PermissionCode.CHAT_USE,
     PermissionCode.CHAT_MANAGE,
+    PermissionCode.ADMIN_KNOWLEDGE_SPACES,
+    PermissionCode.ADMIN_DOCUMENTS,
+    PermissionCode.ADMIN_INGESTION,
 )
 
 ROLE_PERMISSIONS: dict[str, tuple[str, ...]] = {

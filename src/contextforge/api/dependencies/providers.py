@@ -27,6 +27,40 @@ from contextforge.infrastructure.reranking import build_reranker
 from contextforge.infrastructure.retrieval import InMemoryLexicalSearch, PostgresBm25LexicalSearch
 from contextforge.infrastructure.vector_store.qdrant_client import QdrantHealthClient
 from contextforge.infrastructure.vector_store.qdrant_vector_store import QdrantVectorStore
+from contextforge.modules.admin.application.ports.admin_cache import AdminCachePort
+from contextforge.modules.admin.application.ports.llm_connectivity import LlmConnectivityCheckPort
+from contextforge.modules.admin.application.ports.secret_cipher import SecretCipherPort
+from contextforge.modules.admin.application.services.admin_role_service import AdminRoleService
+from contextforge.modules.admin.application.services.admin_user_service import AdminUserService
+from contextforge.modules.admin.application.services.audit_export_service import AuditExportService
+from contextforge.modules.admin.application.services.dashboard_service import DashboardService
+from contextforge.modules.admin.application.services.document_ops_service import DocumentOpsService
+from contextforge.modules.admin.application.services.feature_flag_service import FeatureFlagService
+from contextforge.modules.admin.application.services.ingestion_ops_service import (
+    IngestionOpsService,
+)
+from contextforge.modules.admin.application.services.knowledge_space_admin_service import (
+    KnowledgeSpaceAdminService,
+)
+from contextforge.modules.admin.application.services.llm_config_service import LlmConfigService
+from contextforge.modules.admin.application.services.ops_service import OpsService
+from contextforge.modules.admin.application.services.organization_settings_service import (
+    OrganizationSettingsService,
+)
+from contextforge.modules.admin.application.services.prompt_admin_service import PromptAdminService
+from contextforge.modules.admin.application.services.prompt_override_source import (
+    DatabasePromptOverrideSource,
+)
+from contextforge.modules.admin.application.services.retention_service import (
+    RetentionCleanupService,
+)
+from contextforge.modules.admin.application.services.token_usage_service import TokenUsageService
+from contextforge.modules.admin.application.services.usage_analytics_service import (
+    UsageAnalyticsService,
+)
+from contextforge.modules.admin.infrastructure.cache import InMemoryAdminCache, RedisAdminCache
+from contextforge.modules.admin.infrastructure.crypto import FernetSecretCipher
+from contextforge.modules.admin.infrastructure.llm import HttpLlmConnectivityChecker
 from contextforge.modules.chat.application.ports.cancellation import StreamCancellationPort
 from contextforge.modules.chat.application.services.analytics_service import AnalyticsService
 from contextforge.modules.chat.application.services.chat_service import ChatService
@@ -179,7 +213,10 @@ def get_prompt_registry(request: Request) -> PromptRegistry:
     if existing is not None:
         return existing  # type: ignore[no-any-return]
     settings: Settings = request.app.state.settings
-    registry = PromptRegistry(settings.prompts)
+    registry = PromptRegistry(
+        settings.prompts,
+        override_source=DatabasePromptOverrideSource(),
+    )
     request.app.state.prompt_registry = registry
     return registry
 
@@ -201,12 +238,18 @@ def get_hybrid_retrieval_service(
     )
 
 
+def get_token_usage_service(request: Request) -> TokenUsageService:
+    settings: Settings = request.app.state.settings
+    return TokenUsageService(settings.admin)
+
+
 def get_rag_query_service(
     request: Request,
     retrieval: Annotated[HybridRetrievalService, Depends(get_hybrid_retrieval_service)],
     reranker: Annotated[RerankerPort, Depends(get_reranker)],
     llm: Annotated[LlmProviderPort, Depends(get_llm_provider)],
     prompts: Annotated[PromptRegistry, Depends(get_prompt_registry)],
+    token_usage: Annotated[TokenUsageService, Depends(get_token_usage_service)],
 ) -> RagQueryService:
     settings: Settings = request.app.state.settings
     return RagQueryService(
@@ -216,6 +259,8 @@ def get_rag_query_service(
         prompts=prompts,
         rag_settings=settings.rag,
         rerank_settings=settings.rerank,
+        token_usage=token_usage,
+        llm_provider_name=settings.llm.provider,
     )
 
 
@@ -243,12 +288,91 @@ def get_conversation_service(request: Request) -> ConversationService:
     return ConversationService(settings.chat)
 
 
+def get_admin_cache(request: Request) -> AdminCachePort:
+    existing = getattr(request.app.state, "admin_cache", None)
+    if existing is not None:
+        return existing  # type: ignore[no-any-return]
+    settings: Settings = request.app.state.settings
+    if settings.app.environment == Environment.TEST:
+        cache: AdminCachePort = InMemoryAdminCache()
+    else:
+        redis_client: RedisClient = request.app.state.redis_client
+        cache = RedisAdminCache(redis_client.client)
+    request.app.state.admin_cache = cache
+    return cache
+
+
+def get_secret_cipher(request: Request) -> SecretCipherPort:
+    existing = getattr(request.app.state, "secret_cipher", None)
+    if existing is not None:
+        return existing  # type: ignore[no-any-return]
+    settings: Settings = request.app.state.settings
+    cipher: SecretCipherPort = FernetSecretCipher(settings.security.secret_key.get_secret_value())
+    request.app.state.secret_cipher = cipher
+    return cipher
+
+
+def get_llm_connectivity_checker(request: Request) -> LlmConnectivityCheckPort:
+    existing = getattr(request.app.state, "llm_connectivity_checker", None)
+    if existing is not None:
+        return existing  # type: ignore[no-any-return]
+    checker: LlmConnectivityCheckPort = HttpLlmConnectivityChecker()
+    request.app.state.llm_connectivity_checker = checker
+    return checker
+
+
+def get_feature_flag_service(
+    request: Request,
+    cache: Annotated[AdminCachePort, Depends(get_admin_cache)],
+) -> FeatureFlagService:
+    settings: Settings = request.app.state.settings
+    return FeatureFlagService(cache, settings.admin)
+
+
+def get_llm_config_service(
+    request: Request,
+    cipher: Annotated[SecretCipherPort, Depends(get_secret_cipher)],
+    connectivity: Annotated[LlmConnectivityCheckPort, Depends(get_llm_connectivity_checker)],
+) -> LlmConfigService:
+    settings: Settings = request.app.state.settings
+    return LlmConfigService(cipher, connectivity, settings.admin)
+
+
+def get_document_ops_service(request: Request) -> DocumentOpsService:
+    settings: Settings = request.app.state.settings
+    return DocumentOpsService(settings.ingestion)
+
+
+def get_retention_cleanup_service(request: Request) -> RetentionCleanupService:
+    settings: Settings = request.app.state.settings
+    return RetentionCleanupService(settings.admin)
+
+
+def get_health_service(request: Request) -> HealthService:
+    database: DatabaseManager = request.app.state.database
+    redis_client: RedisClient = request.app.state.redis_client
+    qdrant_client: QdrantHealthClient = request.app.state.qdrant_client
+    minio_client: MinioClient = request.app.state.minio_client
+    return HealthService(
+        checkers=[database, redis_client, qdrant_client, minio_client],
+    )
+
+
+def get_ops_service(
+    request: Request,
+    health: Annotated[HealthService, Depends(get_health_service)],
+) -> OpsService:
+    settings: Settings = request.app.state.settings
+    return OpsService(health, settings)
+
+
 def get_chat_service(
     request: Request,
     rag_query_service: Annotated[RagQueryService, Depends(get_rag_query_service)],
     memory_service: Annotated[MemoryService, Depends(get_memory_service)],
     language_service: Annotated[LanguageService, Depends(get_language_service)],
     cancellation: Annotated[StreamCancellationPort, Depends(get_chat_cancellation_registry)],
+    token_usage: Annotated[TokenUsageService, Depends(get_token_usage_service)],
 ) -> ChatService:
     settings: Settings = request.app.state.settings
     return ChatService(
@@ -258,6 +382,8 @@ def get_chat_service(
         cancellation=cancellation,
         chat_settings=settings.chat,
         rag_settings=settings.rag,
+        token_usage=token_usage,
+        llm_provider_name=settings.llm.provider,
     )
 
 
@@ -283,17 +409,47 @@ def get_chat_analytics_service() -> AnalyticsService:
     return AnalyticsService()
 
 
-def get_health_service(request: Request) -> HealthService:
-    database: DatabaseManager = request.app.state.database
-    redis_client: RedisClient = request.app.state.redis_client
-    qdrant_client: QdrantHealthClient = request.app.state.qdrant_client
-    minio_client: MinioClient = request.app.state.minio_client
-    return HealthService(
-        checkers=[database, redis_client, qdrant_client, minio_client],
-    )
-
-
 def get_system_info_service(
     settings: Annotated[Settings, Depends(get_settings_dependency)],
 ) -> SystemInfoService:
     return SystemInfoService(settings)
+
+
+def get_dashboard_service() -> DashboardService:
+    return DashboardService()
+
+
+def get_admin_user_service() -> AdminUserService:
+    return AdminUserService()
+
+
+def get_admin_role_service() -> AdminRoleService:
+    return AdminRoleService()
+
+
+def get_organization_settings_service() -> OrganizationSettingsService:
+    return OrganizationSettingsService()
+
+
+def get_knowledge_space_admin_service() -> KnowledgeSpaceAdminService:
+    return KnowledgeSpaceAdminService()
+
+
+def get_ingestion_ops_service() -> IngestionOpsService:
+    return IngestionOpsService()
+
+
+def get_audit_export_service() -> AuditExportService:
+    return AuditExportService()
+
+
+def get_usage_analytics_service() -> UsageAnalyticsService:
+    return UsageAnalyticsService()
+
+
+def get_prompt_admin_service() -> PromptAdminService:
+    return PromptAdminService()
+
+
+def get_retention_service(request: Request) -> RetentionCleanupService:
+    return get_retention_cleanup_service(request)

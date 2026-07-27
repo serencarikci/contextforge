@@ -19,6 +19,10 @@ from contextforge.domain.exceptions.identity import (
     InvalidResourceStateError,
     ResourceNotFoundError,
 )
+from contextforge.modules.admin.domain.exceptions import (
+    SystemRoleImmutableError,
+    UnknownPermissionError,
+)
 from contextforge.modules.identity_access.domain.entities.rbac import Role, RoleAssignment
 from contextforge.modules.identity_access.domain.enums import SystemRoleCode
 
@@ -204,6 +208,60 @@ class RoleService:
                 offset=pagination.offset,
                 total=total,
             )
+
+    async def set_permissions(
+        self,
+        uow: SqlAlchemyUnitOfWork,
+        ctx: RequestContext,
+        role_id: UUID,
+        *,
+        permission_codes: list[str],
+    ) -> list[str]:
+        async with uow:
+            ctx.require_permission("admin:roles")
+            role = await uow.rbac.get_role(role_id)
+            if role is None or role.organization_id != ctx.organization_id:
+                raise ResourceNotFoundError("Role not found.")
+            if role.is_system:
+                raise SystemRoleImmutableError("System role permissions cannot be changed.")
+            permissions = await uow.rbac.get_permissions_by_codes(permission_codes)
+            found = {permission.code for permission in permissions}
+            missing = sorted(set(permission_codes) - found)
+            if missing:
+                raise UnknownPermissionError(f"Unknown permissions: {', '.join(missing)}")
+            await uow.rbac.replace_role_permissions(
+                role.id, [permission.id for permission in permissions]
+            )
+            event = build_audit_event(
+                ctx,
+                action="role.permissions_replaced",
+                resource_type="role",
+                resource_id=role.id,
+                metadata={"permission_codes": sorted(found)},
+            )
+            await uow.audit.add(event)
+            return sorted(found)
+
+    async def delete_custom_role(
+        self, uow: SqlAlchemyUnitOfWork, ctx: RequestContext, role_id: UUID
+    ) -> Role:
+        async with uow:
+            ctx.require_permission("admin:roles")
+            role = await uow.rbac.get_role(role_id)
+            if role is None or role.organization_id != ctx.organization_id:
+                raise ResourceNotFoundError("Role not found.")
+            if role.is_system:
+                raise SystemRoleImmutableError("System roles cannot be deleted.")
+            role.archive()
+            role = await uow.rbac.update_role(role)
+            event = build_audit_event(
+                ctx,
+                action="role.archived",
+                resource_type="role",
+                resource_id=role.id,
+            )
+            await uow.audit.add(event)
+            return role
 
 
 __all__ = ["RoleService"]

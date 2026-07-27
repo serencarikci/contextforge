@@ -3,6 +3,7 @@
 from fastapi import APIRouter
 
 from contextforge.api.routers import (
+    admin,
     audit,
     chat_analytics,
     conversations,
@@ -24,6 +25,7 @@ from contextforge.api.routers import (
 api_router = APIRouter()
 api_router.include_router(health.router, tags=["health"])
 api_router.include_router(system.router, tags=["system"])
+api_router.include_router(admin.router)
 api_router.include_router(organizations.router)
 api_router.include_router(users.router)
 api_router.include_router(memberships.router)

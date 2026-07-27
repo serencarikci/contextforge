@@ -7,6 +7,30 @@ from typing import Self
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from contextforge.modules.admin.infrastructure.repositories.admin_stats import (
+    SqlAlchemyAdminStatsRepository,
+)
+from contextforge.modules.admin.infrastructure.repositories.feature_flag import (
+    SqlAlchemyFeatureFlagRepository,
+)
+from contextforge.modules.admin.infrastructure.repositories.llm_provider_config import (
+    SqlAlchemyLlmProviderConfigRepository,
+)
+from contextforge.modules.admin.infrastructure.repositories.organization_settings import (
+    SqlAlchemyOrganizationSettingsRepository,
+)
+from contextforge.modules.admin.infrastructure.repositories.prompt_template import (
+    SqlAlchemyPromptTemplateRepository,
+)
+from contextforge.modules.admin.infrastructure.repositories.retention import (
+    SqlAlchemyRetentionRepository,
+)
+from contextforge.modules.admin.infrastructure.repositories.token_pricing import (
+    SqlAlchemyTokenPricingRepository,
+)
+from contextforge.modules.admin.infrastructure.repositories.token_usage import (
+    SqlAlchemyTokenUsageRepository,
+)
 from contextforge.modules.audit.infrastructure.repositories.audit_event import (
     SqlAlchemyAuditEventRepository,
 )
@@ -79,6 +103,14 @@ class SqlAlchemyUnitOfWork:
         self.chat_messages: SqlAlchemyChatMessageRepository
         self.message_feedback: SqlAlchemyMessageFeedbackRepository
         self.chat_analytics: SqlAlchemyChatAnalyticsRepository
+        self.organization_settings: SqlAlchemyOrganizationSettingsRepository
+        self.feature_flags: SqlAlchemyFeatureFlagRepository
+        self.prompt_templates: SqlAlchemyPromptTemplateRepository
+        self.llm_provider_configs: SqlAlchemyLlmProviderConfigRepository
+        self.token_pricing: SqlAlchemyTokenPricingRepository
+        self.token_usage: SqlAlchemyTokenUsageRepository
+        self.retention: SqlAlchemyRetentionRepository
+        self.admin_stats: SqlAlchemyAdminStatsRepository
 
     async def __aenter__(self) -> Self:
         self.session = self._session_factory()
@@ -98,6 +130,14 @@ class SqlAlchemyUnitOfWork:
         self.chat_messages = SqlAlchemyChatMessageRepository(self.session)
         self.message_feedback = SqlAlchemyMessageFeedbackRepository(self.session)
         self.chat_analytics = SqlAlchemyChatAnalyticsRepository(self.session)
+        self.organization_settings = SqlAlchemyOrganizationSettingsRepository(self.session)
+        self.feature_flags = SqlAlchemyFeatureFlagRepository(self.session)
+        self.prompt_templates = SqlAlchemyPromptTemplateRepository(self.session)
+        self.llm_provider_configs = SqlAlchemyLlmProviderConfigRepository(self.session)
+        self.token_pricing = SqlAlchemyTokenPricingRepository(self.session)
+        self.token_usage = SqlAlchemyTokenUsageRepository(self.session)
+        self.retention = SqlAlchemyRetentionRepository(self.session)
+        self.admin_stats = SqlAlchemyAdminStatsRepository(self.session)
         return self
 
     async def __aexit__(
