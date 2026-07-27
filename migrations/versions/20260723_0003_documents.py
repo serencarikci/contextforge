@@ -5,6 +5,7 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
+from migrations.helpers import existing_role_codes
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
@@ -151,9 +152,11 @@ def _seed_document_rbac_reference_data() -> None:
         .on_conflict_do_nothing(index_elements=["code"])
     )
 
-    role_codes_present = {
-        row[0] for row in connection.execute(sa.select(roles_table.c.code)).fetchall()
-    }
+    role_codes_present = existing_role_codes(
+        connection,
+        roles_table,
+        fallback=NEW_ROLE_PERMISSIONS,
+    )
 
     role_permission_rows = [
         {"role_id": system_role_id(role_code), "permission_id": permission_id(perm_code)}
