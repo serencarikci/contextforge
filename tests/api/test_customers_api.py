@@ -1,5 +1,3 @@
-"""API tests for customer creation authorization: org admin vs. viewer."""
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

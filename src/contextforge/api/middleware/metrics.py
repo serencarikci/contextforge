@@ -1,5 +1,3 @@
-"""Prometheus metrics middleware and scrape endpoint helpers."""
-
 from __future__ import annotations
 
 import time
@@ -29,7 +27,6 @@ DEPENDENCY_UP = Gauge(
 
 
 def _normalize_path(path: str) -> str:
-    """Collapse UUID-looking path segments for low-cardinality labels."""
     parts: list[str] = []
     for part in path.split("/"):
         if not part:
@@ -43,8 +40,6 @@ def _normalize_path(path: str) -> str:
 
 
 class MetricsMiddleware(BaseHTTPMiddleware):
-    """Record request counts and latency histograms."""
-
     def __init__(self, app: object, metrics_path: str = "/metrics") -> None:
         super().__init__(app)  # type: ignore[arg-type]
         self._metrics_path = metrics_path
@@ -69,7 +64,6 @@ class MetricsMiddleware(BaseHTTPMiddleware):
 
 
 async def render_metrics(request: Request) -> Response:
-    """Update dependency gauges when possible and return Prometheus exposition."""
     settings = request.app.state.settings
     if settings.observability.dependency_gauge_enabled:
         await _refresh_dependency_gauges(request)

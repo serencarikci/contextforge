@@ -1,9 +1,3 @@
-"""SQLAlchemy implementation of the conversation repository.
-
-Owns four related tables: ``conversations``, ``conversation_participants``,
-``conversation_knowledge_spaces``, and ``conversation_memories``.
-"""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -32,8 +26,6 @@ from contextforge.modules.chat.infrastructure.models.message import ChatMessageM
 
 
 class SqlAlchemyConversationRepository:
-    """Persists conversations, participants, knowledge-space links, and memory."""
-
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
@@ -157,7 +149,6 @@ class SqlAlchemyConversationRepository:
         offset: int,
         visible_to_user_id: UUID | None = None,
     ) -> tuple[list[Conversation], int]:
-        """Fallback ILIKE search across conversation titles and message content."""
         pattern = f"%{query.strip()}%"
         message_match = exists(
             select(ChatMessageModel.id).where(

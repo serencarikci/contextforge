@@ -1,5 +1,3 @@
-"""Application service for querying audit events."""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -12,8 +10,6 @@ from contextforge.modules.audit.domain.entities.audit_event import AuditEvent
 
 
 class AuditQueryService:
-    """Read-only use cases for the append-only audit trail."""
-
     async def list(
         self,
         uow: SqlAlchemyUnitOfWork,

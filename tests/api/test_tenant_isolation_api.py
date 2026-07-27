@@ -1,5 +1,3 @@
-"""API tests: cross-tenant access to another organization's resources is a 404."""
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -16,7 +14,6 @@ if TYPE_CHECKING:
 def test_cross_tenant_customer_access_returns_404(
     api_client: TestClient, tenant_scenario: TenantScenario
 ) -> None:
-    """Org A's admin cannot fetch a customer that belongs to org B."""
     response = api_client.get(
         f"/api/v1/customers/{tenant_scenario.other_organization_customer_id}",
         headers=tenant_scenario.admin_headers(),
@@ -29,7 +26,6 @@ def test_cross_tenant_customer_access_returns_404(
 def test_cross_tenant_organization_access_returns_404(
     api_client: TestClient, tenant_scenario: TenantScenario
 ) -> None:
-    """Requesting a different organization than the one in context is a 404."""
     response = api_client.get(
         f"/api/v1/organizations/{tenant_scenario.other_organization_id}",
         headers=tenant_scenario.admin_headers(),

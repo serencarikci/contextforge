@@ -1,5 +1,3 @@
-"""Background worker that periodically executes retention policies."""
-
 from __future__ import annotations
 
 import asyncio
@@ -18,8 +16,6 @@ logger = get_logger(__name__)
 
 
 class RetentionWorker:
-    """Long-running process that ticks retention cleanup on an interval."""
-
     def __init__(self) -> None:
         self._settings = get_settings()
         self._stop = asyncio.Event()

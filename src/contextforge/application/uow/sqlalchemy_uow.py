@@ -1,5 +1,3 @@
-"""SQLAlchemy unit of work for write use cases."""
-
 from __future__ import annotations
 
 from types import TracebackType
@@ -82,8 +80,6 @@ from contextforge.modules.projects.infrastructure.repositories.project import (
 
 
 class SqlAlchemyUnitOfWork:
-    """Explicit transaction boundary owning a single AsyncSession."""
-
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
         self.session: AsyncSession | None = None

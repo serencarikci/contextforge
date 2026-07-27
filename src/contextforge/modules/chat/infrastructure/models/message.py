@@ -1,5 +1,3 @@
-"""Chat message and citation ORM models."""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -13,8 +11,6 @@ from contextforge.modules.chat.domain.enums import MessageStatus
 
 
 class ChatMessageModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
-    """A single turn (user, assistant, system, or tool) in a conversation."""
-
     __tablename__ = "chat_messages"
     __table_args__ = (
         UniqueConstraint(
@@ -69,8 +65,6 @@ class ChatMessageModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
 
 
 class MessageCitationModel(Base, UUIDPrimaryKeyMixin):
-    """A grounding citation attached to an assistant message."""
-
     __tablename__ = "message_citations"
     __table_args__ = (
         Index("ix_message_citations_message_id", "message_id"),

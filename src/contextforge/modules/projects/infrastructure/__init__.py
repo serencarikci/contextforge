@@ -1,1 +1,0 @@
-"""projects/infrastructure package."""

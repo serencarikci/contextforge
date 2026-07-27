@@ -1,5 +1,3 @@
-"""SQLAlchemy implementation of the system metadata repository."""
-
 from __future__ import annotations
 
 from sqlalchemy import select
@@ -11,8 +9,6 @@ from contextforge.shared.utilities.datetime import utc_now
 
 
 class SqlAlchemySystemMetadataRepository:
-    """Persists SystemMetadata using an explicit AsyncSession."""
-
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

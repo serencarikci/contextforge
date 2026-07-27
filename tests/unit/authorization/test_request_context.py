@@ -1,5 +1,3 @@
-"""Unit tests for RequestContext permission helpers and knowledge-space visibility."""
-
 from __future__ import annotations
 
 from uuid import uuid4

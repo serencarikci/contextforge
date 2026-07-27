@@ -1,5 +1,3 @@
-"""RAG domain types for retrieval and citations."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -8,8 +6,6 @@ from uuid import UUID
 
 @dataclass(frozen=True, slots=True)
 class RetrievedChunk:
-    """One fused retrieval candidate with provenance metadata."""
-
     chunk_id: UUID
     organization_id: UUID
     document_id: UUID
@@ -28,8 +24,6 @@ class RetrievedChunk:
 
 @dataclass(frozen=True, slots=True)
 class Citation:
-    """Citation payload suitable for frontend rendering."""
-
     document_id: UUID
     document_title: str
     chunk_id: UUID
@@ -41,8 +35,6 @@ class Citation:
 
 @dataclass(frozen=True, slots=True)
 class RagDiagnostics:
-    """Safe observability counters returned with RAG responses."""
-
     retrieval_ms: float
     rerank_ms: float
     prompt_build_ms: float
@@ -58,8 +50,6 @@ class RagDiagnostics:
 
 @dataclass(frozen=True, slots=True)
 class RagAnswer:
-    """Final RAG response."""
-
     answer: str
     language: str
     citations: list[Citation] = field(default_factory=list)

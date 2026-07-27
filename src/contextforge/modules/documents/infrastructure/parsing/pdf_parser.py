@@ -1,5 +1,3 @@
-"""PDF text extraction using pypdf."""
-
 from __future__ import annotations
 
 from io import BytesIO
@@ -14,7 +12,6 @@ from contextforge.shared.types.aliases import JSONValue
 
 
 def parse_pdf(data: bytes) -> ExtractedDocumentContent:
-    """Extract text and document info from a PDF byte payload."""
     if not data:
         raise DocumentParseError("PDF content is empty.")
 

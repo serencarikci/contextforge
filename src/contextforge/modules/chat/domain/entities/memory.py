@@ -1,5 +1,3 @@
-"""Conversation memory entity: a rolling summary of older messages."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -11,8 +9,6 @@ from contextforge.shared.utilities.datetime import utc_now
 
 @dataclass(slots=True)
 class ConversationMemory:
-    """A durable, compacted summary of a conversation's history."""
-
     conversation_id: UUID
     organization_id: UUID
     summary_text: str

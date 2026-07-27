@@ -1,5 +1,3 @@
-"""Structure-aware semantic text chunker for embedding preparation."""
-
 from __future__ import annotations
 
 import re
@@ -32,8 +30,6 @@ class _Unit:
 
 
 class SemanticTextChunker:
-    """Split text on headings/paragraphs/sentences, then pack with overlap."""
-
     def __init__(self, config: ChunkerConfig | None = None) -> None:
         self._config = config or ChunkerConfig()
 

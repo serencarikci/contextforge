@@ -1,5 +1,3 @@
-"""Database-backed prompt slot overrides for PromptRegistry."""
-
 from __future__ import annotations
 
 from uuid import UUID

@@ -1,5 +1,3 @@
-"""Reranker implementations."""
-
 from __future__ import annotations
 
 import hashlib
@@ -15,8 +13,6 @@ _TOKEN_RE = re.compile(r"[^\W_]+", re.UNICODE)
 
 
 class NoopReranker:
-    """Passthrough reranker that preserves hybrid order."""
-
     async def rerank(
         self,
         *,
@@ -31,8 +27,6 @@ class NoopReranker:
 
 
 class HashingCrossEncoderReranker:
-    """Deterministic local cross-encoder stand-in for tests and offline use."""
-
     async def rerank(
         self,
         *,
@@ -54,8 +48,6 @@ class HashingCrossEncoderReranker:
 
 
 class OpenAICompatibleReranker:
-    """HTTP reranker compatible with OpenAI-style scoring endpoints."""
-
     def __init__(self, settings: RerankSettings) -> None:
         self._settings = settings
         headers: dict[str, str] = {"Content-Type": "application/json"}

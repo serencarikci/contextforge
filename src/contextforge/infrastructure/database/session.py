@@ -1,5 +1,3 @@
-"""Async database engine and session management."""
-
 from __future__ import annotations
 
 import time
@@ -22,8 +20,6 @@ logger = get_logger(__name__)
 
 
 class DatabaseManager:
-    """Manages the SQLAlchemy async engine and session factory."""
-
     name = "postgresql"
 
     def __init__(self, settings: PostgresSettings) -> None:
@@ -48,7 +44,6 @@ class DatabaseManager:
         return self._session_factory
 
     async def check(self) -> DependencyCheckResult:
-        """Probe PostgreSQL readiness."""
         started = time.perf_counter()
         try:
             async with self._engine.connect() as connection:
@@ -71,7 +66,6 @@ class DatabaseManager:
 
     @asynccontextmanager
     async def session(self) -> AsyncIterator[AsyncSession]:
-        """Provide a transactional session with explicit commit/rollback."""
         session = self._session_factory()
         try:
             yield session
@@ -83,6 +77,5 @@ class DatabaseManager:
             await session.close()
 
     async def dispose(self) -> None:
-        """Dispose of the engine connection pool."""
         await self._engine.dispose()
         logger.info("database_engine_disposed")

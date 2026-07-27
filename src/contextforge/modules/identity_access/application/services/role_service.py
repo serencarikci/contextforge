@@ -1,5 +1,3 @@
-"""Application service for RBAC (roles, role assignments) use cases."""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -24,8 +22,6 @@ from contextforge.modules.identity_access.domain.enums import SystemRoleCode
 
 
 class RoleService:
-    """Use cases for managing organization-scoped roles and role assignments."""
-
     async def list_roles(self, uow: SqlAlchemyUnitOfWork, ctx: RequestContext) -> list[Role]:
         async with uow:
             ctx.require_permission("role:read")

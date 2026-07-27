@@ -1,5 +1,3 @@
-"""Unit tests for security response headers."""
-
 from __future__ import annotations
 
 import pytest

@@ -1,1 +1,0 @@
-"""organizations/infrastructure/repositories package."""

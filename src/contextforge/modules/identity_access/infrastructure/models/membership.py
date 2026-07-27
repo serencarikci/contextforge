@@ -1,5 +1,3 @@
-"""Organization membership ORM model."""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -15,8 +13,6 @@ from contextforge.shared.utilities.datetime import utc_now
 
 
 class OrganizationMembershipModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
-    """Membership linking a user to an organization."""
-
     __tablename__ = "organization_memberships"
     __table_args__ = (
         UniqueConstraint("organization_id", "user_id", name="uq_organization_memberships_org_user"),

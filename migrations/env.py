@@ -1,5 +1,3 @@
-"""Alembic migration environment."""
-
 from __future__ import annotations
 
 import asyncio
@@ -29,7 +27,6 @@ def get_url() -> str:
 
 
 def run_migrations_offline() -> None:
-    """Run migrations in 'offline' mode."""
     context.configure(
         url=get_url(),
         target_metadata=target_metadata,
@@ -68,7 +65,6 @@ async def run_async_migrations() -> None:
 
 
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode."""
     asyncio.run(run_async_migrations())
 
 

@@ -1,10 +1,3 @@
-"""LLM provider configuration ORM model.
-
-Global configs have ``organization_id IS NULL``. Uniqueness of
-``(provider, model)`` uses two partial unique indexes so NULL tenant ids cannot
-produce duplicate global rows.
-"""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -17,8 +10,6 @@ from contextforge.infrastructure.database.base import Base, TimestampMixin, UUID
 
 
 class LlmProviderConfigModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
-    """Connection and generation parameters for one provider/model pair."""
-
     __tablename__ = "llm_provider_configs"
     __table_args__ = (
         Index(

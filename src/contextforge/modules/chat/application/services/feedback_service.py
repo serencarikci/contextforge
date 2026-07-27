@@ -1,5 +1,3 @@
-"""Application service for submitting and reading message feedback."""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -20,8 +18,6 @@ from contextforge.modules.chat.domain.enums import (
 
 
 class FeedbackService:
-    """Use cases for recording per-user feedback on assistant messages."""
-
     async def submit(
         self,
         uow: SqlAlchemyUnitOfWork,

@@ -1,5 +1,3 @@
-"""RAG search and answer endpoints."""
-
 from __future__ import annotations
 
 import json

@@ -1,10 +1,3 @@
-"""Create ingestion_jobs table for CFG-006 background workers.
-
-Revision ID: 20260723_0007
-Revises: 20260723_0006
-Create Date: 2026-07-23 00:00:00
-"""
-
 from __future__ import annotations
 
 from collections.abc import Sequence

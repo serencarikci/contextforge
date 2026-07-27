@@ -1,5 +1,3 @@
-"""Exception handler registration."""
-
 from __future__ import annotations
 
 from fastapi import FastAPI, Request, status
@@ -28,7 +26,6 @@ def _error_payload(code: str, message: str) -> dict[str, object]:
 
 
 def register_exception_handlers(app: FastAPI) -> None:
-    """Register consistent API exception handlers."""
 
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(

@@ -1,11 +1,3 @@
-"""Application service for exporting a conversation transcript.
-
-Loads the conversation and its messages/citations once (inside a single unit
-of work), then streams the rendered representation from an in-memory list --
-so the underlying database transaction is short-lived even for a large,
-slowly-consumed HTTP response.
-"""
-
 from __future__ import annotations
 
 import json
@@ -32,8 +24,6 @@ class _ExportBundle:
 
 
 class ExportService:
-    """Streams a conversation transcript as JSON or Markdown."""
-
     def __init__(self, settings: ChatSettings) -> None:
         self._settings = settings
 

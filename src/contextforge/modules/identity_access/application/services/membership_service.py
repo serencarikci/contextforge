@@ -1,5 +1,3 @@
-"""Application service for organization membership lifecycle use cases."""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -25,8 +23,6 @@ from contextforge.modules.identity_access.domain.enums import MembershipStatus
 
 
 class MembershipService:
-    """Use cases for adding, viewing, and managing organization memberships."""
-
     async def add_member(
         self, uow: SqlAlchemyUnitOfWork, ctx: RequestContext, *, user_id: UUID
     ) -> OrganizationMembership:

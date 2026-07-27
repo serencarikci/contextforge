@@ -1,5 +1,3 @@
-"""Application service for conversation lifecycle use cases."""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -35,8 +33,6 @@ from contextforge.shared.config.settings import ChatSettings
 
 
 class ConversationService:
-    """Use cases for creating, reading, and managing conversations."""
-
     def __init__(self, settings: ChatSettings) -> None:
         self._settings = settings
 

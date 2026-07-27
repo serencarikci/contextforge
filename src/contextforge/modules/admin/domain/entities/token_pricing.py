@@ -1,5 +1,3 @@
-"""Token pricing table and cost calculation."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -26,19 +24,11 @@ def _coerce_price(value: Decimal | float | int | str, field_name: str) -> Decima
 
 
 def quantize_cost(value: Decimal) -> Decimal:
-    """Round a monetary amount to the persisted precision."""
     return value.quantize(COST_QUANTUM, rounding=ROUND_HALF_UP)
 
 
 @dataclass(slots=True)
 class TokenPricing:
-    """Price per 1,000 prompt/completion tokens for one provider/model pair.
-
-    Rows are time-bounded: ``effective_from`` is inclusive and
-    ``effective_to`` (when set) is exclusive, so historical usage keeps the
-    price that applied when it was recorded.
-    """
-
     provider: str
     model: str
     input_price_per_1k: Decimal
@@ -77,7 +67,6 @@ class TokenPricing:
         return cleaned
 
     def estimate_cost(self, *, prompt_tokens: int, completion_tokens: int) -> Decimal:
-        """Cost for a token split, rounded to the persisted precision."""
         if prompt_tokens < 0 or completion_tokens < 0:
             msg = "Token counts must be non-negative"
             raise ValueError(msg)
@@ -88,7 +77,6 @@ class TokenPricing:
         return quantize_cost(prompt_cost + completion_cost)
 
     def supersede(self, moment: datetime) -> None:
-        """Close this price row so a newer one can take over at ``moment``."""
         if moment <= self.effective_from:
             msg = "A pricing row cannot be superseded before it became effective"
             raise ValueError(msg)
@@ -102,7 +90,6 @@ def estimate_cost(
     prompt_tokens: int,
     completion_tokens: int,
 ) -> Decimal:
-    """Cost helper that treats a missing price row as zero cost."""
     if pricing is None:
         return Decimal("0")
     return pricing.estimate_cost(prompt_tokens=prompt_tokens, completion_tokens=completion_tokens)

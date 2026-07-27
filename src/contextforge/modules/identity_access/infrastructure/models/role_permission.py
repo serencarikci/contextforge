@@ -1,5 +1,3 @@
-"""Role <-> permission association ORM model."""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -12,8 +10,6 @@ from contextforge.infrastructure.database.base import Base
 
 
 class RolePermissionModel(Base):
-    """Grants a permission to a role."""
-
     __tablename__ = "role_permissions"
 
     role_id: Mapped[UUID] = mapped_column(

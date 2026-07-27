@@ -1,5 +1,3 @@
-"""Context packing and citation builders."""
-
 from __future__ import annotations
 
 from contextforge.modules.rag.application.security.prompt_guard import build_context_block

@@ -1,5 +1,3 @@
-"""Process-local admin cache used in tests and when Redis is unavailable."""
-
 from __future__ import annotations
 
 import time

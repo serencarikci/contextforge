@@ -1,5 +1,3 @@
-"""Hybrid dense + BM25 retrieval service."""
-
 from __future__ import annotations
 
 import time
@@ -29,8 +27,6 @@ logger = get_logger(__name__)
 
 
 class HybridRetrievalService:
-    """Combines dense vector search and BM25 keyword search with score fusion."""
-
     def __init__(
         self,
         *,

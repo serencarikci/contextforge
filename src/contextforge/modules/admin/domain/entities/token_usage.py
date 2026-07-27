@@ -1,5 +1,3 @@
-"""Token usage analytics value objects."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -9,8 +7,6 @@ from uuid import UUID
 
 @dataclass(frozen=True, slots=True)
 class TokenUsageAggregate:
-    """Grouped usage totals returned by the analytics queries."""
-
     provider: str
     model: str
     prompt_tokens: int

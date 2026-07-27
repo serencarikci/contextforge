@@ -1,5 +1,3 @@
-"""Application service for organization lifecycle use cases."""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -25,8 +23,6 @@ from contextforge.modules.organizations.domain.entities.organization import Orga
 
 
 class OrganizationService:
-    """Use cases for creating, reading, and managing organizations."""
-
     async def create(
         self,
         uow: SqlAlchemyUnitOfWork,
@@ -35,14 +31,6 @@ class OrganizationService:
         slug: str,
         creator_user_id: UUID,
     ) -> Organization:
-        """Create a new organization and make ``creator_user_id`` its admin.
-
-        This is a bootstrap-like use case: it does not require an existing
-        ``RequestContext`` because the creator is not yet a member of any
-        organization. The creator's membership and ``organization_admin``
-        role assignment are created in the same transaction as the
-        organization itself.
-        """
         async with uow:
             creator = await uow.users.get_by_id(creator_user_id)
             if creator is None:

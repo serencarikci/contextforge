@@ -1,5 +1,3 @@
-"""Daily token usage rollup ORM model."""
-
 from __future__ import annotations
 
 from datetime import date
@@ -14,8 +12,6 @@ from contextforge.infrastructure.database.base import Base, TimestampMixin, UUID
 
 
 class TokenUsageDailyModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
-    """One (organization, day, provider, model) usage bucket."""
-
     __tablename__ = "token_usage_daily"
     __table_args__ = (
         UniqueConstraint(

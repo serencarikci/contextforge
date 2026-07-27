@@ -1,12 +1,3 @@
-"""Role ORM model.
-
-System roles are shared across all tenants and have ``organization_id IS NULL``.
-Organization roles are tenant-scoped. Uniqueness of ``code`` is enforced with two
-partial unique indexes rather than a single composite unique constraint because
-PostgreSQL treats every NULL as distinct, which would otherwise allow duplicate
-system role codes.
-"""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -20,8 +11,6 @@ from contextforge.infrastructure.database.base import Base, TimestampMixin, UUID
 
 
 class RoleModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
-    """A named collection of permissions, either system-wide or organization-scoped."""
-
     __tablename__ = "roles"
     __table_args__ = (
         Index(

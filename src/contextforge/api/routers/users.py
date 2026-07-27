@@ -1,5 +1,3 @@
-"""User endpoints."""
-
 from __future__ import annotations
 
 from typing import Annotated
@@ -24,7 +22,6 @@ async def create_user(
     uow: Annotated[SqlAlchemyUnitOfWork, Depends(get_uow)],
     ctx: Annotated[RequestContext, Depends(get_request_context)],
 ) -> UserResponse:
-    """Provision a new user. Requires ``user:manage`` in the caller's organization."""
     user = await _service.create(
         uow,
         email=payload.email,

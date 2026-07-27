@@ -1,5 +1,3 @@
-"""Correlation ID middleware."""
-
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -15,8 +13,6 @@ CORRELATION_HEADER = "X-Correlation-ID"
 
 
 class CorrelationIdMiddleware(BaseHTTPMiddleware):
-    """Accept or generate a correlation ID for each request."""
-
     async def dispatch(
         self,
         request: Request,

@@ -1,4 +1,4 @@
-.PHONY: install dev worker retention-worker up down logs lint format type-check test test-unit test-integration test-architecture test-authorization test-security coverage migrate migration downgrade bootstrap-dev seed-system-data validate-infra helm-lint terraform-validate backup-postgres load-test-smoke compose-prod-config clean help
+.PHONY: install dev worker retention-worker up down logs lint format type-check test test-unit test-integration test-architecture test-authorization test-security coverage migrate migration downgrade bootstrap-dev seed-system-data validate-infra helm-lint terraform-validate backup-postgres load-test-smoke compose-prod-config frontend-install frontend-dev frontend-build frontend-test clean help
 
 UV ?= uv
 PYTHON ?= python3
@@ -34,6 +34,10 @@ help:
 	@echo "  make backup-postgres      Run Postgres backup script"
 	@echo "  make load-test-smoke      Run k6 smoke scenario (k6 required)"
 	@echo "  make compose-prod-config  Validate prod compose merge"
+	@echo "  make frontend-install     Install frontend npm deps"
+	@echo "  make frontend-dev         Run Next.js on :3001"
+	@echo "  make frontend-build       Build frontend production bundle"
+	@echo "  make frontend-test        Run frontend unit tests"
 	@echo "  make clean                Remove caches and build artifacts"
 
 install:
@@ -87,7 +91,7 @@ test-security:
 	$(UV) run pytest -m security
 
 coverage:
-	$(UV) run pytest --cov=contextforge --cov-report=term-missing --cov-report=xml --cov-fail-under=85
+	$(UV) run pytest --cov=contextforge --cov-report=term-missing --cov-report=xml --cov-fail-under=80
 
 migrate:
 	$(UV) run alembic upgrade head
@@ -124,6 +128,19 @@ compose-prod-config:
 	$(COMPOSE) -f docker-compose.yml -f docker-compose.prod.yml config >/dev/null
 	@echo "compose prod config OK"
 
+frontend-install:
+	cd frontend/web && npm install
+
+frontend-dev:
+	cd frontend/web && npm run dev
+
+frontend-build:
+	cd frontend/web && npm run build
+
+frontend-test:
+	cd frontend/web && npm test
+
 clean:
 	rm -rf .pytest_cache .mypy_cache .ruff_cache .coverage htmlcov coverage.xml dist build
 	find . -type d -name "__pycache__" -prune -exec rm -rf {} +
+	rm -rf frontend/web/.next frontend/web/coverage

@@ -1,5 +1,3 @@
-"""User ORM model."""
-
 from __future__ import annotations
 
 from sqlalchemy import Boolean, String
@@ -10,8 +8,6 @@ from contextforge.modules.identity_access.domain.enums import PreferredLanguage,
 
 
 class UserModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
-    """Platform-wide user account."""
-
     __tablename__ = "users"
 
     email: Mapped[str] = mapped_column(String(320), unique=True, nullable=False)

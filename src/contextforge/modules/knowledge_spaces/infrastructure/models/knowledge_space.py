@@ -1,5 +1,3 @@
-"""Knowledge space ORM model."""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -17,8 +15,6 @@ from contextforge.modules.identity_access.domain.enums import (
 
 
 class KnowledgeSpaceModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
-    """A namespace for knowledge content, owned by an organization."""
-
     __tablename__ = "knowledge_spaces"
     __table_args__ = (
         UniqueConstraint(

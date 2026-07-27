@@ -1,5 +1,3 @@
-"""Shared conversation-access checks used by multiple chat application services."""
-
 from __future__ import annotations
 
 from contextforge.application.context.request_context import RequestContext
@@ -13,10 +11,6 @@ async def ensure_conversation_access(
     ctx: RequestContext,
     conversation: Conversation,
 ) -> None:
-    """Allow the owner, any participant, a platform admin, or ``chat:manage``.
-
-    Must be called from inside an already-open ``uow`` (``async with uow:``).
-    """
     if ctx.is_platform_admin or ctx.has_permission("chat:manage"):
         return
     if conversation.owner_user_id == ctx.user_id:
@@ -29,7 +23,6 @@ async def ensure_conversation_access(
 
 
 def ensure_owner_or_manage(ctx: RequestContext, conversation: Conversation) -> None:
-    """Allow only the conversation owner, a platform admin, or ``chat:manage``."""
     if ctx.is_platform_admin or ctx.has_permission("chat:manage"):
         return
     if conversation.owner_user_id == ctx.user_id:

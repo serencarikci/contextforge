@@ -1,5 +1,3 @@
-"""Administration application ports."""
-
 from __future__ import annotations
 
 from contextforge.modules.admin.application.ports.admin_cache import AdminCachePort

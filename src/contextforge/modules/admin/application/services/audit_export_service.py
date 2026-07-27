@@ -1,5 +1,3 @@
-"""Audit trail export for administrators."""
-
 from __future__ import annotations
 
 import csv

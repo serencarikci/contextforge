@@ -1,9 +1,3 @@
-"""SQLAlchemy implementation of the RBAC repository.
-
-Covers roles, permissions, and role assignments (organization-, project-, and
-knowledge-space-scoped grants of a role to an organization membership).
-"""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -27,8 +21,6 @@ from contextforge.modules.identity_access.infrastructure.models.role_permission 
 
 
 class SqlAlchemyRbacRepository:
-    """Persists roles, permissions, and role assignments using an explicit AsyncSession."""
-
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

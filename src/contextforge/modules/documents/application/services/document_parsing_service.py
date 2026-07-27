@@ -1,5 +1,3 @@
-"""Application service for document text extraction use cases."""
-
 from __future__ import annotations
 
 import asyncio
@@ -24,8 +22,6 @@ logger = get_logger(__name__)
 
 
 class DocumentParsingService:
-    """Loads stored documents and extracts text/metadata via a parser port."""
-
     def __init__(self, parser: DocumentParserPort) -> None:
         self._parser = parser
 

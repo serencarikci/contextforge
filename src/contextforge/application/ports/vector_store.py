@@ -1,5 +1,3 @@
-"""Port for vector store operations over document chunks."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -11,8 +9,6 @@ from contextforge.shared.types.aliases import JSONValue
 
 @dataclass(frozen=True, slots=True)
 class ChunkVectorPoint:
-    """One chunk vector ready to upsert into the vector store."""
-
     chunk_id: UUID
     organization_id: UUID
     document_id: UUID
@@ -26,8 +22,6 @@ class ChunkVectorPoint:
 
 @dataclass(frozen=True, slots=True)
 class VectorSearchHit:
-    """One dense-search result from the vector store."""
-
     chunk_id: UUID
     organization_id: UUID
     document_id: UUID
@@ -39,27 +33,17 @@ class VectorSearchHit:
 
 
 class VectorStoreError(Exception):
-    """Raised when a vector store operation fails."""
-
     def __init__(self, message: str) -> None:
         super().__init__(message)
         self.message = message
 
 
 class VectorStorePort(Protocol):
-    """Persists chunk embeddings for similarity retrieval."""
+    async def ensure_ready(self, *, dimensions: int) -> None: ...
 
-    async def ensure_ready(self, *, dimensions: int) -> None:
-        """Ensure the backing collection exists for the configured dimensions."""
-        ...
+    async def upsert_chunk_vectors(self, points: list[ChunkVectorPoint]) -> None: ...
 
-    async def upsert_chunk_vectors(self, points: list[ChunkVectorPoint]) -> None:
-        """Insert or replace vectors for the given chunks."""
-        ...
-
-    async def delete_by_document(self, organization_id: UUID, document_id: UUID) -> None:
-        """Remove all vectors belonging to a document."""
-        ...
+    async def delete_by_document(self, organization_id: UUID, document_id: UUID) -> None: ...
 
     async def search(
         self,
@@ -68,9 +52,7 @@ class VectorStorePort(Protocol):
         query_vector: list[float],
         knowledge_space_ids: list[UUID],
         top_k: int,
-    ) -> list[VectorSearchHit]:
-        """Dense similarity search scoped to an organization and knowledge spaces."""
-        ...
+    ) -> list[VectorSearchHit]: ...
 
 
 __all__ = [

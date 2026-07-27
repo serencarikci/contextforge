@@ -1,5 +1,3 @@
-"""Token-budget memory strategy: greedily fit the most recent turns."""
-
 from __future__ import annotations
 
 from contextforge.modules.chat.application.services.memory_strategies import format_turn
@@ -9,8 +7,6 @@ from contextforge.shared.utilities.tokens import estimate_tokens
 
 
 class TokenBudgetStrategy:
-    """Includes as many of the most recent turns as fit within a token budget."""
-
     def __init__(self, *, max_tokens: int) -> None:
         self._max_tokens = max_tokens
 

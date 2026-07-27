@@ -1,10 +1,3 @@
-"""Seed rag:query permission and role mappings for Phase 2 RAG.
-
-Revision ID: 20260724_0008
-Revises: 20260723_0007
-Create Date: 2026-07-24 00:00:00
-"""
-
 from __future__ import annotations
 
 import uuid as _uuid
@@ -12,6 +5,7 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
+from migrations.helpers import existing_role_codes
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
@@ -81,9 +75,11 @@ def _seed_rag_rbac_reference_data() -> None:
         .on_conflict_do_nothing(index_elements=["code"])
     )
 
-    role_codes_present = {
-        row[0] for row in connection.execute(sa.select(roles_table.c.code)).fetchall()
-    }
+    role_codes_present = existing_role_codes(
+        connection,
+        roles_table,
+        fallback=NEW_ROLE_PERMISSIONS,
+    )
 
     role_permission_rows = [
         {"role_id": system_role_id(role_code), "permission_id": permission_id(perm_code)}

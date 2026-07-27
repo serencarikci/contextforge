@@ -1,5 +1,3 @@
-"""Permission ORM model."""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -12,8 +10,6 @@ from contextforge.shared.utilities.datetime import utc_now
 
 
 class PermissionModel(Base, UUIDPrimaryKeyMixin):
-    """Fine-grained permission code in the RBAC catalog."""
-
     __tablename__ = "permissions"
 
     code: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)

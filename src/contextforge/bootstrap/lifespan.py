@@ -1,5 +1,3 @@
-"""Application lifespan management."""
-
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
@@ -19,7 +17,6 @@ logger = get_logger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """Initialize and tear down application resources."""
     settings: Settings = app.state.settings
     configure_logging(settings.logging, environment=settings.app.environment.value)
 

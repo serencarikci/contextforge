@@ -1,5 +1,3 @@
-"""MinIO client used for readiness checks and document storage."""
-
 from __future__ import annotations
 
 import asyncio
@@ -22,14 +20,10 @@ _UNSAFE_FILENAME_CHARS = re.compile(r"[^A-Za-z0-9._-]+")
 
 
 class ObjectStorageError(InfrastructureError):
-    """Raised when a MinIO object operation fails."""
-
     code = "OBJECT_STORAGE_ERROR"
 
 
 class MinioClient:
-    """MinIO wrapper with async-friendly readiness checks."""
-
     name = "minio"
 
     def __init__(self, settings: MinioSettings) -> None:
@@ -68,7 +62,6 @@ class MinioClient:
         length: int,
         content_type: str,
     ) -> None:
-        """Upload an object to the configured bucket."""
         stream: BinaryIO = io.BytesIO(data) if isinstance(data, bytes) else data
         try:
             await asyncio.wait_for(
@@ -87,7 +80,6 @@ class MinioClient:
             raise ObjectStorageError(f"Failed to upload object '{object_name}'.") from exc
 
     async def get_object(self, object_name: str) -> bytes:
-        """Download an object's bytes from the configured bucket."""
 
         def _read() -> bytes:
             response = self._client.get_object(self._settings.bucket, object_name)
@@ -107,7 +99,6 @@ class MinioClient:
             raise ObjectStorageError(f"Failed to download object '{object_name}'.") from exc
 
     async def remove_object(self, object_name: str) -> None:
-        """Delete an object from the configured bucket."""
         try:
             await asyncio.wait_for(
                 asyncio.to_thread(self._client.remove_object, self._settings.bucket, object_name),
@@ -124,10 +115,6 @@ class MinioClient:
         document_id: UUID,
         filename: str,
     ) -> str:
-        """Build a deterministic, tenant-scoped object key for a document.
-
-        Format: ``{organization_id}/{knowledge_space_id}/{document_id}/{safe_filename}``.
-        """
         safe_filename = _UNSAFE_FILENAME_CHARS.sub("_", filename.strip()) or "file"
         return f"{organization_id}/{knowledge_space_id}/{document_id}/{safe_filename}"
 

@@ -1,5 +1,3 @@
-"""API tests for automatic ingestion job enqueue and retry."""
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

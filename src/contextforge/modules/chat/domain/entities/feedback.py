@@ -1,5 +1,3 @@
-"""Message feedback entity."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -32,8 +30,6 @@ def _normalize_comment(comment: str | None) -> str | None:
 
 @dataclass(slots=True)
 class MessageFeedback:
-    """A single user's feedback on an assistant message."""
-
     message_id: UUID
     conversation_id: UUID
     organization_id: UUID

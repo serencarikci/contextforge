@@ -1,5 +1,3 @@
-"""Conversation lifecycle, membership, messaging, suggestion, and export endpoints."""
-
 from __future__ import annotations
 
 import json
@@ -389,18 +387,7 @@ async def get_conversation_analytics(
     since: Annotated[datetime | None, Query()] = None,
 ) -> ChatAnalyticsOverviewResponse:
     overview = await service.get_overview(uow, ctx, since=since, conversation_id=conversation_id)
-    return ChatAnalyticsOverviewResponse(
-        total_messages=overview.total_messages,
-        assistant_messages=overview.assistant_messages,
-        failed_messages=overview.failed_messages,
-        avg_latency_ms=overview.avg_latency_ms,
-        avg_retrieval_ms=overview.avg_retrieval_ms,
-        total_prompt_tokens=overview.total_prompt_tokens,
-        total_completion_tokens=overview.total_completion_tokens,
-        feedback_up_count=overview.feedback_up_count,
-        feedback_down_count=overview.feedback_down_count,
-        events_by_type=overview.events_by_type,
-    )
+    return ChatAnalyticsOverviewResponse.model_validate(overview, from_attributes=True)
 
 
 @router.get("/{conversation_id}/export")

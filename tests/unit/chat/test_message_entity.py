@@ -1,5 +1,3 @@
-"""Unit tests for the ChatMessage and MessageCitation entities."""
-
 from __future__ import annotations
 
 from uuid import uuid4

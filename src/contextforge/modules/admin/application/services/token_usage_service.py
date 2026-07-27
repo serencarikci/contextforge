@@ -1,5 +1,3 @@
-"""Token usage rollups, pricing, and cost analytics."""
-
 from __future__ import annotations
 
 import csv

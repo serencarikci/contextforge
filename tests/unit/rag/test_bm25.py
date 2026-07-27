@@ -1,5 +1,3 @@
-"""Unit tests for BM25 lexical search."""
-
 from __future__ import annotations
 
 from uuid import uuid4

@@ -1,5 +1,3 @@
-"""Organization ORM model."""
-
 from __future__ import annotations
 
 from sqlalchemy import String
@@ -10,8 +8,6 @@ from contextforge.modules.identity_access.domain.enums import OrganizationStatus
 
 
 class OrganizationModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
-    """A tenant organization."""
-
     __tablename__ = "organizations"
 
     name: Mapped[str] = mapped_column(String(150), nullable=False)

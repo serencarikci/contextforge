@@ -1,5 +1,3 @@
-"""Unit tests for organization/user/membership status transition invariants."""
-
 from __future__ import annotations
 
 from uuid import uuid4

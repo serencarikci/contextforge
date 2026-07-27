@@ -1,5 +1,3 @@
-"""SQLAlchemy repository for retention policies and runs."""
-
 from __future__ import annotations
 
 from uuid import UUID

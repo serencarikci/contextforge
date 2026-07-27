@@ -1,5 +1,3 @@
-"""Feature flag administration with short-lived cache."""
-
 from __future__ import annotations
 
 import json

@@ -1,5 +1,3 @@
-"""Document ORM model."""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -14,8 +12,6 @@ from contextforge.modules.documents.domain.enums import DocumentStatus
 
 
 class DocumentModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
-    """Metadata for a document whose bytes live in object storage."""
-
     __tablename__ = "documents"
     __table_args__ = (
         Index(

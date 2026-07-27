@@ -1,5 +1,3 @@
-"""Fernet-based secret cipher derived from the application security secret."""
-
 from __future__ import annotations
 
 import base64
@@ -11,8 +9,6 @@ from contextforge.modules.admin.domain.exceptions import SecretDecryptionError
 
 
 class FernetSecretCipher:
-    """Encrypts secrets with a key derived from ``SECURITY_SECRET_KEY``."""
-
     def __init__(self, secret_key: str) -> None:
         digest = hashlib.sha256(secret_key.encode("utf-8")).digest()
         self._fernet = Fernet(base64.urlsafe_b64encode(digest))

@@ -1,5 +1,3 @@
-"""Unit tests for pagination parameter validation."""
-
 from __future__ import annotations
 
 import pytest

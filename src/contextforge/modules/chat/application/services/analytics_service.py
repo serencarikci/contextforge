@@ -1,5 +1,3 @@
-"""Application service for chat usage/quality analytics aggregations."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -14,8 +12,6 @@ from contextforge.modules.chat.application.services.access import ensure_convers
 
 @dataclass(frozen=True, slots=True)
 class ChatAnalyticsOverview:
-    """Aggregate chat usage and quality metrics."""
-
     total_messages: int
     assistant_messages: int
     failed_messages: int
@@ -29,8 +25,6 @@ class ChatAnalyticsOverview:
 
 
 class AnalyticsService:
-    """Read-only aggregations over chat messages, feedback, and events."""
-
     async def get_overview(
         self,
         uow: SqlAlchemyUnitOfWork,

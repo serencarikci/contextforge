@@ -1,5 +1,3 @@
-"""Per-organization administrative settings, quotas, and defaults."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -30,12 +28,6 @@ _MAX_QUOTA = 1_000_000_000
 
 @dataclass(frozen=True, slots=True)
 class OrganizationQuotas:
-    """Hard upper bounds an organization is allowed to consume.
-
-    ``None`` means "unbounded"; a value of ``0`` means "nothing allowed" and is
-    a valid way to freeze a resource family.
-    """
-
     max_users: int | None = None
     max_documents: int | None = None
     max_conversations: int | None = None
@@ -55,7 +47,6 @@ class OrganizationQuotas:
 
     @classmethod
     def from_mapping(cls, raw: dict[str, Any] | None) -> OrganizationQuotas:
-        """Build quotas from persisted JSON, ignoring unknown keys."""
         payload = raw or {}
         return cls(**{key: payload.get(key) for key in QUOTA_KEYS})
 
@@ -63,7 +54,6 @@ class OrganizationQuotas:
         return {key: getattr(self, key) for key in QUOTA_KEYS}
 
     def remaining(self, key: str, current: int) -> int | None:
-        """Headroom left for ``key``, or ``None`` when unbounded."""
         limit = getattr(self, key)
         if limit is None:
             return None
@@ -77,11 +67,6 @@ class OrganizationQuotas:
 
 
 def validate_defaults(raw: dict[str, Any] | None) -> dict[str, Any]:
-    """Validate the organization default-preferences payload.
-
-    Unknown keys are rejected rather than silently dropped so a typo in an
-    admin PATCH surfaces as a 400 instead of a setting that never applies.
-    """
     payload = raw or {}
     unknown = sorted(set(payload) - set(DEFAULT_KEYS))
     if unknown:
@@ -119,7 +104,6 @@ def validate_defaults(raw: dict[str, Any] | None) -> dict[str, Any]:
 
 
 def validate_feature_overrides(raw: dict[str, Any] | None) -> dict[str, bool]:
-    """Coerce the per-organization feature toggle map to ``{key: bool}``."""
     payload = raw or {}
     overrides: dict[str, bool] = {}
     for key, value in payload.items():
@@ -136,8 +120,6 @@ def validate_feature_overrides(raw: dict[str, Any] | None) -> dict[str, bool]:
 
 @dataclass(slots=True)
 class OrganizationSettings:
-    """Administrative configuration attached to a single organization."""
-
     organization_id: UUID
     quotas: OrganizationQuotas = field(default_factory=OrganizationQuotas)
     defaults: dict[str, Any] = field(default_factory=dict)

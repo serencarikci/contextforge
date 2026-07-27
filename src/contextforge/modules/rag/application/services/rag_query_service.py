@@ -1,5 +1,3 @@
-"""End-to-end RAG query pipeline."""
-
 from __future__ import annotations
 
 import time
@@ -34,8 +32,6 @@ logger = get_logger(__name__)
 
 
 class RagQueryService:
-    """Permission-aware RAG orchestration: retrieve → rerank → prompt → LLM → citations."""
-
     def __init__(
         self,
         *,
@@ -59,7 +55,6 @@ class RagQueryService:
 
     @property
     def model_name(self) -> str:
-        """Configured LLM model/deployment name, for observability/attribution."""
         return self._llm.model
 
     def _resolve_knowledge_spaces(

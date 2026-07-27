@@ -1,1 +1,0 @@
-"""audit/domain/entities package."""

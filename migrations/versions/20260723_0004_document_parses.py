@@ -1,10 +1,3 @@
-"""Create document_parse_results table for CFG-003 parsing pipeline.
-
-Revision ID: 20260723_0004
-Revises: 20260723_0003
-Create Date: 2026-07-23 00:00:00
-"""
-
 from __future__ import annotations
 
 from collections.abc import Sequence

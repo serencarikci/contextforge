@@ -1,5 +1,3 @@
-"""HTTP-backed LLM and reranker provider unit tests with MockTransport."""
-
 from __future__ import annotations
 
 import json

@@ -1,5 +1,3 @@
-"""Document endpoints: upload, read, update metadata/content, parse, download, delete."""
-
 from __future__ import annotations
 
 from typing import Annotated

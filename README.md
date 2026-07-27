@@ -8,9 +8,9 @@ answers grounded in authorized company documents.
 > **Current scope:** identity, multi-tenancy, RBAC, audit logging, document upload/storage,
 > parsing, semantic chunking, multilingual embeddings (Qdrant), background ingestion
 > workers, hybrid RAG answering, multi-turn enterprise chat (streaming, memory,
-> feedback, and analytics), Phase 4 administration/governance, and Phase 5 production
-> engineering (Docker/Helm/Terraform, metrics, rate limits, CI/CD, backups, runbooks)
-> are implemented.
+> feedback, and analytics), Phase 4 administration/governance, Phase 5 production
+> engineering (Docker/Helm/Terraform, metrics, rate limits, CI/CD, backups, runbooks),
+> and Phase 6 Next.js enterprise web UI (`frontend/web`) are implemented.
 >
 > **Authentication:** identity is resolved via development-only HTTP headers (see
 > [Development identity headers](#development-identity-headers)), gated off in
@@ -63,8 +63,308 @@ answers grounded in authorized company documents.
  `obs` profile), security headers, rate limiting, Prometheus `/metrics`, Helm chart,
  provider-neutral Terraform stubs, CD to GHCR, backups/DR scripts, k6 scenarios, and
  ops runbooks under `ops/runbooks/`
+* **Enterprise web UI (Phase 6)** — Next.js 15 / React 19 app in `frontend/web` with
+ App Router, TanStack Query + Zustand, i18n (EN/TR), light/dark theme, chat SSE,
+ documents, knowledge spaces, admin, analytics, and system ops pages
 * Pytest (unit, integration, architecture, authorization, security, API)
 * Ruff, mypy, pre-commit, GitHub Actions CI/CD
+
+## Frontend (Phase 6)
+
+The production web client lives in [`frontend/web`](frontend/web).
+
+```mermaid
+flowchart LR
+  Browser[Browser] --> Web[Next.js web :3001]
+  Web -->|X-ContextForge-* headers| API[FastAPI :8000]
+  API --> PG[(PostgreSQL)]
+  API --> Qdrant[(Qdrant)]
+  API --> MinIO[(MinIO)]
+```
+
+### Stack
+
+* Next.js 15 (App Router), React 19, TypeScript strict
+* Tailwind CSS + shadcn-style Radix primitives
+* TanStack Query (server state), Zustand (session/UI)
+* React Hook Form + Zod, Axios, i18next (EN/TR), next-themes
+* Vitest unit tests, Playwright e2e scaffold
+
+### Local development
+
+```bash
+# API + infra
+make up
+make bootstrap-dev
+
+# Frontend
+cd frontend/web
+cp .env.example .env.local
+npm install
+npm run dev          # http://localhost:3001
+```
+
+Sign in with bootstrap presets (`admin@contextforge.local` / `developer@contextforge.local`)
+or any valid user UUID after bootstrap. The UI stores a client session and sends the
+backend development identity headers on every API call.
+
+Compose also builds the `web` service on port **3001** (`NEXT_PUBLIC_API_BASE_URL`
+should point at the browser-reachable API URL, typically `http://localhost:8000`).
+
+### Frontend commands
+
+```bash
+cd frontend/web
+npm run lint
+npm run type-check
+npm test
+npm run build
+docker build -t contextforge-web .
+```
+
+### UI map
+
+| Area | Routes |
+| --- | --- |
+| Auth | `/login`, `/logout`, `/forgot-password`, `/reset-password`, `/session-expired`, `/unauthorized` |
+| Chat | `/chat`, `/chat/[conversationId]` (SSE streaming) |
+| Documents | `/documents`, `/documents/upload` |
+| Knowledge spaces | `/knowledge-spaces`, `/new`, `/[id]` |
+| Tenancy | `/customers`, `/projects` |
+| Admin | `/admin/*` users, roles, prompts, LLM, flags, audit, retention… |
+| Analytics / System | `/analytics`, `/system`, `/settings` |
+
+CORS must allow `http://localhost:3001` and the `X-ContextForge-*` headers (wired in
+API middleware + `.env.example`).
+
+### UI screens & operations
+
+Screenshots live under [`docs/screenshots/ui/`](docs/screenshots/ui/). Regenerate them with the
+API + web running (`:8001` / `:3001` in local hybrid mode, or compose ports):
+
+```bash
+cd frontend/web
+npm install
+npx playwright install chromium   # once
+node scripts/capture-ui-screenshots.mjs
+```
+
+#### 1. Sign in (`/login`)
+
+![Sign in](docs/screenshots/ui/01-login.png)
+
+1. Open `http://localhost:3001/login`.
+2. Click **Use bootstrap account / Dev Admin** or **Dev Developer** for instant local sign-in
+   (no password; client session + `X-ContextForge-*` headers).
+3. Or type an email/user UUID, wait for organizations to load, pick an org, then **Sign in**.
+4. Use **Forgot session?** to reach the recovery flow.
+
+#### 2. Forgot session (`/forgot-password`)
+
+![Forgot password](docs/screenshots/ui/02-forgot-password.png)
+
+1. Enter email or user ID.
+2. Submit to continue to reset (dev UI only — no real email).
+
+#### 3. Reset session (`/reset-password`)
+
+![Reset password](docs/screenshots/ui/03-reset-password.png)
+
+1. Confirm identity from the query string / form.
+2. Complete the form to return to login with a fresh client session path.
+
+#### 4. Session expired (`/session-expired`)
+
+![Session expired](docs/screenshots/ui/04-session-expired.png)
+
+Shown when the client session TTL expires. Click through to `/login` and sign in again.
+
+#### 5. Unauthorized (`/unauthorized`)
+
+![Unauthorized](docs/screenshots/ui/05-unauthorized.png)
+
+Shown when the signed-in user lacks the permission for a route. Switch account/org or ask an admin
+for the required RBAC permission.
+
+#### 6. Chat list (`/chat`)
+
+![Chat list](docs/screenshots/ui/06-chat.png)
+
+1. Sidebar → **Chat**.
+2. Click **New conversation** to create a thread (optionally scoped to the session knowledge space).
+3. Search by title; filter **Active** / **Archived**.
+4. Open a row to enter the conversation workspace.
+5. Row menu: pin / archive / restore / delete (permission-gated).
+
+#### 7. Conversation (`/chat/[conversationId]`)
+
+![Conversation](docs/screenshots/ui/07-chat-conversation.png)
+
+1. Type a question in the composer and **Send** (SSE streaming reply).
+2. Open **Sources** to inspect RAG citations for the latest answer.
+3. Use **Export** to download the transcript.
+4. Switch threads from the left list without leaving chat.
+
+#### 8. Documents (`/documents`)
+
+![Documents](docs/screenshots/ui/08-documents.png)
+
+1. Sidebar → **Documents**.
+2. Filter by search, status, and knowledge space.
+3. Track lifecycle badges: document status, **Parse**, **Embedding**.
+4. Row actions / bulk select for delete (and admin bulk ops when permitted).
+5. Click **Upload documents** to start an upload.
+
+#### 9. Upload documents (`/documents/upload`)
+
+![Upload documents](docs/screenshots/ui/09-documents-upload.png)
+
+1. Select a **Knowledge space**.
+2. Drag-and-drop or pick files in the dropzone.
+3. After upload, return to the documents list and wait for parse/embed jobs.
+
+#### 10. Knowledge spaces (`/knowledge-spaces`)
+
+![Knowledge spaces](docs/screenshots/ui/10-knowledge-spaces.png)
+
+1. Sidebar → **Knowledge Spaces**.
+2. Search / filter by status.
+3. Open a row for detail, or **Create** for a new space.
+
+#### 11. Create knowledge space (`/knowledge-spaces/new`)
+
+![Create knowledge space](docs/screenshots/ui/11-knowledge-spaces-new.png)
+
+1. Fill **Name**, **Slug**, optional **Description**.
+2. Set **Visibility** and optional **Project**.
+3. **Create** → detail page; **Cancel** returns to the list.
+
+#### 12. Knowledge space detail (`/knowledge-spaces/[id]`)
+
+![Knowledge space detail](docs/screenshots/ui/12-knowledge-space-detail.png)
+
+1. **Overview**: review slug/visibility; edit name, description, visibility → **Save**.
+2. **Members**: invite/remove members and roles for the space.
+3. **Documents**: jump into documents scoped to this space.
+4. **Statistics**: usage counters for the space.
+5. **Archive** / **Back** from the header actions.
+
+#### 13. Customers (`/customers`)
+
+![Customers](docs/screenshots/ui/13-customers.png)
+
+1. Open `/customers` (permission `customer:read`).
+2. Review customer code, name, and status in the table.
+
+#### 14. Projects (`/projects`)
+
+![Projects](docs/screenshots/ui/14-projects.png)
+
+1. Open `/projects` (permission `project:read`).
+2. Review project rows for the current organization.
+
+#### 15. Analytics (`/analytics`)
+
+![Analytics](docs/screenshots/ui/15-analytics.png)
+
+1. Sidebar → **Analytics**.
+2. Change the time window (e.g. 7 / 30 days).
+3. Inspect usage, token, and chat charts.
+4. **Export** downloads analytics data when available.
+
+#### 16. System (`/system`)
+
+![System](docs/screenshots/ui/16-system.png)
+
+1. Sidebar → **System**.
+2. Check live/ready health and ops counters.
+3. Filter ingestion jobs by status; refresh to poll worker progress.
+4. Retry/cancel failed jobs when actions are offered.
+
+#### 17. Settings (`/settings`)
+
+![Settings](docs/screenshots/ui/17-settings.png)
+
+1. Sidebar → **Settings**.
+2. Update display name and preferred language → save.
+3. Switch theme (light / dark / system) and organization context.
+4. Header controls also toggle language and theme globally.
+
+#### 18. Admin dashboard (`/admin`)
+
+![Admin dashboard](docs/screenshots/ui/18-admin-dashboard.png)
+
+1. Sidebar → **Administration** (needs `admin:dashboard`).
+2. Read membership, document, conversation, and token stats.
+3. Use the admin sub-nav for users, orgs, roles, prompts, LLM, flags, settings, audit, retention.
+4. Drill into ingestion / ops cards when investigating pipeline health.
+
+#### 19. Admin users (`/admin/users`)
+
+![Admin users](docs/screenshots/ui/19-admin-users.png)
+
+1. Search / filter users by status.
+2. **Activate** or **Deactivate** accounts from row actions.
+
+#### 20. Admin organizations (`/admin/organizations`)
+
+![Admin organizations](docs/screenshots/ui/20-admin-organizations.png)
+
+1. List organizations for the platform.
+2. Open or update org metadata according to available admin actions.
+
+#### 21. Admin roles (`/admin/roles`)
+
+![Admin roles](docs/screenshots/ui/21-admin-roles.png)
+
+1. Review role definitions and permission sets.
+2. Create/update roles when `role:manage` / admin role permissions allow it.
+
+#### 22. Admin prompts (`/admin/prompts`)
+
+![Admin prompts](docs/screenshots/ui/22-admin-prompts.png)
+
+1. Browse prompt templates used by RAG/chat.
+2. Edit or version prompts where the admin UI exposes mutations.
+
+#### 23. Admin LLM providers (`/admin/llm-providers`)
+
+![Admin LLM providers](docs/screenshots/ui/23-admin-llm.png)
+
+1. Inspect configured LLM providers and models.
+2. Enable/disable or adjust provider settings for the org.
+
+#### 24. Admin feature flags (`/admin/feature-flags`)
+
+![Admin feature flags](docs/screenshots/ui/24-admin-feature-flags.png)
+
+1. Toggle feature flags for staged rollouts.
+2. Save changes and verify UI/API behavior for the flag.
+
+#### 25. Admin audit (`/admin/audit`)
+
+![Admin audit](docs/screenshots/ui/25-admin-audit.png)
+
+1. Filter audit events by actor/action/time.
+2. Inspect rows for compliance / incident review (`audit:read`).
+
+#### 26. Admin retention (`/admin/retention`)
+
+![Admin retention](docs/screenshots/ui/26-admin-retention.png)
+
+1. Review retention policies for conversations/documents.
+2. Update retention windows when `admin:retention` is granted.
+
+#### 27. Admin settings (`/admin/settings`)
+
+![Admin settings](docs/screenshots/ui/27-admin-settings.png)
+
+1. Adjust organization-level admin settings.
+2. Save and confirm via toast / refreshed values.
+
+**Typical happy path:** sign in as Dev Admin → create/select a knowledge space → upload a document →
+wait until parse/embed are healthy on System/Documents → open Chat → **New conversation** → ask a
+question → open **Sources** for citations.
 
 ## Architecture overview
 

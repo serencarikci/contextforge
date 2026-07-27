@@ -1,5 +1,3 @@
-"""Ingestion job ORM model."""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -14,8 +12,6 @@ from contextforge.modules.ingestion.domain.enums import IngestionJobStatus, Inge
 
 
 class IngestionJobModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
-    """Persisted background ingestion job."""
-
     __tablename__ = "ingestion_jobs"
     __table_args__ = (
         Index("ix_ingestion_jobs_organization_id_status", "organization_id", "status"),

@@ -1,1 +1,0 @@
-"""documents/domain/entities package."""

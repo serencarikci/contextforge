@@ -1,5 +1,3 @@
-"""Unit tests for exception response formatting."""
-
 from __future__ import annotations
 
 import pytest

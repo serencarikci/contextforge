@@ -1,5 +1,3 @@
-"""Conversation aggregate: a multi-turn chat session scoped to an organization."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -19,7 +17,6 @@ DEFAULT_TITLE = "New conversation"
 
 
 def normalize_title(title: str | None) -> str:
-    """Collapse whitespace and enforce length bounds, falling back to a default."""
     cleaned = " ".join((title or "").split()).strip()
     if not cleaned:
         return DEFAULT_TITLE
@@ -30,8 +27,6 @@ def normalize_title(title: str | None) -> str:
 
 @dataclass(slots=True)
 class Conversation:
-    """A chat session between one or more users and the assistant."""
-
     organization_id: UUID
     owner_user_id: UUID
     id: UUID = field(default_factory=uuid4)
@@ -54,7 +49,6 @@ class Conversation:
             raise InvalidResourceStateError("Deleted conversations cannot be modified.")
 
     def ensure_open_for_messages(self) -> None:
-        """Raise unless the conversation can currently accept new messages."""
         if self.status != ConversationStatus.ACTIVE:
             raise InvalidResourceStateError("Only active conversations can accept new messages.")
 
@@ -87,7 +81,6 @@ class Conversation:
         self.updated_at = utc_now()
 
     def restore(self) -> None:
-        """Reactivate an archived or soft-deleted conversation."""
         self.status = ConversationStatus.ACTIVE
         self.deleted_at = None
         self.updated_at = utc_now()
@@ -100,8 +93,6 @@ class Conversation:
 
 @dataclass(slots=True)
 class ConversationParticipant:
-    """A user granted access to a conversation."""
-
     conversation_id: UUID
     organization_id: UUID
     user_id: UUID
@@ -111,8 +102,6 @@ class ConversationParticipant:
 
 @dataclass(slots=True)
 class ConversationKnowledgeSpaceLink:
-    """Associates a conversation with a knowledge space used for grounding."""
-
     conversation_id: UUID
     knowledge_space_id: UUID
     organization_id: UUID

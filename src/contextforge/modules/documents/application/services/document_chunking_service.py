@@ -1,5 +1,3 @@
-"""Application service for semantic document chunking use cases."""
-
 from __future__ import annotations
 
 import asyncio
@@ -21,8 +19,6 @@ logger = get_logger(__name__)
 
 
 class DocumentChunkingService:
-    """Builds retrieval-ready chunks from a successful document parse result."""
-
     def __init__(self, chunker: DocumentChunkerPort) -> None:
         self._chunker = chunker
 

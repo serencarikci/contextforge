@@ -1,12 +1,3 @@
-"""Versioned prompt registry loaded from YAML files with optional DB overrides.
-
-Resolution order for each prompt slot (system/user/citation/multilingual):
-
-1. Active organization-scoped database template
-2. Active global database template
-3. Bundled YAML file under ``modules/rag/prompts``
-"""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
@@ -39,14 +30,10 @@ class PromptOverrideSource(Protocol):
         *,
         organization_id: UUID,
         language: str,
-    ) -> dict[str, str]:
-        """Return active ``{slot_name: content}`` preferring org over global."""
-        ...
+    ) -> dict[str, str]: ...
 
 
 class PromptRegistry:
-    """Loads and renders versioned prompt templates."""
-
     def __init__(
         self,
         settings: PromptSettings,
@@ -92,7 +79,6 @@ class PromptRegistry:
         language: str | None = None,
         version: str | None = None,
     ) -> PromptBundle:
-        """YAML bundle with any active database slot overrides applied."""
         base = self.get(language=language, version=version)
         if self._override_source is None:
             return base

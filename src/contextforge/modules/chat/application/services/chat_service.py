@@ -1,10 +1,3 @@
-"""Application service orchestrating chat message send/stream flows.
-
-Architecture boundary: this is the *only* chat service that touches
-retrieval/LLM concerns, and it does so exclusively through
-``RagQueryService`` -- never directly against Qdrant or an LLM provider.
-"""
-
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
@@ -40,8 +33,6 @@ logger = get_logger(__name__)
 
 @dataclass(frozen=True, slots=True)
 class ChatAnswer:
-    """Result of a synchronous (non-streaming) chat exchange."""
-
     user_message: ChatMessage
     assistant_message: ChatMessage
     citations: list[MessageCitation]
@@ -68,8 +59,6 @@ def _citation_entities(
 
 
 class ChatService:
-    """Sends and streams chat messages, grounded via ``RagQueryService``."""
-
     def __init__(
         self,
         *,
@@ -149,15 +138,6 @@ class ChatService:
         ctx: RequestContext,
         conversation_id: UUID,
     ) -> list[UUID] | None:
-        """Re-validate a conversation's linked knowledge spaces on every message.
-
-        Returns ``None`` when the conversation has no explicit links (letting
-        ``RagQueryService`` fall back to the caller's full accessible set), or
-        the accessible subset of explicitly linked spaces. Raises if the
-        conversation has links but none remain accessible -- silently falling
-        back to "everything the caller can see" would defeat the purpose of
-        scoping a conversation to specific knowledge spaces.
-        """
         linked = await uow.conversations.list_knowledge_space_ids(
             ctx.organization_id, conversation_id
         )

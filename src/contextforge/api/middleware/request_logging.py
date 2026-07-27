@@ -1,5 +1,3 @@
-"""Structured request logging and timing middleware."""
-
 from __future__ import annotations
 
 import time
@@ -15,8 +13,6 @@ logger = get_logger("contextforge.api.request")
 
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
-    """Log method, route, status, and duration without bodies or secrets."""
-
     async def dispatch(
         self,
         request: Request,

@@ -1,5 +1,3 @@
-"""API test for the public system info endpoint's capability flags."""
-
 from __future__ import annotations
 
 import pytest
@@ -8,7 +6,6 @@ from fastapi.testclient import TestClient
 
 @pytest.mark.api
 def test_system_info_reports_expected_capability_flags(api_client: TestClient) -> None:
-    """No identity headers are required -- system info is intentionally public."""
     response = api_client.get("/api/v1/system/info")
     assert response.status_code == 200
     body = response.json()

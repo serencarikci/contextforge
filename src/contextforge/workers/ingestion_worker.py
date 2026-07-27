@@ -1,5 +1,3 @@
-"""Background worker that drains the document ingestion queue."""
-
 from __future__ import annotations
 
 import asyncio
@@ -32,8 +30,6 @@ logger = get_logger(__name__)
 
 
 class IngestionWorker:
-    """Long-running process that claims and executes ingestion jobs."""
-
     def __init__(self) -> None:
         self._settings = get_settings()
         self._stop = asyncio.Event()

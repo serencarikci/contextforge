@@ -1,5 +1,3 @@
-"""API tests for RAG search and query endpoints."""
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

@@ -1,5 +1,3 @@
-"""SQLAlchemy implementation of the audit event repository (append-only)."""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -13,8 +11,6 @@ from contextforge.modules.audit.infrastructure.models.audit_event import AuditEv
 
 
 class SqlAlchemyAuditEventRepository:
-    """Persists append-only AuditEvent records using an explicit AsyncSession."""
-
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

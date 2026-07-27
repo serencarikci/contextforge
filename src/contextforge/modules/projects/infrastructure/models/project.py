@@ -1,5 +1,3 @@
-"""Project ORM model."""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -14,8 +12,6 @@ from contextforge.modules.identity_access.domain.enums import PreferredLanguage,
 
 
 class ProjectModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
-    """A project owned by an organization, optionally linked to a customer."""
-
     __tablename__ = "projects"
     __table_args__ = (
         UniqueConstraint("organization_id", "key", name="uq_projects_organization_id_key"),

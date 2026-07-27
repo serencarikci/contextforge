@@ -1,5 +1,3 @@
-"""Organization settings ORM model (one row per organization)."""
-
 from __future__ import annotations
 
 from typing import Any
@@ -14,13 +12,6 @@ from contextforge.infrastructure.database.base import Base, TimestampMixin
 
 
 class OrganizationSettingsModel(Base, TimestampMixin):
-    """Administrative quotas, defaults, and feature overrides for a tenant.
-
-    ``organization_id`` is both the primary key and the foreign key: an
-    organization has exactly zero or one settings row, created lazily the first
-    time an administrator changes anything.
-    """
-
     __tablename__ = "organization_settings"
 
     organization_id: Mapped[UUID] = mapped_column(

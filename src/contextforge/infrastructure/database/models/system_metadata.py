@@ -1,5 +1,3 @@
-"""SystemMetadata ORM model."""
-
 from __future__ import annotations
 
 from typing import Any
@@ -12,8 +10,6 @@ from contextforge.infrastructure.database.base import Base, TimestampMixin, UUID
 
 
 class SystemMetadataModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
-    """Persisted system metadata key/value record."""
-
     __tablename__ = "system_metadata"
 
     key: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)

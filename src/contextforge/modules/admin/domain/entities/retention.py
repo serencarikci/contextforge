@@ -1,5 +1,3 @@
-"""Retention policy and retention run entities."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -23,8 +21,6 @@ _PURGE_ONLY_RESOURCES = frozenset(
 
 @dataclass(slots=True)
 class RetentionPolicy:
-    """How long one resource family is kept for an organization (or globally)."""
-
     resource_type: RetentionResourceType
     retention_days: int
     id: UUID = field(default_factory=uuid4)
@@ -53,12 +49,7 @@ class RetentionPolicy:
             raise ValueError(msg)
         return days
 
-    @property
-    def is_global(self) -> bool:
-        return self.organization_id is None
-
     def cutoff(self, *, now: datetime | None = None) -> datetime:
-        """Timestamp before which rows are eligible for cleanup."""
         reference = now or utc_now()
         return reference - timedelta(days=self.retention_days)
 
@@ -86,8 +77,6 @@ class RetentionPolicy:
 
 @dataclass(slots=True)
 class RetentionRun:
-    """One execution of a retention policy."""
-
     policy_id: UUID
     id: UUID = field(default_factory=uuid4)
     organization_id: UUID | None = None

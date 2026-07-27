@@ -1,5 +1,3 @@
-"""Prompt injection and untrusted document handling."""
-
 from __future__ import annotations
 
 import re
@@ -37,7 +35,6 @@ def wrap_untrusted_document(content: str, *, chunk_id: str) -> str:
 
 
 def build_context_block(chunks: list[tuple[str, str]]) -> str:
-    """Build context from (chunk_id, content) pairs."""
     parts = [wrap_untrusted_document(content, chunk_id=chunk_id) for chunk_id, content in chunks]
     return "\n\n".join(parts)
 
@@ -49,12 +46,6 @@ _UNTRUSTED_MARKERS = re.compile(
 
 
 def wrap_conversation_history(history: str) -> str:
-    """Sanitize and wrap prior conversation turns injected into the prompt.
-
-    Prior turns originate from end-user messages (already persisted), so they
-    receive the same control-character stripping and injection-phrase
-    filtering as a fresh question before being placed in the prompt.
-    """
     safe = _CONTROL_CHARS.sub(" ", history or "").strip()
     for pattern in _INJECTION_PATTERNS:
         safe = pattern.sub("[filtered]", safe)
@@ -64,7 +55,6 @@ def wrap_conversation_history(history: str) -> str:
 
 
 def sanitize_model_answer(answer: str) -> str:
-    """Strip untrusted-document wrappers if a model echoes prompt scaffolding."""
     cleaned = _UNTRUSTED_MARKERS.sub(" ", answer or "")
     cleaned = re.sub(r"[ \t]{2,}", " ", cleaned)
     cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)

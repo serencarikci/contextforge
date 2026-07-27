@@ -1,5 +1,3 @@
-"""Integration tests for SystemMetadata persistence."""
-
 from __future__ import annotations
 
 from uuid import uuid4

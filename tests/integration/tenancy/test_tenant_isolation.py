@@ -1,12 +1,3 @@
-"""Integration tests for tenant isolation of customers and projects.
-
-Every business entity is scoped by ``organization_id``. These tests create
-two independent organizations against the real database and assert that
-lookups scoped to one organization never resolve entities that belong to
-the other -- the core multi-tenancy guarantee the repository layer must
-uphold regardless of what the application/API layers do on top of it.
-"""
-
 from __future__ import annotations
 
 from uuid import uuid4

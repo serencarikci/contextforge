@@ -1,5 +1,3 @@
-"""Redis-backed ingestion job queue."""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -13,8 +11,6 @@ logger = get_logger(__name__)
 
 
 class RedisIngestionJobQueue:
-    """Simple Redis list queue for ingestion job ids."""
-
     def __init__(self, redis: Redis[str], settings: IngestionSettings) -> None:
         self._redis = redis
         self._settings = settings
@@ -36,8 +32,6 @@ class RedisIngestionJobQueue:
 
 
 class InMemoryIngestionJobQueue:
-    """Process-local queue used by unit/API tests."""
-
     def __init__(self) -> None:
         self._items: list[UUID] = []
 

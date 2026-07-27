@@ -1,5 +1,3 @@
-"""Unit tests for domain entity behavior."""
-
 from __future__ import annotations
 
 import pytest

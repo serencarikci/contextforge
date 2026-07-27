@@ -1,5 +1,3 @@
-"""Message feedback ORM model."""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -12,8 +10,6 @@ from contextforge.infrastructure.database.base import Base, TimestampMixin, UUID
 
 
 class MessageFeedbackModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
-    """One user's feedback on a single assistant message."""
-
     __tablename__ = "message_feedback"
     __table_args__ = (
         UniqueConstraint("message_id", "user_id", name="uq_message_feedback_message_user"),

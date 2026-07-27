@@ -1,5 +1,3 @@
-"""Unit tests for streaming heartbeat interleaving and cancellation registry."""
-
 from __future__ import annotations
 
 import asyncio

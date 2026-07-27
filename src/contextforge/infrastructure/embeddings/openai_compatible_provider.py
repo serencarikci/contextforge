@@ -1,5 +1,3 @@
-"""OpenAI-compatible multilingual embedding provider with retries."""
-
 from __future__ import annotations
 
 import httpx
@@ -18,8 +16,6 @@ logger = get_logger(__name__)
 
 
 class OpenAICompatibleEmbeddingProvider:
-    """HTTP embedding client for OpenAI-compatible multilingual model APIs."""
-
     def __init__(self, settings: EmbeddingSettings) -> None:
         self._settings = settings
         if settings.api_key is None or not settings.api_key.get_secret_value():

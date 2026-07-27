@@ -1,5 +1,3 @@
-"""Port for probing LLM provider connectivity without exposing secrets."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -23,6 +21,4 @@ class LlmConnectivityCheckPort(Protocol):
         *,
         api_key: str | None,
         timeout_seconds: float,
-    ) -> LlmConnectivityResult:
-        """Probe whether the configured provider endpoint is reachable."""
-        ...
+    ) -> LlmConnectivityResult: ...

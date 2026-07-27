@@ -1,10 +1,3 @@
-"""Add embedding metadata columns to document_chunks for CFG-005.
-
-Revision ID: 20260723_0006
-Revises: 20260723_0005
-Create Date: 2026-07-23 00:00:00
-"""
-
 from __future__ import annotations
 
 from collections.abc import Sequence

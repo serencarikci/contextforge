@@ -1,5 +1,3 @@
-"""SQLAlchemy implementation of the knowledge space repository."""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -25,8 +23,6 @@ from contextforge.modules.knowledge_spaces.infrastructure.models.knowledge_space
 
 
 class SqlAlchemyKnowledgeSpaceRepository:
-    """Persists KnowledgeSpace aggregates and their memberships using an explicit AsyncSession."""
-
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

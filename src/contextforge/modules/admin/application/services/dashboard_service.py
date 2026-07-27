@@ -1,5 +1,3 @@
-"""Administration dashboard aggregations."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -1,5 +1,3 @@
-"""Application service for customer lifecycle use cases."""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -20,8 +18,6 @@ from contextforge.modules.identity_access.domain.enums import CustomerStatus
 
 
 class CustomerService:
-    """Use cases for creating, reading, and managing customers."""
-
     async def create(
         self,
         uow: SqlAlchemyUnitOfWork,

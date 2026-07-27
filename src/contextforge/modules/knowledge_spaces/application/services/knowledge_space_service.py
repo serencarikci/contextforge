@@ -1,5 +1,3 @@
-"""Application service for knowledge space lifecycle use cases."""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -29,8 +27,6 @@ _MAX_VISIBILITY_SCAN = 10_000
 
 
 class KnowledgeSpaceService:
-    """Use cases for creating, reading, and managing knowledge spaces."""
-
     async def create(
         self,
         uow: SqlAlchemyUnitOfWork,

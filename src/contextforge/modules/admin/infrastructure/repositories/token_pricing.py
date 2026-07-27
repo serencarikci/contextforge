@@ -1,5 +1,3 @@
-"""SQLAlchemy repository for token pricing rows."""
-
 from __future__ import annotations
 
 from datetime import datetime

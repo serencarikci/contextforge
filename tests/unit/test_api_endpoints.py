@@ -1,5 +1,3 @@
-"""Unit tests for system info and liveness endpoints."""
-
 from __future__ import annotations
 
 import pytest

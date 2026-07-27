@@ -1,5 +1,3 @@
-"""Conversation memory ORM model."""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -12,8 +10,6 @@ from contextforge.infrastructure.database.base import Base, TimestampMixin, UUID
 
 
 class ConversationMemoryModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
-    """A durable, compacted summary of a conversation's history."""
-
     __tablename__ = "conversation_memories"
     __table_args__ = (
         Index(

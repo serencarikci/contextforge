@@ -1,25 +1,4 @@
 #!/usr/bin/env python
-"""Idempotent local development data bootstrap.
-
-Invoked by ``make bootstrap-dev``. Creates a deterministic development
-tenant (organization, users, memberships, role assignments, a customer, a
-project, and two knowledge spaces) so a fresh local environment has
-something usable to develop and test against immediately after
-``make migrate``.
-
-Every entity id is derived deterministically with ``uuid.uuid5`` over a
-fixed namespace, so running this script twice (or on a fresh database
-seeded from the same migrations) always produces the exact same ids. The
-script looks up each entity by its natural key (slug/email/code) before
-creating it, so it is safe to run repeatedly -- it will not create
-duplicates and will not fail on the second run.
-
-At the end, it prints the development identity headers for the seeded
-admin user so they can be pasted straight into ``curl`` or an HTTP client:
-
-    X-ContextForge-User-ID: <uuid>
-    X-ContextForge-Organization-ID: <uuid>
-"""
 
 from __future__ import annotations
 
@@ -80,14 +59,11 @@ WELCOME_DOCUMENT_CONTENT = b"Welcome to the ContextForge Company Handbook knowle
 
 
 def _dev_uuid(name: str) -> uuid.UUID:
-    """Deterministic UUID for a piece of bootstrap sample data."""
     return uuid.uuid5(DEV_UUID_NAMESPACE, name)
 
 
 @dataclass(frozen=True, slots=True)
 class BootstrapResult:
-    """Ids of every entity ensured by :func:`bootstrap`, for callers/tests."""
-
     organization_id: uuid.UUID
     admin_user_id: uuid.UUID
     admin_membership_id: uuid.UUID
@@ -266,12 +242,6 @@ async def _ensure_welcome_document(
     knowledge_space_id: uuid.UUID,
     uploaded_by_user_id: uuid.UUID,
 ) -> Document:
-    """Ensure a tiny "Welcome" sample document exists in the given knowledge space.
-
-    Idempotent by title within the knowledge space: if a document titled
-    ``WELCOME_DOCUMENT_TITLE`` already exists there, it is returned as-is
-    without uploading anything new.
-    """
     existing_items, _ = await uow.documents.list(
         organization_id,
         limit=100,
@@ -309,7 +279,6 @@ async def _ensure_welcome_document(
 
 
 async def bootstrap(uow: SqlAlchemyUnitOfWork, minio: MinioClient) -> BootstrapResult:
-    """Ensure the full development dataset exists. Safe to call repeatedly."""
     async with uow:
         organization = await _ensure_organization(uow)
 

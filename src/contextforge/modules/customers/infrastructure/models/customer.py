@@ -1,5 +1,3 @@
-"""Customer ORM model."""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -14,8 +12,6 @@ from contextforge.modules.identity_access.domain.enums import CustomerStatus
 
 
 class CustomerModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
-    """A customer/account owned by an organization."""
-
     __tablename__ = "customers"
     __table_args__ = (
         UniqueConstraint("organization_id", "code", name="uq_customers_organization_id_code"),

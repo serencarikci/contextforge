@@ -1,5 +1,3 @@
-"""Application service for multilingual chunk embedding generation."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -43,8 +41,6 @@ class DocumentEmbeddingResult:
 
 
 class DocumentEmbeddingService:
-    """Generates embeddings for document chunks and stores them in Qdrant."""
-
     def __init__(
         self,
         embedding_provider: EmbeddingProviderPort,

@@ -1,27 +1,19 @@
-"""Extended application and domain errors for identity and tenancy."""
-
 from __future__ import annotations
 
 from contextforge.domain.exceptions.base import ApplicationError, DomainError
 
 
 class AuthenticationError(ApplicationError):
-    """Raised when identity is missing or invalid."""
-
     code = "AUTHENTICATION_REQUIRED"
     http_status = 401
 
 
 class InvalidDevelopmentIdentityError(AuthenticationError):
-    """Raised when development identity headers are invalid."""
-
     code = "INVALID_DEVELOPMENT_IDENTITY"
     http_status = 401
 
 
 class AuthorizationError(ApplicationError):
-    """Raised when the caller is authenticated but not permitted."""
-
     code = "PERMISSION_DENIED"
     http_status = 403
 
@@ -42,8 +34,6 @@ class MembershipInactiveError(AuthorizationError):
 
 
 class ResourceNotFoundError(ApplicationError):
-    """Safe not-found for tenant-scoped resources."""
-
     code = "RESOURCE_NOT_FOUND"
     http_status = 404
 

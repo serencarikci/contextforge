@@ -1,5 +1,3 @@
-"""Deterministic multilingual hashing embedding provider for local/test use."""
-
 from __future__ import annotations
 
 import hashlib
@@ -12,12 +10,6 @@ from contextforge.shared.config.settings import EmbeddingSettings
 
 
 class HashingMultilingualEmbeddingProvider:
-    """Offline multilingual embedding provider using language-aware hashing.
-
-    Suitable for local development and tests. Production deployments should use
-    an ``openai_compatible`` multilingual model endpoint.
-    """
-
     def __init__(self, settings: EmbeddingSettings) -> None:
         self._settings = settings
 

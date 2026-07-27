@@ -1,5 +1,3 @@
-"""Unit tests for prompt guard and registry."""
-
 from __future__ import annotations
 
 import pytest

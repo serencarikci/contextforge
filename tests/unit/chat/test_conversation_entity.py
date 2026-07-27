@@ -1,5 +1,3 @@
-"""Unit tests for the Conversation aggregate and its participants/links."""
-
 from __future__ import annotations
 
 from uuid import uuid4

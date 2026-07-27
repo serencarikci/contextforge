@@ -1,5 +1,3 @@
-"""Document entity: metadata for a file stored in object storage."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -14,7 +12,6 @@ MAX_DOCUMENT_SIZE_BYTES = 25 * 1024 * 1024
 
 
 def ensure_upload_size_within_limit(size_bytes: int) -> None:
-    """Raise if ``size_bytes`` exceeds the maximum allowed document size."""
     if size_bytes > MAX_DOCUMENT_SIZE_BYTES:
         msg = (
             f"Document size ({size_bytes} bytes) exceeds the maximum allowed size "

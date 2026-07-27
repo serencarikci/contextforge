@@ -1,5 +1,3 @@
-"""chat/infrastructure/models package."""
-
 from __future__ import annotations
 
 from contextforge.modules.chat.infrastructure.models.analytics import ChatAnalyticsEventModel

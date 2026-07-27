@@ -1,5 +1,3 @@
-"""Shared helpers for application services."""
-
 from __future__ import annotations
 
 from typing import Any
@@ -64,11 +62,6 @@ def build_audit_event_for_actor(
     resource_id: UUID | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> AuditEvent:
-    """Build an audit event for bootstrap-like flows without a full RequestContext.
-
-    Used by use cases such as organization/user creation where no authenticated
-    tenant context exists yet (the actor is not yet a member of any organization).
-    """
     candidate = get_correlation_id()
     correlation_id: UUID | None = None
     if is_valid_correlation_id(candidate):

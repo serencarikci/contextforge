@@ -1,5 +1,3 @@
-"""SQLAlchemy declarative base and common column conventions."""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -21,14 +19,10 @@ NAMING_CONVENTION = {
 
 
 class Base(DeclarativeBase):
-    """Declarative base for all ORM models."""
-
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
 
 
 class TimestampMixin:
-    """Reusable timezone-aware created/updated timestamps."""
-
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -45,8 +39,6 @@ class TimestampMixin:
 
 
 class UUIDPrimaryKeyMixin:
-    """Reusable UUID primary key column."""
-
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),
         primary_key=True,

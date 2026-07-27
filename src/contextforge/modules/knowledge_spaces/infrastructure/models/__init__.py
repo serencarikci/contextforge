@@ -1,5 +1,3 @@
-"""Knowledge spaces ORM models."""
-
 from contextforge.modules.knowledge_spaces.infrastructure.models.knowledge_space import (
     KnowledgeSpaceModel,
 )

@@ -1,5 +1,3 @@
-"""SQLAlchemy repository for prompt templates."""
-
 from __future__ import annotations
 
 from uuid import UUID
@@ -65,7 +63,6 @@ class SqlAlchemyPromptTemplateRepository:
     async def list_active_overrides(
         self, organization_id: UUID, language: str
     ) -> list[PromptTemplate]:
-        """Active org rows first; missing slots filled by active global rows."""
         org_rows = await self.list_templates(
             organization_id=organization_id,
             include_global=False,

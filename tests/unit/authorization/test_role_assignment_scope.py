@@ -1,5 +1,3 @@
-"""Unit tests for RoleAssignment scope invariants."""
-
 from __future__ import annotations
 
 from uuid import uuid4

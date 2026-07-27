@@ -1,5 +1,3 @@
-"""Integration tests for health endpoints against real infrastructure."""
-
 from __future__ import annotations
 
 import pytest
