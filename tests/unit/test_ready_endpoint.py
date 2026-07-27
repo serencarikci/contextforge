@@ -23,8 +23,8 @@ class _ReadyService(HealthService):
 
 @pytest.mark.unit
 def test_ready_endpoint_ready_and_not_ready(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("CONTEXTFORGE_APP__ENVIRONMENT", "test")
-    monkeypatch.setenv("CONTEXTFORGE_API__CORS_ORIGINS", "http://localhost:3000")
+    monkeypatch.setenv("CONTEXTFORGE_APP_ENVIRONMENT", "test")
+    monkeypatch.setenv("CONTEXTFORGE_API_CORS_ORIGINS", "http://localhost:3000")
     clear_settings_cache()
     app = create_app(Settings())
 

@@ -27,6 +27,23 @@ from contextforge.infrastructure.reranking import build_reranker
 from contextforge.infrastructure.retrieval import InMemoryLexicalSearch, PostgresBm25LexicalSearch
 from contextforge.infrastructure.vector_store.qdrant_client import QdrantHealthClient
 from contextforge.infrastructure.vector_store.qdrant_vector_store import QdrantVectorStore
+from contextforge.modules.chat.application.ports.cancellation import StreamCancellationPort
+from contextforge.modules.chat.application.services.analytics_service import AnalyticsService
+from contextforge.modules.chat.application.services.chat_service import ChatService
+from contextforge.modules.chat.application.services.conversation_search_service import (
+    ConversationSearchService,
+)
+from contextforge.modules.chat.application.services.conversation_service import (
+    ConversationService,
+)
+from contextforge.modules.chat.application.services.export_service import ExportService
+from contextforge.modules.chat.application.services.feedback_service import FeedbackService
+from contextforge.modules.chat.application.services.language_service import LanguageService
+from contextforge.modules.chat.application.services.memory_service import MemoryService
+from contextforge.modules.chat.application.services.suggestion_service import SuggestionService
+from contextforge.modules.chat.infrastructure.cancellation import (
+    InMemoryStreamCancellationRegistry,
+)
 from contextforge.modules.documents.application.ports.document_chunker import DocumentChunkerPort
 from contextforge.modules.documents.application.ports.document_parser import DocumentParserPort
 from contextforge.modules.documents.application.services.document_embedding_service import (
@@ -200,6 +217,70 @@ def get_rag_query_service(
         rag_settings=settings.rag,
         rerank_settings=settings.rerank,
     )
+
+
+def get_chat_cancellation_registry(request: Request) -> StreamCancellationPort:
+    existing = getattr(request.app.state, "chat_cancellation_registry", None)
+    if existing is not None:
+        return existing  # type: ignore[no-any-return]
+    registry = InMemoryStreamCancellationRegistry()
+    request.app.state.chat_cancellation_registry = registry
+    return registry
+
+
+def get_language_service(request: Request) -> LanguageService:
+    settings: Settings = request.app.state.settings
+    return LanguageService(settings.chat)
+
+
+def get_memory_service(request: Request) -> MemoryService:
+    settings: Settings = request.app.state.settings
+    return MemoryService(settings.chat)
+
+
+def get_conversation_service(request: Request) -> ConversationService:
+    settings: Settings = request.app.state.settings
+    return ConversationService(settings.chat)
+
+
+def get_chat_service(
+    request: Request,
+    rag_query_service: Annotated[RagQueryService, Depends(get_rag_query_service)],
+    memory_service: Annotated[MemoryService, Depends(get_memory_service)],
+    language_service: Annotated[LanguageService, Depends(get_language_service)],
+    cancellation: Annotated[StreamCancellationPort, Depends(get_chat_cancellation_registry)],
+) -> ChatService:
+    settings: Settings = request.app.state.settings
+    return ChatService(
+        rag_query_service=rag_query_service,
+        memory_service=memory_service,
+        language_service=language_service,
+        cancellation=cancellation,
+        chat_settings=settings.chat,
+        rag_settings=settings.rag,
+    )
+
+
+def get_feedback_service() -> FeedbackService:
+    return FeedbackService()
+
+
+def get_conversation_search_service() -> ConversationSearchService:
+    return ConversationSearchService()
+
+
+def get_suggestion_service(request: Request) -> SuggestionService:
+    settings: Settings = request.app.state.settings
+    return SuggestionService(settings.chat)
+
+
+def get_export_service(request: Request) -> ExportService:
+    settings: Settings = request.app.state.settings
+    return ExportService(settings.chat)
+
+
+def get_chat_analytics_service() -> AnalyticsService:
+    return AnalyticsService()
 
 
 def get_health_service(request: Request) -> HealthService:

@@ -10,6 +10,18 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from contextforge.modules.audit.infrastructure.repositories.audit_event import (
     SqlAlchemyAuditEventRepository,
 )
+from contextforge.modules.chat.infrastructure.repositories.analytics import (
+    SqlAlchemyChatAnalyticsRepository,
+)
+from contextforge.modules.chat.infrastructure.repositories.chat_message import (
+    SqlAlchemyChatMessageRepository,
+)
+from contextforge.modules.chat.infrastructure.repositories.conversation import (
+    SqlAlchemyConversationRepository,
+)
+from contextforge.modules.chat.infrastructure.repositories.feedback import (
+    SqlAlchemyMessageFeedbackRepository,
+)
 from contextforge.modules.customers.infrastructure.repositories.customer import (
     SqlAlchemyCustomerRepository,
 )
@@ -63,6 +75,10 @@ class SqlAlchemyUnitOfWork:
         self.document_chunks: SqlAlchemyDocumentChunkRepository
         self.ingestion_jobs: SqlAlchemyIngestionJobRepository
         self.audit: SqlAlchemyAuditEventRepository
+        self.conversations: SqlAlchemyConversationRepository
+        self.chat_messages: SqlAlchemyChatMessageRepository
+        self.message_feedback: SqlAlchemyMessageFeedbackRepository
+        self.chat_analytics: SqlAlchemyChatAnalyticsRepository
 
     async def __aenter__(self) -> Self:
         self.session = self._session_factory()
@@ -78,13 +94,17 @@ class SqlAlchemyUnitOfWork:
         self.document_chunks = SqlAlchemyDocumentChunkRepository(self.session)
         self.ingestion_jobs = SqlAlchemyIngestionJobRepository(self.session)
         self.audit = SqlAlchemyAuditEventRepository(self.session)
+        self.conversations = SqlAlchemyConversationRepository(self.session)
+        self.chat_messages = SqlAlchemyChatMessageRepository(self.session)
+        self.message_feedback = SqlAlchemyMessageFeedbackRepository(self.session)
+        self.chat_analytics = SqlAlchemyChatAnalyticsRepository(self.session)
         return self
 
     async def __aexit__(
         self,
         exc_type: type[BaseException] | None,
         exc: BaseException | None,
-        tb: TracebackType | None,
+        _tb: TracebackType | None,
     ) -> None:
         assert self.session is not None
         try:

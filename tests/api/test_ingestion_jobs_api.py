@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from uuid import uuid4
 
 import httpx
 import pytest
 from fastapi.testclient import TestClient
+from tests.fakes import FakeVectorStore
+from tests.helpers import acreate_knowledge_space, create_knowledge_space
 
-from contextforge.application.ports.vector_store import ChunkVectorPoint
 from contextforge.application.uow.sqlalchemy_uow import SqlAlchemyUnitOfWork
 from contextforge.bootstrap.app_factory import create_app
 from contextforge.infrastructure.embeddings import build_embedding_provider
@@ -33,49 +33,12 @@ if TYPE_CHECKING:
     from tests.conftest import TenantScenario
 
 
-class _FakeVectorStore:
-    def __init__(self) -> None:
-        self.upserted: list[ChunkVectorPoint] = []
-
-    async def upsert_chunk_vectors(self, points: list[ChunkVectorPoint]) -> None:
-        self.upserted.extend(points)
-
-    async def delete_by_document(self, organization_id: object, document_id: object) -> None:
-        return None
-
-    async def ensure_ready(self, *, dimensions: int) -> None:
-        return None
-
-    async def search(self, **kwargs: object) -> list[object]:
-        return []
-
-
-def _create_knowledge_space(api_client: TestClient, headers: dict[str, str]) -> str:
-    response = api_client.post(
-        "/api/v1/knowledge-spaces",
-        json={"name": "Ingest KS", "slug": f"ingest-ks-{uuid4().hex[:10]}"},
-        headers=headers,
-    )
-    assert response.status_code == 201
-    return str(response.json()["id"])
-
-
-async def _acreate_knowledge_space(client: httpx.AsyncClient, headers: dict[str, str]) -> str:
-    response = await client.post(
-        "/api/v1/knowledge-spaces",
-        json={"name": "Ingest KS", "slug": f"ingest-ks-{uuid4().hex[:10]}"},
-        headers=headers,
-    )
-    assert response.status_code == 201
-    return str(response.json()["id"])
-
-
 def _build_runner(
     *,
     settings: Settings,
     app: object,
     queue: InMemoryIngestionJobQueue,
-    vector_store: _FakeVectorStore,
+    vector_store: FakeVectorStore,
 ) -> IngestionPipelineRunner:
     provider = build_embedding_provider(settings.embedding)
     return IngestionPipelineRunner(
@@ -108,10 +71,10 @@ def test_upload_enqueues_ingestion_job(
 
     with TestClient(app) as api_client:
         headers = tenant_scenario.admin_headers()
-        ks_id = _create_knowledge_space(api_client, headers)
+        ks_id = create_knowledge_space(api_client, headers)
         upload = api_client.post(
             "/api/v1/documents",
-            data={"knowledge_space_id": ks_id, "title": "Queued Doc"},
+            data={"knowledge_space_id": str(ks_id), "title": "Queued Doc"},
             files={"file": ("note.md", b"# Title\n\nBody text for parsing.", "text/markdown")},
             headers=headers,
         )
@@ -144,7 +107,7 @@ async def test_worker_pipeline_succeeds_for_uploaded_markdown(
     clear_settings_cache()
     app = create_app(integration_settings)
     queue = InMemoryIngestionJobQueue()
-    fake_store = _FakeVectorStore()
+    fake_store = FakeVectorStore()
 
     async with app.router.lifespan_context(app):
         app.state.ingestion_job_queue = queue
@@ -152,11 +115,11 @@ async def test_worker_pipeline_succeeds_for_uploaded_markdown(
         transport = httpx.ASGITransport(app=app)
         async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
             headers = tenant_scenario.admin_headers()
-            ks_id = await _acreate_knowledge_space(client, headers)
+            ks_id = await acreate_knowledge_space(client, headers)
             body = "# Overview\n\n" + " ".join(f"token{i}" for i in range(80))
             upload = await client.post(
                 "/api/v1/documents",
-                data={"knowledge_space_id": ks_id, "title": "Pipeline Doc"},
+                data={"knowledge_space_id": str(ks_id), "title": "Pipeline Doc"},
                 files={"file": ("guide.md", body.encode("utf-8"), "text/markdown")},
                 headers=headers,
             )
@@ -195,10 +158,10 @@ async def test_retry_failed_job_requeues(
         transport = httpx.ASGITransport(app=app)
         async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
             headers = tenant_scenario.admin_headers()
-            ks_id = await _acreate_knowledge_space(client, headers)
+            ks_id = await acreate_knowledge_space(client, headers)
             upload = await client.post(
                 "/api/v1/documents",
-                data={"knowledge_space_id": ks_id, "title": "Retry Doc"},
+                data={"knowledge_space_id": str(ks_id), "title": "Retry Doc"},
                 files={"file": ("a.md", b"# Hi\n\nBody", "text/markdown")},
                 headers=headers,
             )

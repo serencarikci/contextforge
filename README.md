@@ -7,8 +7,8 @@ answers grounded in authorized company documents.
 
 > **Current scope:** identity, multi-tenancy, RBAC, audit logging, document upload/storage,
 > parsing, semantic chunking, multilingual embeddings (Qdrant), background ingestion
-> workers, and hybrid RAG answering are implemented. Multi-turn chat sessions are **not**
-> shipped yet.
+> workers, hybrid RAG answering, and multi-turn enterprise chat (streaming, memory,
+> feedback, and analytics) are implemented.
 >
 > **Authentication:** identity is resolved via development-only HTTP headers (see
 > [Development identity headers](#development-identity-headers)), gated off in
@@ -33,21 +33,25 @@ answers grounded in authorized company documents.
 * Structured logging and correlation IDs
 * Docker / Docker Compose
 * **Organization multi-tenancy** — organizations, memberships, and every business
-  entity scoped by `organization_id` (see [ADR-005](docs/adr/ADR-005-organization-multi-tenancy.md))
+ entity scoped by `organization_id`
 * **Scoped RBAC** — system + custom roles, permissions, org/project/knowledge-space-scoped
-  role assignments (see [ADR-006](docs/adr/ADR-006-scoped-rbac.md))
+ role assignments
 * **Development identity** — header-based caller identity for local/test/development
-  only (see [ADR-007](docs/adr/ADR-007-development-identity.md))
+ only
 * **Customers, projects, and knowledge spaces** — core tenant business entities, with
-  knowledge-space visibility rules (`organization` vs `restricted`)
+ knowledge-space visibility rules (`organization` vs `restricted`)
 * **Append-only audit trail** — every mutation is durably recorded with sanitized
-  metadata (see [ADR-008](docs/adr/ADR-008-append-only-audit.md))
+ metadata
 * **Document pipeline** — MinIO upload/storage, PDF/DOCX/HTML/Markdown parsing, semantic
-  chunking, multilingual embeddings into Qdrant
+ chunking, multilingual embeddings into Qdrant
 * **Background ingestion workers** — Redis-backed jobs that run parse → chunk → embed with
-  retries and failed-job recovery (`make worker` / Compose `ingestion-worker`)
+ retries and failed-job recovery (`make worker` / Compose `ingestion-worker`)
 * **Hybrid RAG** — dense (Qdrant) + BM25 lexical retrieval, reranking, provider-neutral LLM
-  answering with citations, prompt versioning, and injection-resistant context assembly
+ answering with citations, prompt versioning, and injection-resistant context assembly
+* **Enterprise chat** — multi-turn conversations grounded via `RagQueryService`, pluggable
+ memory strategies, SSE streaming with cooperative cancellation, message idempotency,
+ per-message knowledge-space revalidation, feedback, export (JSON/Markdown), and
+ usage analytics
 * Pytest (unit, integration, architecture, authorization, security, API)
 * Ruff, mypy, pre-commit, GitHub Actions CI
 
@@ -55,15 +59,15 @@ answers grounded in authorized company documents.
 
 ```mermaid
 flowchart LR
-    User[User / Client] --> API[ContextForge API]
-    API --> PG[(PostgreSQL)]
-    API --> Redis[(Redis)]
-    API --> Qdrant[(Qdrant)]
-    API --> MinIO[(MinIO)]
-    Worker[Ingestion Worker] --> PG
-    Worker --> Redis
-    Worker --> Qdrant
-    Worker --> MinIO
+ User[User / Client] --> API[ContextForge API]
+ API --> PG[(PostgreSQL)]
+ API --> Redis[(Redis)]
+ API --> Qdrant[(Qdrant)]
+ API --> MinIO[(MinIO)]
+ Worker[Ingestion Worker] --> PG
+ Worker --> Redis
+ Worker --> Qdrant
+ Worker --> MinIO
 ```
 
 Conceptual layers:
@@ -72,6 +76,42 @@ Conceptual layers:
 * **Application** — use cases and ports
 * **Domain** — entities and domain errors
 * **Infrastructure** — PostgreSQL, Redis, Qdrant, MinIO adapters
+
+## RAG and chat flows
+
+```mermaid
+sequenceDiagram
+  participant Client
+  participant API
+  participant Hybrid as HybridRetrieval
+  participant Rerank
+  participant LLM
+  Client->>API: POST /rag/query
+  API->>API: rag:query + KS authz
+  API->>Hybrid: dense + BM25 fuse
+  Hybrid-->>API: candidates
+  API->>Rerank: reorder top-N
+  Rerank-->>API: context chunks
+  API->>LLM: system + untrusted context + question
+  LLM-->>API: answer
+  API-->>Client: answer + citations + diagnostics
+```
+
+```mermaid
+sequenceDiagram
+  participant Client
+  participant API as Chat router
+  participant ChatSvc as ChatService
+  participant Memory as MemoryService
+  participant Rag as RagQueryService
+  Client->>API: POST /conversations/{id}/messages
+  API->>ChatSvc: send_message
+  ChatSvc->>Memory: build_history_context
+  ChatSvc->>Rag: query(..., history_context)
+  Rag-->>ChatSvc: answer + citations
+  ChatSvc-->>API: ChatAnswer
+  API-->>Client: user + assistant messages
+```
 
 ## Identity & multi-tenancy overview
 
@@ -82,108 +122,107 @@ for a given request is resolved from.
 
 ```mermaid
 erDiagram
-    USER ||--o{ ORGANIZATION_MEMBERSHIP : "has"
-    ORGANIZATION ||--o{ ORGANIZATION_MEMBERSHIP : "has"
-    ORGANIZATION ||--o{ CUSTOMER : "owns"
-    ORGANIZATION ||--o{ PROJECT : "owns"
-    ORGANIZATION ||--o{ KNOWLEDGE_SPACE : "owns"
-    ORGANIZATION ||--o{ ROLE : "defines (custom roles)"
-    CUSTOMER ||--o{ PROJECT : "has"
-    PROJECT ||--o{ KNOWLEDGE_SPACE : "may contain"
-    ORGANIZATION_MEMBERSHIP ||--o{ ROLE_ASSIGNMENT : "granted"
-    ROLE ||--o{ ROLE_ASSIGNMENT : "used in"
-    ROLE ||--o{ ROLE_PERMISSION : "bundles"
-    PERMISSION ||--o{ ROLE_PERMISSION : "granted by"
-    ORGANIZATION_MEMBERSHIP ||--o{ KNOWLEDGE_SPACE_MEMBERSHIP : "granted"
-    KNOWLEDGE_SPACE ||--o{ KNOWLEDGE_SPACE_MEMBERSHIP : "has"
-    ORGANIZATION ||--o{ AUDIT_EVENT : "scopes"
+ USER ||--o{ ORGANIZATION_MEMBERSHIP : "has"
+ ORGANIZATION ||--o{ ORGANIZATION_MEMBERSHIP : "has"
+ ORGANIZATION ||--o{ CUSTOMER : "owns"
+ ORGANIZATION ||--o{ PROJECT : "owns"
+ ORGANIZATION ||--o{ KNOWLEDGE_SPACE : "owns"
+ ORGANIZATION ||--o{ ROLE : "defines (custom roles)"
+ CUSTOMER ||--o{ PROJECT : "has"
+ PROJECT ||--o{ KNOWLEDGE_SPACE : "may contain"
+ ORGANIZATION_MEMBERSHIP ||--o{ ROLE_ASSIGNMENT : "granted"
+ ROLE ||--o{ ROLE_ASSIGNMENT : "used in"
+ ROLE ||--o{ ROLE_PERMISSION : "bundles"
+ PERMISSION ||--o{ ROLE_PERMISSION : "granted by"
+ ORGANIZATION_MEMBERSHIP ||--o{ KNOWLEDGE_SPACE_MEMBERSHIP : "granted"
+ KNOWLEDGE_SPACE ||--o{ KNOWLEDGE_SPACE_MEMBERSHIP : "has"
+ ORGANIZATION ||--o{ AUDIT_EVENT : "scopes"
 
-    USER {
-        uuid id
-        string email
-        string status
-        bool is_platform_admin
-    }
-    ORGANIZATION {
-        uuid id
-        string slug
-        string status
-    }
-    ORGANIZATION_MEMBERSHIP {
-        uuid id
-        uuid organization_id
-        uuid user_id
-        string status
-    }
-    ROLE {
-        uuid id
-        string code
-        uuid organization_id "null for system roles"
-        bool is_system
-    }
-    ROLE_ASSIGNMENT {
-        uuid id
-        uuid membership_id
-        uuid role_id
-        uuid project_id "nullable scope"
-        uuid knowledge_space_id "nullable scope"
-    }
-    CUSTOMER {
-        uuid id
-        uuid organization_id
-        string code
-    }
-    PROJECT {
-        uuid id
-        uuid organization_id
-        uuid customer_id
-        string key
-    }
-    KNOWLEDGE_SPACE {
-        uuid id
-        uuid organization_id
-        uuid project_id "nullable"
-        string visibility
-    }
-    KNOWLEDGE_SPACE_MEMBERSHIP {
-        uuid id
-        uuid knowledge_space_id
-        uuid membership_id
-        string access_level
-    }
-    AUDIT_EVENT {
-        uuid id
-        uuid organization_id
-        uuid actor_user_id
-        string action
-        string resource_type
-    }
+ USER {
+ uuid id
+ string email
+ string status
+ bool is_platform_admin
+ }
+ ORGANIZATION {
+ uuid id
+ string slug
+ string status
+ }
+ ORGANIZATION_MEMBERSHIP {
+ uuid id
+ uuid organization_id
+ uuid user_id
+ string status
+ }
+ ROLE {
+ uuid id
+ string code
+ uuid organization_id "null for system roles"
+ bool is_system
+ }
+ ROLE_ASSIGNMENT {
+ uuid id
+ uuid membership_id
+ uuid role_id
+ uuid project_id "nullable scope"
+ uuid knowledge_space_id "nullable scope"
+ }
+ CUSTOMER {
+ uuid id
+ uuid organization_id
+ string code
+ }
+ PROJECT {
+ uuid id
+ uuid organization_id
+ uuid customer_id
+ string key
+ }
+ KNOWLEDGE_SPACE {
+ uuid id
+ uuid organization_id
+ uuid project_id "nullable"
+ string visibility
+ }
+ KNOWLEDGE_SPACE_MEMBERSHIP {
+ uuid id
+ uuid knowledge_space_id
+ uuid membership_id
+ string access_level
+ }
+ AUDIT_EVENT {
+ uuid id
+ uuid organization_id
+ uuid actor_user_id
+ string action
+ string resource_type
+ }
 ```
 
-Request-scoped authorization flow (see [ADR-007](docs/adr/ADR-007-development-identity.md)
-for the identity part and [ADR-006](docs/adr/ADR-006-scoped-rbac.md) for RBAC):
+Request-scoped authorization flow:
 
 ```mermaid
 sequenceDiagram
-    participant Client
-    participant API as FastAPI dependency
-    participant IdentitySvc as identity_context_service
-    participant DB as PostgreSQL
+ participant Client
+ participant API as FastAPI dependency
+ participant IdentitySvc as identity_context_service
+ participant DB as PostgreSQL
 
-    Client->>API: Request + X-ContextForge-User-ID / -Organization-ID
-    API->>IdentitySvc: build_request_context(user_id, organization_id)
-    IdentitySvc->>IdentitySvc: development_identity_enabled(settings)?
-    alt disabled (staging/production)
-        IdentitySvc-->>Client: 401 AUTHENTICATION_REQUIRED
-    else enabled (local/test/development)
-        IdentitySvc->>DB: load user, organization, membership
-        IdentitySvc->>IdentitySvc: validate active status (user/org/membership)
-        IdentitySvc->>DB: load org/project/KS-scoped permissions + accessible ids
-        IdentitySvc-->>API: RequestContext (permissions, accessible ids)
-        API->>API: service.method(uow, ctx, ...)
-        API->>API: ctx.require_permission(...) / ctx.require_*_access(...)
-        API-->>Client: 200 (or 403/404 per authorization result)
-    end
+ Client->>API: Request + X-ContextForge-User-ID / -Organization-ID
+ API->>IdentitySvc: build_request_context(user_id, organization_id)
+ IdentitySvc->>IdentitySvc: development_identity_enabled(settings)?
+ alt disabled (staging/production)
+ IdentitySvc-->>Client: 401 AUTHENTICATION_REQUIRED
+ else enabled (local/test/development)
+ IdentitySvc->>DB: load user, organization, membership
+ IdentitySvc->>IdentitySvc: validate active status (user/org/membership)
+ IdentitySvc->>DB: load org/project/KS-scoped permissions + accessible ids
+ IdentitySvc-->>API: RequestContext (permissions, accessible ids)
+ API->>API: service.method(uow, ctx, ...)
+ API->>API: ctx.require_permission(...) / ctx.require_*_access(...)
+ API-->>Client: 200 (or 403/404 per authorization result)
+ end
 ```
 
 ## Technology stack
@@ -203,12 +242,12 @@ sequenceDiagram
 ## Repository structure
 
 ```text
-src/contextforge/     Application source
-migrations/           Alembic migrations
-tests/                Unit, integration, architecture tests
-infrastructure/       Docker/service helper assets
-docs/                 Architecture docs and ADRs
-scripts/              Entrypoint and utility scripts
+src/contextforge/ Application source
+migrations/ Alembic migrations
+tests/ Unit, integration, architecture tests
+infrastructure/ Docker/service helper assets
+docs/ Architecture docs and ADRs
+scripts/ Entrypoint and utility scripts
 ```
 
 ## Prerequisites
@@ -256,11 +295,14 @@ docker compose down
 See `.env.example`. Nested settings use:
 
 ```text
-CONTEXTFORGE_APP__ENVIRONMENT
-CONTEXTFORGE_POSTGRES__HOST
-CONTEXTFORGE_REDIS__URL
-CONTEXTFORGE_QDRANT__URL
-CONTEXTFORGE_MINIO__ENDPOINT
+CONTEXTFORGE_APP_ENVIRONMENT
+CONTEXTFORGE_POSTGRES_HOST
+CONTEXTFORGE_REDIS_URL
+CONTEXTFORGE_QDRANT_URL
+CONTEXTFORGE_MINIO_ENDPOINT
+CONTEXTFORGE_CHAT_MEMORY_STRATEGY
+CONTEXTFORGE_CHAT_MAX_MESSAGE_LENGTH
+CONTEXTFORGE_CHAT_STREAM_HEARTBEAT_SECONDS
 ```
 
 Supported environments: `local`, `test`, `development`, `staging`, `production`.
@@ -270,8 +312,8 @@ Docker Compose uses clearly marked **non-production** development credentials.
 ## Development identity headers
 
 > ⚠️ **This is not production authentication.** It is a deliberate, environment-gated
-> stand-in used only in `local`, `test`, and `development` (see
-> [ADR-007](docs/adr/ADR-007-development-identity.md)). It is unconditionally disabled in
+> stand-in used only in `local`, `test`, and `development`.
+> It is unconditionally disabled in
 > `staging` and `production` — every request without real authentication is rejected
 > with `401 AUTHENTICATION_REQUIRED` in those environments, regardless of headers sent.
 
@@ -297,7 +339,7 @@ repeatedly (idempotent: looks up each entity by its natural key before creating 
 produces the exact same UUIDs every time via `uuid5`):
 
 ```bash
-make migrate         # apply migrations first
+make migrate # apply migrations first
 make bootstrap-dev
 ```
 
@@ -305,11 +347,11 @@ It creates:
 
 * organization `contextforge-dev`
 * an `organization_admin` user (`admin@contextforge.local`) and a `developer` user
-  (`developer@contextforge.local`), both active members
+ (`developer@contextforge.local`), both active members
 * a customer (`DEV-CUST`) and a project (`DEMO`) linked to it
 * an organization-visible knowledge space (`company-handbook`) and a `restricted` one
-  (`incident-playbooks`), with the developer granted `contributor` access to the
-  restricted space
+ (`incident-playbooks`), with the developer granted `contributor` access to the
+ restricted space
 
 It prints the header values for the seeded admin user at the end:
 
@@ -326,10 +368,10 @@ not by this script) is actually present, and prints their counts.
 ## Database migrations
 
 ```bash
-make migrate                 # alembic upgrade head
-make migration name="desc"   # autogenerate revision
-make downgrade               # alembic downgrade -1
-make worker                  # run ingestion worker locally
+make migrate # alembic upgrade head
+make migration name="desc" # autogenerate revision
+make downgrade # alembic downgrade -1
+make worker # run ingestion worker locally
 uv run alembic history
 ```
 
@@ -379,39 +421,44 @@ make type-check
 | POST/GET | `/api/v1/documents/{id}/parse`, `/{id}/chunks`, `/{id}/embeddings` | Parse, chunk, and embed a document on demand |
 | GET/POST | `/api/v1/ingestion-jobs`, `/{id}`, `/{id}/retry`, `/documents/{id}/ingestion-jobs` | Background ingestion jobs (list, inspect, retry failed) |
 | POST | `/api/v1/rag/search`, `/rag/query`, `/rag/query/stream` | Hybrid retrieval and grounded RAG answers (`rag:query`) |
+| GET/POST/PATCH/DELETE | `/api/v1/conversations`, `/{id}`, `/{id}/archive`, `/{id}/restore` | Conversation lifecycle (`chat:use`) |
+| GET/POST/DELETE | `/api/v1/conversations/{id}/participants`, `/{user_id}` | Conversation participant management |
+| POST | `/api/v1/conversations/{id}/messages`, `/messages/stream`, `/messages/{id}/cancel` | Send a chat message (sync or SSE stream) and cancel an in-flight stream |
+| GET | `/api/v1/conversations/{id}/messages`, `/suggestions`, `/export` | List messages, follow-up suggestions, JSON/Markdown export |
+| GET/PUT | `/api/v1/messages/{id}`, `/{id}/feedback` | Read a message and submit/update feedback |
+| GET | `/api/v1/chat/analytics/overview` | Chat usage and quality analytics (`chat:manage`) |
 | GET | `/api/v1/audit` | Query the append-only audit trail (`audit:read`) |
 
 All endpoints above (except `/health/*` and `/system/info`) require
 [development identity headers](#development-identity-headers) and are subject to
-[scoped RBAC](docs/adr/ADR-006-scoped-rbac.md).
+scoped RBAC.
 
 Example system info capabilities (implemented in this commit vs. still planned):
 
 ```json
 {
-  "identity_context": true,
-  "multi_tenancy": true,
-  "rbac": true,
-  "customers": true,
-  "projects": true,
-  "knowledge_spaces": true,
-  "audit_log": true,
-  "document_ingestion": true,
-  "document_parsing": true,
-  "document_chunking": true,
-  "document_embeddings": true,
-  "ingestion_workers": true,
-  "rag": true,
-  "chat": false,
-  "multilingual_answers": true
+ "identity_context": true,
+ "multi_tenancy": true,
+ "rbac": true,
+ "customers": true,
+ "projects": true,
+ "knowledge_spaces": true,
+ "audit_log": true,
+ "document_ingestion": true,
+ "document_parsing": true,
+ "document_chunking": true,
+ "document_embeddings": true,
+ "ingestion_workers": true,
+ "rag": true,
+ "chat": true,
+ "multilingual_answers": true
 }
 ```
 
 ## System roles & permissions summary
 
 Permissions are namespaced `resource:action` strings; system roles are global (identical
-across every organization) and cannot be created/modified through the API (see
-[ADR-006](docs/adr/ADR-006-scoped-rbac.md)). Organizations can additionally define their
+across every organization) and cannot be created/modified through the API. Organizations can additionally define their
 own custom roles with any subset of permissions via `POST /api/v1/roles`.
 
 | System role | Summary |
@@ -433,6 +480,9 @@ own custom roles with any subset of permissions via `POST /api/v1/roles`.
 | `project:create/read/update/archive/manage_members` | Projects |
 | `knowledge_space:create/read/update/archive/manage_members` | Knowledge spaces |
 | `document:create/read/update/delete` | Documents |
+| `rag:query` | Hybrid retrieval and grounded RAG answers |
+| `chat:use` | Create/use conversations and send messages (granted to the same roles as `rag:query`) |
+| `chat:manage` | Moderate any conversation and view chat analytics (`organization_admin`, `knowledge_manager`) |
 | `audit:read` | The audit trail |
 
 Every user can always read/update their *own* profile (`GET`/`PATCH /users/{their own id}`)
@@ -443,13 +493,13 @@ without holding `user:read`/`user:manage`.
 Knowledge spaces have two visibility levels:
 
 * **`organization`** (default) — visible to anyone in the organization holding
-  `knowledge_space:read`. No explicit grant needed.
+ `knowledge_space:read`. No explicit grant needed.
 * **`restricted`** — requires an *explicit* grant: either a knowledge-space-scoped role
-  assignment, or a `KnowledgeSpaceMembership` row. Holding org-wide `knowledge_space:read`
-  is **not** sufficient — even the organization admin who created a restricted space gets
-  `404` (not `403`) without an explicit grant, so a caller can never distinguish "exists
-  but restricted" from "does not exist" (see
-  `tests/security/test_restricted_knowledge_space_access.py`).
+ assignment, or a `KnowledgeSpaceMembership` row. Holding org-wide `knowledge_space:read`
+ is **not** sufficient — even the organization admin who created a restricted space gets
+ `404` (not `403`) without an explicit grant, so a caller can never distinguish "exists
+ but restricted" from "does not exist" (see
+ `tests/security/test_restricted_knowledge_space_access.py`).
 * `platform_admin` bypasses both rules.
 
 ## Example curl commands
@@ -466,15 +516,15 @@ curl -s http://localhost:8000/api/v1/system/info | jq
 
 # List organizations the admin is a member of.
 curl -s http://localhost:8000/api/v1/organizations \
-  -H "X-ContextForge-User-ID: $USER_ID" \
-  -H "X-ContextForge-Organization-ID: $ORG_ID" | jq
+ -H "X-ContextForge-User-ID: $USER_ID" \
+ -H "X-ContextForge-Organization-ID: $ORG_ID" | jq
 
 # Create a customer as the organization admin.
 curl -s -X POST http://localhost:8000/api/v1/customers \
-  -H "X-ContextForge-User-ID: $USER_ID" \
-  -H "X-ContextForge-Organization-ID: $ORG_ID" \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Acme Corp", "code": "ACME"}' | jq
+ -H "X-ContextForge-User-ID: $USER_ID" \
+ -H "X-ContextForge-Organization-ID: $ORG_ID" \
+ -H "Content-Type: application/json" \
+ -d '{"name": "Acme Corp", "code": "ACME"}' | jq
 
 # Missing identity headers -> 401.
 curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8000/api/v1/customers
@@ -482,18 +532,17 @@ curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8000/api/v1/customers
 
 ## Auth roadmap
 
-Development identity ([ADR-007](docs/adr/ADR-007-development-identity.md)) is an interim
+Development identity is an interim
 mechanism only. Planned follow-ups, in rough order:
 
 1. Real authentication (OIDC/SSO) replacing header-based identity, without changing
-   `RequestContext` or any application service's signature.
+ `RequestContext` or any application service's signature.
 2. Session/token issuance and refresh flows.
 3. Per-organization identity provider configuration (enterprise SSO).
 4. Service-to-service / API-key authentication for automation clients.
 5. Removing development identity from non-production builds entirely once (1)–(2) ship.
 
-RAG retrieval, LLM answer generation, and chat remain on the product roadmap — see
-[Planned roadmap](#planned-roadmap) below.
+See [Planned roadmap](#planned-roadmap) below for the rest of the product roadmap.
 
 ## Health-check behavior
 
@@ -509,7 +558,7 @@ RAG retrieval, LLM answer generation, and chat remain on the product roadmap —
 | Ready returns 503 | Dependency not healthy | `docker compose ps` and inspect service logs |
 | Migrations fail | Postgres not ready | Ensure `postgres` is healthy, rerun `make migrate` |
 | MinIO check fails | Bucket missing | Ensure `minio-init` completed successfully |
-| Docs missing in prod | Expected | Docs disabled when `CONTEXTFORGE_APP__ENVIRONMENT=production` |
+| Docs missing in prod | Expected | Docs disabled when `CONTEXTFORGE_APP_ENVIRONMENT=production` |
 
 ## Security notes
 
@@ -517,16 +566,12 @@ RAG retrieval, LLM answer generation, and chat remain on the product roadmap —
 * Containers run as non-root (`uid 10001`).
 * CORS is off unless origins are explicitly configured.
 * **Development identity is not production authentication** — it is unconditionally
-  disabled in `staging`/`production` (see
-  [Development identity headers](#development-identity-headers) and
-  [ADR-007](docs/adr/ADR-007-development-identity.md)). Real authentication (OIDC/SSO)
-  is tracked in the [Auth roadmap](#auth-roadmap) and has not shipped yet — treat any
-  non-production deployment of this API as an internal foundation only.
+ disabled in `staging`/`production` (see [Development identity headers](#development-identity-headers)). Real authentication (OIDC/SSO)
+ is tracked in the [Auth roadmap](#auth-roadmap) and has not shipped yet — treat any
+ non-production deployment of this API as an internal foundation only.
 * Authorization (RBAC + tenancy) is enforced server-side only; no client-supplied
-  role/permission header is ever trusted (see
-  [ADR-006](docs/adr/ADR-006-scoped-rbac.md)).
-* Audit metadata is sanitized to strip secret-like keys before persistence (see
-  [ADR-008](docs/adr/ADR-008-append-only-audit.md)).
+ role/permission header is ever trusted.
+* Audit metadata is sanitized to strip secret-like keys before persistence.
 
 ## Development conventions
 
@@ -538,11 +583,12 @@ RAG retrieval, LLM answer generation, and chat remain on the product roadmap —
 ## Planned roadmap
 
 1. ~~Multi-tenancy, scoped RBAC, and audit logging~~ — done (development identity only;
-   see [Auth roadmap](#auth-roadmap) for real authentication)
+ see [Auth roadmap](#auth-roadmap) for real authentication)
 2. ~~Document upload, parsing, chunking, embeddings, and ingestion workers~~ — done
 3. ~~Hybrid retrieval, reranking, and RAG answering~~ — done
-4. Real authentication (OIDC/SSO) replacing development identity
-5. Multilingual chat experience (Turkish / English) with session memory
+4. ~~Multilingual chat experience (Turkish / English) with session memory~~ — done
+   (conversations, streaming, memory, feedback, export, analytics)
+5. Real authentication (OIDC/SSO) replacing development identity
 6. Admin tooling on top of the audit trail
 
 ## License
@@ -553,16 +599,3 @@ MIT — see [LICENSE](LICENSE).
 
 Built by [serencarikci](https://github.com/serencarikci).
 
-## Architecture decision records
-
-* [ADR-001: Modular Monolith and Clean Architecture](docs/adr/ADR-001-modular-monolith-clean-architecture.md)
-* [ADR-002: PostgreSQL as the Transactional Database](docs/adr/ADR-002-postgresql-transactional-database.md)
-* [ADR-003: Asynchronous Python Stack](docs/adr/ADR-003-asynchronous-python-stack.md)
-* [ADR-004: Qdrant, Redis, and MinIO Infrastructure](docs/adr/ADR-004-qdrant-redis-minio-infrastructure.md)
-* [ADR-005: Organization-Scoped Multi-Tenancy](docs/adr/ADR-005-organization-multi-tenancy.md)
-* [ADR-006: Scoped Role-Based Access Control (RBAC)](docs/adr/ADR-006-scoped-rbac.md)
-* [ADR-007: Header-Based Development Identity](docs/adr/ADR-007-development-identity.md)
-* [ADR-008: Append-Only Audit Trail with Sanitized Metadata](docs/adr/ADR-008-append-only-audit.md)
-* [ADR-009: Hybrid Retrieval (Dense + BM25)](docs/adr/ADR-009-hybrid-retrieval.md)
-* [ADR-010: LLM Provider Abstraction](docs/adr/ADR-010-llm-provider-abstraction.md)
-* [ADR-011: RAG Security Boundaries](docs/adr/ADR-011-rag-security.md)

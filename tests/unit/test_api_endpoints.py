@@ -5,13 +5,15 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 
+from contextforge.__about__ import __version__
 from contextforge.bootstrap.app_factory import create_app
 from contextforge.shared.config.settings import Settings, clear_settings_cache
 
 
 @pytest.fixture
 def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
-    monkeypatch.setenv("CONTEXTFORGE_APP__ENVIRONMENT", "test")
+    monkeypatch.setenv("CONTEXTFORGE_APP_ENVIRONMENT", "test")
+    monkeypatch.setenv("CONTEXTFORGE_APP_VERSION", __version__)
     clear_settings_cache()
     app = create_app(Settings())
     with TestClient(app) as test_client:
@@ -26,7 +28,7 @@ def test_liveness(client: TestClient) -> None:
     assert body == {
         "status": "ok",
         "service": "contextforge-api",
-        "version": "0.2.0",
+        "version": __version__,
     }
     assert "X-Correlation-ID" in response.headers
 
@@ -44,7 +46,7 @@ def test_system_info_capabilities(client: TestClient) -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["name"] == "ContextForge API"
-    assert body["version"] == "0.2.0"
+    assert body["version"] == __version__
     assert body["environment"] == "test"
     assert body["capabilities"] == {
         "identity_context": True,
@@ -60,7 +62,7 @@ def test_system_info_capabilities(client: TestClient) -> None:
         "document_embeddings": True,
         "ingestion_workers": True,
         "rag": True,
-        "chat": False,
+        "chat": True,
         "multilingual_answers": True,
     }
     assert body["authentication"] == "development_only"

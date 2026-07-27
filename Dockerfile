@@ -25,7 +25,7 @@ FROM python:3.13-slim AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/app/.venv/bin:$PATH" \
-    CONTEXTFORGE_LOGGING__FORMAT=json
+    CONTEXTFORGE_LOGGING_FORMAT=json
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \

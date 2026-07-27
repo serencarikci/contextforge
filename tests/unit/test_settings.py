@@ -13,13 +13,13 @@ from contextforge.shared.config.settings import (
 
 @pytest.mark.unit
 def test_settings_load_nested_env(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("CONTEXTFORGE_APP__ENVIRONMENT", "development")
-    monkeypatch.setenv("CONTEXTFORGE_POSTGRES__HOST", "db.internal")
-    monkeypatch.setenv("CONTEXTFORGE_POSTGRES__PORT", "5433")
-    monkeypatch.setenv("CONTEXTFORGE_REDIS__URL", "redis://cache:6379/1")
-    monkeypatch.setenv("CONTEXTFORGE_QDRANT__URL", "http://qdrant:6333")
-    monkeypatch.setenv("CONTEXTFORGE_MINIO__ENDPOINT", "minio:9000")
-    monkeypatch.setenv("CONTEXTFORGE_LOGGING__LEVEL", "DEBUG")
+    monkeypatch.setenv("CONTEXTFORGE_APP_ENVIRONMENT", "development")
+    monkeypatch.setenv("CONTEXTFORGE_POSTGRES_HOST", "db.internal")
+    monkeypatch.setenv("CONTEXTFORGE_POSTGRES_PORT", "5433")
+    monkeypatch.setenv("CONTEXTFORGE_REDIS_URL", "redis://cache:6379/1")
+    monkeypatch.setenv("CONTEXTFORGE_QDRANT_URL", "http://qdrant:6333")
+    monkeypatch.setenv("CONTEXTFORGE_MINIO_ENDPOINT", "minio:9000")
+    monkeypatch.setenv("CONTEXTFORGE_LOGGING_LEVEL", "DEBUG")
     clear_settings_cache()
 
     settings = Settings()
@@ -37,9 +37,9 @@ def test_settings_load_nested_env(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_production_disables_docs_and_forces_json_logging(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv("CONTEXTFORGE_APP__ENVIRONMENT", "production")
-    monkeypatch.setenv("CONTEXTFORGE_API__DOCS_ENABLED", "true")
-    monkeypatch.setenv("CONTEXTFORGE_LOGGING__FORMAT", "console")
+    monkeypatch.setenv("CONTEXTFORGE_APP_ENVIRONMENT", "production")
+    monkeypatch.setenv("CONTEXTFORGE_API_DOCS_ENABLED", "true")
+    monkeypatch.setenv("CONTEXTFORGE_LOGGING_FORMAT", "console")
     clear_settings_cache()
 
     settings = Settings()
@@ -50,10 +50,10 @@ def test_production_disables_docs_and_forces_json_logging(
 
 @pytest.mark.unit
 def test_postgres_async_dsn_contains_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("CONTEXTFORGE_POSTGRES__USER", "cf_user")
-    monkeypatch.setenv("CONTEXTFORGE_POSTGRES__PASSWORD", "secret")
-    monkeypatch.setenv("CONTEXTFORGE_POSTGRES__HOST", "localhost")
-    monkeypatch.setenv("CONTEXTFORGE_POSTGRES__DATABASE", "contextforge")
+    monkeypatch.setenv("CONTEXTFORGE_POSTGRES_USER", "cf_user")
+    monkeypatch.setenv("CONTEXTFORGE_POSTGRES_PASSWORD", "secret")
+    monkeypatch.setenv("CONTEXTFORGE_POSTGRES_HOST", "localhost")
+    monkeypatch.setenv("CONTEXTFORGE_POSTGRES_DATABASE", "contextforge")
     clear_settings_cache()
 
     settings = Settings()

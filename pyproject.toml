@@ -1,6 +1,6 @@
 [project]
 name = "contextforge"
-version = "0.2.0"
+version = "0.3.0"
 description = "ContextForge — Multilingual Enterprise Knowledge Assistant"
 readme = "README.md"
 license = { text = "MIT" }
@@ -92,6 +92,11 @@ ignore = [
 "tests/**/*.py" = ["S105", "S106"]
 "migrations/**/*.py" = ["N999"]
 "scripts/**/*.py" = ["T201"]
+"src/contextforge/modules/chat/application/services/language_service.py" = ["RUF001"]
+"src/contextforge/modules/chat/application/services/suggestion_service.py" = ["RUF001"]
+"tests/unit/chat/**/*.py" = ["RUF001"]
+"tests/security/test_chat_security.py" = ["RUF001"]
+"tests/api/test_conversations_api.py" = ["RUF001"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -125,7 +130,7 @@ minversion = "8.0"
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "."]
 markers = [
   "unit: Unit tests that do not require external services",
   "integration: Integration tests that require infrastructure services",

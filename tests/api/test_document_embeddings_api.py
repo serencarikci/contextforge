@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
+from tests.fakes import FakeVectorStore
+from tests.helpers import create_knowledge_space
 
-from contextforge.application.ports.vector_store import ChunkVectorPoint
 from contextforge.bootstrap.app_factory import create_app
 from contextforge.shared.config.settings import Settings, clear_settings_cache
 
@@ -17,34 +17,8 @@ if TYPE_CHECKING:
     from tests.conftest import TenantScenario
 
 
-class _FakeVectorStore:
-    def __init__(self) -> None:
-        self.upserted: list[ChunkVectorPoint] = []
-        self.deleted: list[tuple[object, object]] = []
-        self.ensure_ready = AsyncMock()
-
-    async def upsert_chunk_vectors(self, points: list[ChunkVectorPoint]) -> None:
-        self.upserted.extend(points)
-
-    async def delete_by_document(self, organization_id: object, document_id: object) -> None:
-        self.deleted.append((organization_id, document_id))
-
-    async def search(self, **kwargs: object) -> list[object]:
-        return []
-
-
-def _create_knowledge_space(api_client: TestClient, headers: dict[str, str]) -> str:
-    response = api_client.post(
-        "/api/v1/knowledge-spaces",
-        json={"name": "Embed KS", "slug": f"embed-ks-{uuid4().hex[:10]}"},
-        headers=headers,
-    )
-    assert response.status_code == 201
-    return str(response.json()["id"])
-
-
 def _upload_and_prepare(api_client: TestClient, headers: dict[str, str]) -> str:
-    ks_id = _create_knowledge_space(api_client, headers)
+    ks_id = create_knowledge_space(api_client, headers)
     turkish = "Bu belge Turkce ozel karakterler icerir: " + "\u011f\u00fc\u015f\u0131\u00f6\u00e7"
     body = "\n\n".join(
         [
@@ -56,7 +30,7 @@ def _upload_and_prepare(api_client: TestClient, headers: dict[str, str]) -> str:
     )
     upload = api_client.post(
         "/api/v1/documents",
-        data={"knowledge_space_id": ks_id, "title": "Multilingual Doc"},
+        data={"knowledge_space_id": str(ks_id), "title": "Multilingual Doc"},
         files={"file": ("guide.md", body.encode("utf-8"), "text/markdown")},
         headers=headers,
     )
@@ -75,7 +49,7 @@ def test_embed_document_stores_vectors_and_updates_chunks(
 ) -> None:
     clear_settings_cache()
     app = create_app(integration_settings)
-    fake_store = _FakeVectorStore()
+    fake_store = FakeVectorStore()
     app.state.vector_store = fake_store
 
     with TestClient(app) as api_client:
@@ -95,7 +69,7 @@ def test_embed_document_stores_vectors_and_updates_chunks(
         assert payload["dimensions"] == integration_settings.embedding.dimensions
         assert all(item["embedding_status"] == "embedded" for item in payload["items"])
         assert all(item["language"] == "tr" for item in payload["items"])
-        assert fake_store.ensure_ready.await_count >= 1
+        assert fake_store.ensure_ready_calls >= 1
         assert len(fake_store.upserted) == payload["embedded_count"]
         assert fake_store.upserted[0].language == "tr"
 
@@ -114,10 +88,10 @@ def test_embed_without_chunks_returns_400(
     api_client: TestClient, tenant_scenario: TenantScenario
 ) -> None:
     headers = tenant_scenario.admin_headers()
-    ks_id = _create_knowledge_space(api_client, headers)
+    ks_id = create_knowledge_space(api_client, headers)
     upload = api_client.post(
         "/api/v1/documents",
-        data={"knowledge_space_id": ks_id, "title": "No Chunks"},
+        data={"knowledge_space_id": str(ks_id), "title": "No Chunks"},
         files={"file": ("a.md", b"# Hi\n\nBody", "text/markdown")},
         headers=headers,
     )

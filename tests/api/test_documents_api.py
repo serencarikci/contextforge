@@ -8,6 +8,7 @@ from uuid import uuid4
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
+from tests.helpers import create_knowledge_space
 
 from contextforge.application.uow.sqlalchemy_uow import SqlAlchemyUnitOfWork
 from contextforge.modules.documents.domain.entities.document import MAX_DOCUMENT_SIZE_BYTES
@@ -25,20 +26,10 @@ USER_ID_HEADER = "X-ContextForge-User-ID"
 ORGANIZATION_ID_HEADER = "X-ContextForge-Organization-ID"
 
 
-def _create_knowledge_space(api_client: TestClient, headers: dict[str, str]) -> str:
-    response = api_client.post(
-        "/api/v1/knowledge-spaces",
-        json={"name": "Docs KS", "slug": f"docs-ks-{uuid4().hex[:10]}"},
-        headers=headers,
-    )
-    assert response.status_code == 201
-    return str(response.json()["id"])
-
-
 def _upload_document(
     api_client: TestClient,
     headers: dict[str, str],
-    knowledge_space_id: str,
+    knowledge_space_id: object,
     *,
     title: str = "Test Doc",
     filename: str = "test.txt",
@@ -47,7 +38,7 @@ def _upload_document(
 ) -> Any:
     return api_client.post(
         "/api/v1/documents",
-        data={"knowledge_space_id": knowledge_space_id, "title": title},
+        data={"knowledge_space_id": str(knowledge_space_id), "title": title},
         files={"file": (filename, content, content_type)},
         headers=headers,
     )
@@ -99,14 +90,14 @@ class TestDocumentLifecycle:
         self, api_client: TestClient, tenant_scenario: TenantScenario
     ) -> None:
         headers = tenant_scenario.admin_headers()
-        ks_id = _create_knowledge_space(api_client, headers)
+        ks_id = create_knowledge_space(api_client, headers)
 
         upload_response = _upload_document(api_client, headers, ks_id)
         assert upload_response.status_code == 201
         body = upload_response.json()
         assert body["title"] == "Test Doc"
         assert body["filename"] == "test.txt"
-        assert body["knowledge_space_id"] == ks_id
+        assert body["knowledge_space_id"] == str(ks_id)
         assert body["status"] == "active"
         document_id = body["id"]
 
@@ -152,13 +143,13 @@ class TestDocumentLifecycle:
         self, api_client: TestClient, tenant_scenario: TenantScenario
     ) -> None:
         headers = tenant_scenario.admin_headers()
-        ks_id = _create_knowledge_space(api_client, headers)
+        ks_id = create_knowledge_space(api_client, headers)
         _upload_document(api_client, headers, ks_id, title="Doc One")
         _upload_document(api_client, headers, ks_id, title="Doc Two")
 
         response = api_client.get(
             "/api/v1/documents",
-            params={"knowledge_space_id": ks_id},
+            params={"knowledge_space_id": str(ks_id)},
             headers=headers,
         )
         assert response.status_code == 200
@@ -171,7 +162,7 @@ class TestDocumentLifecycle:
         self, api_client: TestClient, tenant_scenario: TenantScenario
     ) -> None:
         headers = tenant_scenario.admin_headers()
-        ks_id = _create_knowledge_space(api_client, headers)
+        ks_id = create_knowledge_space(api_client, headers)
         oversized = b"x" * (MAX_DOCUMENT_SIZE_BYTES + 1)
 
         response = _upload_document(api_client, headers, ks_id, content=oversized)
@@ -192,7 +183,7 @@ class TestDocumentAuthorization:
         self, api_client: TestClient, tenant_scenario: TenantScenario
     ) -> None:
         admin_headers = tenant_scenario.admin_headers()
-        ks_id = _create_knowledge_space(api_client, admin_headers)
+        ks_id = create_knowledge_space(api_client, admin_headers)
         upload_response = _upload_document(api_client, admin_headers, ks_id)
         document_id = upload_response.json()["id"]
 
@@ -208,7 +199,7 @@ class TestDocumentAuthorization:
         self, api_client: TestClient, tenant_scenario: TenantScenario
     ) -> None:
         admin_headers = tenant_scenario.admin_headers()
-        ks_id = _create_knowledge_space(api_client, admin_headers)
+        ks_id = create_knowledge_space(api_client, admin_headers)
         upload_response = _upload_document(api_client, admin_headers, ks_id)
         document_id = upload_response.json()["id"]
 
@@ -224,7 +215,7 @@ class TestDocumentAuthorization:
         self, api_client: TestClient, tenant_scenario: TenantScenario
     ) -> None:
         admin_headers = tenant_scenario.admin_headers()
-        ks_id = _create_knowledge_space(api_client, admin_headers)
+        ks_id = create_knowledge_space(api_client, admin_headers)
         upload_response = _upload_document(api_client, admin_headers, ks_id)
         document_id = upload_response.json()["id"]
 
@@ -241,7 +232,7 @@ def test_cross_tenant_document_access_returns_404(
 ) -> None:
     """A document that belongs to one organization is invisible to another."""
     admin_headers = tenant_scenario.admin_headers()
-    ks_id = _create_knowledge_space(api_client, admin_headers)
+    ks_id = create_knowledge_space(api_client, admin_headers)
     upload_response = _upload_document(api_client, admin_headers, ks_id)
     document_id = upload_response.json()["id"]
 

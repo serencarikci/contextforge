@@ -107,30 +107,30 @@ services:
       dockerfile: Dockerfile
     container_name: contextforge-migrate
     environment: &api-env
-      CONTEXTFORGE_APP__NAME: contextforge-api
-      CONTEXTFORGE_APP__ENVIRONMENT: local
-      CONTEXTFORGE_APP__DEBUG: "false"
-      CONTEXTFORGE_APP__VERSION: "0.2.0"
-      CONTEXTFORGE_API__HOST: 0.0.0.0
-      CONTEXTFORGE_API__PORT: "8000"
-      CONTEXTFORGE_API__DOCS_ENABLED: "true"
-      CONTEXTFORGE_API__CORS_ORIGINS: "[]"
-      CONTEXTFORGE_POSTGRES__HOST: postgres
-      CONTEXTFORGE_POSTGRES__PORT: "5432"
-      CONTEXTFORGE_POSTGRES__USER: contextforge
-      CONTEXTFORGE_POSTGRES__PASSWORD: contextforge_dev_password
-      CONTEXTFORGE_POSTGRES__DATABASE: contextforge
-      CONTEXTFORGE_REDIS__URL: redis://redis:6379/0
-      CONTEXTFORGE_QDRANT__URL: http://qdrant:6333
-      CONTEXTFORGE_MINIO__ENDPOINT: minio:9000
-      CONTEXTFORGE_MINIO__ACCESS_KEY: contextforge_minio
-      CONTEXTFORGE_MINIO__SECRET_KEY: contextforge_minio_secret
-      CONTEXTFORGE_MINIO__BUCKET: contextforge-documents
-      CONTEXTFORGE_MINIO__SECURE: "false"
-      CONTEXTFORGE_LOGGING__LEVEL: INFO
-      CONTEXTFORGE_LOGGING__FORMAT: json
-      CONTEXTFORGE_LOGGING__SERVICE_NAME: contextforge-api
-      CONTEXTFORGE_SECURITY__SECRET_KEY: change-me-local-only-not-for-production
+      CONTEXTFORGE_APP_NAME: contextforge-api
+      CONTEXTFORGE_APP_ENVIRONMENT: local
+      CONTEXTFORGE_APP_DEBUG: "false"
+      CONTEXTFORGE_APP_VERSION: "0.3.0"
+      CONTEXTFORGE_API_HOST: 0.0.0.0
+      CONTEXTFORGE_API_PORT: "8000"
+      CONTEXTFORGE_API_DOCS_ENABLED: "true"
+      CONTEXTFORGE_API_CORS_ORIGINS: "[]"
+      CONTEXTFORGE_POSTGRES_HOST: postgres
+      CONTEXTFORGE_POSTGRES_PORT: "5432"
+      CONTEXTFORGE_POSTGRES_USER: contextforge
+      CONTEXTFORGE_POSTGRES_PASSWORD: contextforge_dev_password
+      CONTEXTFORGE_POSTGRES_DATABASE: contextforge
+      CONTEXTFORGE_REDIS_URL: redis://redis:6379/0
+      CONTEXTFORGE_QDRANT_URL: http://qdrant:6333
+      CONTEXTFORGE_MINIO_ENDPOINT: minio:9000
+      CONTEXTFORGE_MINIO_ACCESS_KEY: contextforge_minio
+      CONTEXTFORGE_MINIO_SECRET_KEY: contextforge_minio_secret
+      CONTEXTFORGE_MINIO_BUCKET: contextforge-documents
+      CONTEXTFORGE_MINIO_SECURE: "false"
+      CONTEXTFORGE_LOGGING_LEVEL: INFO
+      CONTEXTFORGE_LOGGING_FORMAT: json
+      CONTEXTFORGE_LOGGING_SERVICE_NAME: contextforge-api
+      CONTEXTFORGE_SECURITY_SECRET_KEY: change-me-local-only-not-for-production
       CONTEXTFORGE_RUN_MIGRATIONS: "true"
     depends_on:
       postgres:
@@ -182,7 +182,7 @@ services:
     environment:
       <<: *api-env
       CONTEXTFORGE_RUN_MIGRATIONS: "false"
-      CONTEXTFORGE_LOGGING__SERVICE_NAME: contextforge-ingestion-worker
+      CONTEXTFORGE_LOGGING_SERVICE_NAME: contextforge-ingestion-worker
     depends_on:
       postgres:
         condition: service_healthy

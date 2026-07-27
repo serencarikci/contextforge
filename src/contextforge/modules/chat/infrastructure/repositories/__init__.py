@@ -1,0 +1,1 @@
+"""chat/infrastructure/repositories package."""

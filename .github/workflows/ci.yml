@@ -72,34 +72,34 @@ jobs:
 
       - name: Apply migrations
         env:
-          CONTEXTFORGE_APP__ENVIRONMENT: test
-          CONTEXTFORGE_POSTGRES__HOST: localhost
-          CONTEXTFORGE_POSTGRES__PORT: "5432"
-          CONTEXTFORGE_POSTGRES__USER: contextforge
-          CONTEXTFORGE_POSTGRES__PASSWORD: contextforge_dev_password
-          CONTEXTFORGE_POSTGRES__DATABASE: contextforge
+          CONTEXTFORGE_APP_ENVIRONMENT: test
+          CONTEXTFORGE_POSTGRES_HOST: localhost
+          CONTEXTFORGE_POSTGRES_PORT: "5432"
+          CONTEXTFORGE_POSTGRES_USER: contextforge
+          CONTEXTFORGE_POSTGRES_PASSWORD: contextforge_dev_password
+          CONTEXTFORGE_POSTGRES_DATABASE: contextforge
         run: uv run alembic upgrade head
 
       - name: Integration tests with coverage
         env:
-          CONTEXTFORGE_APP__ENVIRONMENT: test
-          CONTEXTFORGE_APP__DEBUG: "true"
-          CONTEXTFORGE_API__DOCS_ENABLED: "true"
-          CONTEXTFORGE_POSTGRES__HOST: localhost
-          CONTEXTFORGE_POSTGRES__PORT: "5432"
-          CONTEXTFORGE_POSTGRES__USER: contextforge
-          CONTEXTFORGE_POSTGRES__PASSWORD: contextforge_dev_password
-          CONTEXTFORGE_POSTGRES__DATABASE: contextforge
-          CONTEXTFORGE_REDIS__URL: redis://localhost:6379/0
-          CONTEXTFORGE_QDRANT__URL: http://localhost:6333
-          CONTEXTFORGE_MINIO__ENDPOINT: localhost:9000
-          CONTEXTFORGE_MINIO__ACCESS_KEY: contextforge_minio
-          CONTEXTFORGE_MINIO__SECRET_KEY: contextforge_minio_secret
-          CONTEXTFORGE_MINIO__BUCKET: contextforge-documents
-          CONTEXTFORGE_MINIO__SECURE: "false"
-          CONTEXTFORGE_LOGGING__LEVEL: WARNING
-          CONTEXTFORGE_LOGGING__FORMAT: console
-          CONTEXTFORGE_SECURITY__SECRET_KEY: test-secret-key-not-for-production
+          CONTEXTFORGE_APP_ENVIRONMENT: test
+          CONTEXTFORGE_APP_DEBUG: "true"
+          CONTEXTFORGE_API_DOCS_ENABLED: "true"
+          CONTEXTFORGE_POSTGRES_HOST: localhost
+          CONTEXTFORGE_POSTGRES_PORT: "5432"
+          CONTEXTFORGE_POSTGRES_USER: contextforge
+          CONTEXTFORGE_POSTGRES_PASSWORD: contextforge_dev_password
+          CONTEXTFORGE_POSTGRES_DATABASE: contextforge
+          CONTEXTFORGE_REDIS_URL: redis://localhost:6379/0
+          CONTEXTFORGE_QDRANT_URL: http://localhost:6333
+          CONTEXTFORGE_MINIO_ENDPOINT: localhost:9000
+          CONTEXTFORGE_MINIO_ACCESS_KEY: contextforge_minio
+          CONTEXTFORGE_MINIO_SECRET_KEY: contextforge_minio_secret
+          CONTEXTFORGE_MINIO_BUCKET: contextforge-documents
+          CONTEXTFORGE_MINIO_SECURE: "false"
+          CONTEXTFORGE_LOGGING_LEVEL: WARNING
+          CONTEXTFORGE_LOGGING_FORMAT: console
+          CONTEXTFORGE_SECURITY_SECRET_KEY: test-secret-key-not-for-production
         run: >
           uv run pytest -m "integration or unit or architecture"
           --cov=contextforge

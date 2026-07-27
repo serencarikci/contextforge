@@ -4,12 +4,15 @@ from fastapi import APIRouter
 
 from contextforge.api.routers import (
     audit,
+    chat_analytics,
+    conversations,
     customers,
     documents,
     health,
     ingestion_jobs,
     knowledge_spaces,
     memberships,
+    messages,
     organizations,
     projects,
     rag,
@@ -32,4 +35,7 @@ api_router.include_router(documents.router)
 api_router.include_router(ingestion_jobs.router)
 api_router.include_router(ingestion_jobs.documents_ingestion_router)
 api_router.include_router(rag.router)
+api_router.include_router(conversations.router)
+api_router.include_router(messages.router)
+api_router.include_router(chat_analytics.router)
 api_router.include_router(audit.router)

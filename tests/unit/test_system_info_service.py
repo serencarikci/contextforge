@@ -10,7 +10,7 @@ from contextforge.shared.config.settings import Settings, clear_settings_cache
 
 @pytest.mark.unit
 def test_system_info_service(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("CONTEXTFORGE_APP__ENVIRONMENT", "staging")
+    monkeypatch.setenv("CONTEXTFORGE_APP_ENVIRONMENT", "staging")
     clear_settings_cache()
     service = SystemInfoService(Settings())
     info = service.get_info()
@@ -21,7 +21,7 @@ def test_system_info_service(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.mark.unit
 def test_system_info_service_implemented_capabilities(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("CONTEXTFORGE_APP__ENVIRONMENT", "test")
+    monkeypatch.setenv("CONTEXTFORGE_APP_ENVIRONMENT", "test")
     clear_settings_cache()
     service = SystemInfoService(Settings())
     info = service.get_info()
@@ -40,7 +40,7 @@ def test_system_info_service_implemented_capabilities(monkeypatch: pytest.Monkey
     assert info.capabilities.document_embeddings is True
     assert info.capabilities.ingestion_workers is True
     assert info.capabilities.rag is True
-    assert info.capabilities.chat is False
+    assert info.capabilities.chat is True
     assert info.capabilities.multilingual_answers is True
 
     assert info.authentication == "development_only"
