@@ -40,7 +40,6 @@ async def test_prompt_registry_applies_db_overrides(tmp_path: Path) -> None:
         override_source=_FakeOverrideSource(),
     )
 
-    # UoW is unused by the fake source; construct a dummy-like object.
     class _DummyUow:
         async def __aenter__(self):
             return self

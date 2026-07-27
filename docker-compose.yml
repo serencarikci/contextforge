@@ -110,7 +110,7 @@ services:
       CONTEXTFORGE_APP_NAME: contextforge-api
       CONTEXTFORGE_APP_ENVIRONMENT: local
       CONTEXTFORGE_APP_DEBUG: "false"
-      CONTEXTFORGE_APP_VERSION: "0.4.0"
+      CONTEXTFORGE_APP_VERSION: "0.5.0"
       CONTEXTFORGE_API_HOST: 0.0.0.0
       CONTEXTFORGE_API_PORT: "8000"
       CONTEXTFORGE_API_DOCS_ENABLED: "true"
@@ -131,7 +131,11 @@ services:
       CONTEXTFORGE_LOGGING_FORMAT: json
       CONTEXTFORGE_LOGGING_SERVICE_NAME: contextforge-api
       CONTEXTFORGE_SECURITY_SECRET_KEY: change-me-local-only-not-for-production
+      CONTEXTFORGE_RATE_LIMIT_ENABLED: "true"
+      CONTEXTFORGE_RATE_LIMIT_BACKEND: memory
+      CONTEXTFORGE_OBSERVABILITY_METRICS_ENABLED: "true"
       CONTEXTFORGE_RUN_MIGRATIONS: "true"
+      CONTEXTFORGE_SKIP_HEALTHCHECK: "true"
     depends_on:
       postgres:
         condition: service_healthy
@@ -148,6 +152,7 @@ services:
     environment:
       <<: *api-env
       CONTEXTFORGE_RUN_MIGRATIONS: "false"
+      CONTEXTFORGE_SKIP_HEALTHCHECK: "false"
     ports:
       - "8000:8000"
     depends_on:
@@ -164,7 +169,7 @@ services:
       migrate:
         condition: service_completed_successfully
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/api/v1/health/live"]
+      test: ["CMD", "/app/scripts/docker-healthcheck.sh"]
       interval: 15s
       timeout: 5s
       retries: 10
@@ -182,6 +187,7 @@ services:
     environment:
       <<: *api-env
       CONTEXTFORGE_RUN_MIGRATIONS: "false"
+      CONTEXTFORGE_SKIP_HEALTHCHECK: "true"
       CONTEXTFORGE_LOGGING_SERVICE_NAME: contextforge-ingestion-worker
     depends_on:
       postgres:
@@ -201,6 +207,80 @@ services:
     networks:
       - contextforge
 
+  retention-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: contextforge-retention-worker
+    restart: unless-stopped
+    command: ["contextforge-retention-worker"]
+    environment:
+      <<: *api-env
+      CONTEXTFORGE_RUN_MIGRATIONS: "false"
+      CONTEXTFORGE_SKIP_HEALTHCHECK: "true"
+      CONTEXTFORGE_LOGGING_SERVICE_NAME: contextforge-retention-worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      disable: true
+    networks:
+      - contextforge
+
+  prometheus:
+    profiles: ["obs"]
+    image: prom/prometheus:v2.55.1
+    container_name: contextforge-prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./deploy/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./deploy/observability/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - contextforge_prometheus_data:/prometheus
+    depends_on:
+      - api
+    networks:
+      - contextforge
+
+  grafana:
+    profiles: ["obs"]
+    image: grafana/grafana:11.3.1
+    container_name: contextforge-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./deploy/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deploy/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - contextforge_grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - contextforge
+
+  loki:
+    profiles: ["obs"]
+    image: grafana/loki:3.2.1
+    container_name: contextforge-loki
+    restart: unless-stopped
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    ports:
+      - "3100:3100"
+    networks:
+      - contextforge
+
 networks:
   contextforge:
     name: contextforge-network
@@ -211,3 +291,5 @@ volumes:
   contextforge_redis_data:
   contextforge_qdrant_data:
   contextforge_minio_data:
+  contextforge_prometheus_data:
+  contextforge_grafana_data:

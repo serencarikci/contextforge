@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1.7
 
 FROM python:3.13-slim AS builder
 
@@ -22,10 +21,24 @@ RUN uv sync --frozen --no-dev --no-editable
 
 FROM python:3.13-slim AS runtime
 
+ARG VERSION=0.5.0
+ARG VCS_REF=unknown
+ARG BUILD_DATE=unknown
+
+LABEL org.opencontainers.image.title="ContextForge" \
+      org.opencontainers.image.description="Multilingual Enterprise Knowledge Assistant" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.revision="${VCS_REF}" \
+      org.opencontainers.image.created="${BUILD_DATE}" \
+      org.opencontainers.image.source="https://github.com/serencarikci/contextforge-enterprise-ai" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.vendor="ContextForge"
+
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/app/.venv/bin:$PATH" \
-    CONTEXTFORGE_LOGGING_FORMAT=json
+    CONTEXTFORGE_LOGGING_FORMAT=json \
+    CONTEXTFORGE_SKIP_HEALTHCHECK=false
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
@@ -40,16 +53,19 @@ COPY --from=builder /app/src /app/src
 COPY alembic.ini /app/alembic.ini
 COPY migrations /app/migrations
 COPY scripts/docker-entrypoint.sh /app/scripts/docker-entrypoint.sh
+COPY scripts/docker-healthcheck.sh /app/scripts/docker-healthcheck.sh
 
-RUN chmod +x /app/scripts/docker-entrypoint.sh \
+RUN chmod +x /app/scripts/docker-entrypoint.sh /app/scripts/docker-healthcheck.sh \
     && chown -R contextforge:contextforge /app
 
 USER contextforge
 
 EXPOSE 8000
 
+STOPSIGNAL SIGTERM
+
 HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=5 \
-  CMD curl -fsS http://127.0.0.1:8000/api/v1/health/live || exit 1
+  CMD ["/app/scripts/docker-healthcheck.sh"]
 
 ENTRYPOINT ["/app/scripts/docker-entrypoint.sh"]
 CMD ["uvicorn", "contextforge.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]

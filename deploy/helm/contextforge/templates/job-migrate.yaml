@@ -1,0 +1,45 @@
+{{- if .Values.migrate.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "contextforge.fullname" . }}-migrate-{{ .Release.Revision }}
+  labels:
+    {{- include "contextforge.labels" . | nindent 4 }}
+    app.kubernetes.io/component: migrate
+spec:
+  backoffLimit: {{ .Values.migrate.backoffLimit }}
+  template:
+    metadata:
+      labels:
+        {{- include "contextforge.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: migrate
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "contextforge.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: migrate
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "contextforge.fullname" . }}-config
+            {{- if or .Values.existingSecret .Values.externalSecret.enabled }}
+            - secretRef:
+                name: {{ default (printf "%s-app" (include "contextforge.fullname" .)) .Values.existingSecret }}
+            {{- end }}
+          env:
+            - name: CONTEXTFORGE_RUN_MIGRATIONS
+              value: "true"
+            - name: CONTEXTFORGE_SKIP_HEALTHCHECK
+              value: "true"
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+{{- end }}

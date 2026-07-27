@@ -1,4 +1,4 @@
-.PHONY: install dev worker up down logs lint format type-check test test-unit test-integration test-architecture test-authorization test-security coverage migrate migration downgrade bootstrap-dev seed-system-data clean help
+.PHONY: install dev worker retention-worker up down logs lint format type-check test test-unit test-integration test-architecture test-authorization test-security coverage migrate migration downgrade bootstrap-dev seed-system-data validate-infra helm-lint terraform-validate backup-postgres load-test-smoke compose-prod-config clean help
 
 UV ?= uv
 PYTHON ?= python3
@@ -9,6 +9,7 @@ help:
 	@echo "  make install              Install dependencies with uv"
 	@echo "  make dev                  Run API locally with uvicorn"
 	@echo "  make worker               Run the document ingestion worker"
+	@echo "  make retention-worker     Run the retention cleanup worker"
 	@echo "  make up                   Start full Docker Compose stack"
 	@echo "  make down                 Stop Docker Compose stack"
 	@echo "  make logs                 Tail Compose logs"
@@ -27,6 +28,12 @@ help:
 	@echo "  make downgrade            Downgrade one Alembic migration"
 	@echo "  make bootstrap-dev        Seed deterministic local development data"
 	@echo "  make seed-system-data     Verify RBAC reference data is seeded"
+	@echo "  make validate-infra       Helm + Terraform validation scripts"
+	@echo "  make helm-lint            Lint/template Helm chart"
+	@echo "  make terraform-validate   Fmt/validate Terraform"
+	@echo "  make backup-postgres      Run Postgres backup script"
+	@echo "  make load-test-smoke      Run k6 smoke scenario (k6 required)"
+	@echo "  make compose-prod-config  Validate prod compose merge"
 	@echo "  make clean                Remove caches and build artifacts"
 
 install:
@@ -97,6 +104,25 @@ bootstrap-dev:
 
 seed-system-data:
 	$(UV) run python scripts/seed_system_data.py
+
+validate-infra: helm-lint terraform-validate
+
+helm-lint:
+	./scripts/validate-helm.sh
+
+terraform-validate:
+	./scripts/validate-terraform.sh
+
+backup-postgres:
+	./scripts/backup/backup_postgres.sh
+
+load-test-smoke:
+	@if ! command -v k6 >/dev/null 2>&1; then echo "k6 not installed"; exit 1; fi
+	k6 run perf/k6/smoke.js
+
+compose-prod-config:
+	$(COMPOSE) -f docker-compose.yml -f docker-compose.prod.yml config >/dev/null
+	@echo "compose prod config OK"
 
 clean:
 	rm -rf .pytest_cache .mypy_cache .ruff_cache .coverage htmlcov coverage.xml dist build

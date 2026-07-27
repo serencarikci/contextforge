@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from sqlalchemy import and_, or_, select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from contextforge.modules.admin.domain.entities.llm_provider_config import LlmProviderConfig
@@ -41,35 +41,6 @@ class SqlAlchemyLlmProviderConfigRepository:
             .order_by(LlmProviderConfigModel.provider.asc(), LlmProviderConfigModel.model.asc())
         )
         return [self._to_entity(m) for m in result.scalars().all()]
-
-    async def get_active_for_organization(self, organization_id: UUID) -> LlmProviderConfig | None:
-        result = await self._session.execute(
-            select(LlmProviderConfigModel)
-            .where(
-                and_(
-                    LlmProviderConfigModel.organization_id == organization_id,
-                    LlmProviderConfigModel.is_active.is_(True),
-                )
-            )
-            .order_by(LlmProviderConfigModel.updated_at.desc())
-            .limit(1)
-        )
-        model = result.scalar_one_or_none()
-        if model is not None:
-            return self._to_entity(model)
-        result = await self._session.execute(
-            select(LlmProviderConfigModel)
-            .where(
-                and_(
-                    LlmProviderConfigModel.organization_id.is_(None),
-                    LlmProviderConfigModel.is_active.is_(True),
-                )
-            )
-            .order_by(LlmProviderConfigModel.updated_at.desc())
-            .limit(1)
-        )
-        model = result.scalar_one_or_none()
-        return None if model is None else self._to_entity(model)
 
     async def add(self, entity: LlmProviderConfig) -> LlmProviderConfig:
         model = LlmProviderConfigModel(

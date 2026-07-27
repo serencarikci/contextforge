@@ -10,10 +10,7 @@ from sqlalchemy import and_, func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from contextforge.modules.admin.domain.entities.token_usage import (
-    TokenUsageAggregate,
-    TokenUsageDaily,
-)
+from contextforge.modules.admin.domain.entities.token_usage import TokenUsageAggregate
 from contextforge.modules.admin.infrastructure.models.token_usage import TokenUsageDailyModel
 from contextforge.shared.utilities.datetime import utc_now
 
@@ -21,26 +18,6 @@ from contextforge.shared.utilities.datetime import utc_now
 class SqlAlchemyTokenUsageRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
-
-    async def get_day(
-        self,
-        organization_id: UUID,
-        day: date,
-        provider: str,
-        model: str,
-    ) -> TokenUsageDaily | None:
-        result = await self._session.execute(
-            select(TokenUsageDailyModel).where(
-                and_(
-                    TokenUsageDailyModel.organization_id == organization_id,
-                    TokenUsageDailyModel.day == day,
-                    TokenUsageDailyModel.provider == provider,
-                    TokenUsageDailyModel.model == model,
-                )
-            )
-        )
-        model_row = result.scalar_one_or_none()
-        return None if model_row is None else self._to_entity(model_row)
 
     async def increment(
         self,
@@ -82,26 +59,6 @@ class SqlAlchemyTokenUsageRepository:
             )
         )
         await self._session.execute(statement)
-
-    async def list_range(
-        self,
-        organization_id: UUID,
-        *,
-        day_from: date,
-        day_to: date,
-    ) -> list[TokenUsageDaily]:
-        result = await self._session.execute(
-            select(TokenUsageDailyModel)
-            .where(
-                and_(
-                    TokenUsageDailyModel.organization_id == organization_id,
-                    TokenUsageDailyModel.day >= day_from,
-                    TokenUsageDailyModel.day <= day_to,
-                )
-            )
-            .order_by(TokenUsageDailyModel.day.asc(), TokenUsageDailyModel.provider.asc())
-        )
-        return [self._to_entity(m) for m in result.scalars().all()]
 
     async def aggregate(
         self,
@@ -160,19 +117,3 @@ class SqlAlchemyTokenUsageRepository:
             )
         )
         return int(result.scalar_one())
-
-    @staticmethod
-    def _to_entity(model: TokenUsageDailyModel) -> TokenUsageDaily:
-        return TokenUsageDaily(
-            organization_id=model.organization_id,
-            day=model.day,
-            provider=model.provider,
-            model=model.model,
-            id=model.id,
-            prompt_tokens=model.prompt_tokens,
-            completion_tokens=model.completion_tokens,
-            request_count=model.request_count,
-            estimated_cost=model.estimated_cost,
-            created_at=model.created_at,
-            updated_at=model.updated_at,
-        )

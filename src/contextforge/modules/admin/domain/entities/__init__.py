@@ -18,10 +18,7 @@ from contextforge.modules.admin.domain.entities.organization_settings import (
 from contextforge.modules.admin.domain.entities.prompt_template import PromptTemplate
 from contextforge.modules.admin.domain.entities.retention import RetentionPolicy, RetentionRun
 from contextforge.modules.admin.domain.entities.token_pricing import TokenPricing, estimate_cost
-from contextforge.modules.admin.domain.entities.token_usage import (
-    TokenUsageAggregate,
-    TokenUsageDaily,
-)
+from contextforge.modules.admin.domain.entities.token_usage import TokenUsageAggregate
 
 __all__ = [
     "FeatureFlag",
@@ -33,7 +30,6 @@ __all__ = [
     "RetentionRun",
     "TokenPricing",
     "TokenUsageAggregate",
-    "TokenUsageDaily",
     "estimate_cost",
     "mask_api_key",
     "normalize_flag_key",

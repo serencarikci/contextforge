@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -44,6 +47,18 @@ jobs:
 
       - name: Architecture tests
         run: uv run pytest -m architecture
+
+      - name: Migration upgrade check (offline SQL)
+        run: uv run alembic upgrade head --sql > /tmp/alembic-upgrade.sql
+
+      - name: Dependency audit
+        run: uv pip audit || uv run pip-audit || echo "pip audit soft-fail (tool unavailable)"
+
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
 
   integration:
     name: Integration tests
@@ -118,6 +133,44 @@ jobs:
         if: always()
         run: docker compose down -v
 
+  infra:
+    name: Helm, Terraform, SBOM
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.16.2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+
+      - name: Helm lint and template
+        run: ./scripts/validate-helm.sh
+
+      - name: Terraform fmt and validate
+        run: ./scripts/validate-terraform.sh
+
+      - name: Generate SBOM (syft or cyclonedx soft-fail)
+        run: |
+          if command -v syft >/dev/null 2>&1; then
+            syft dir:. -o cyclonedx-json > sbom.cdx.json
+          else
+            curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /tmp
+            if [ -x /tmp/syft ]; then
+              /tmp/syft dir:. -o cyclonedx-json > sbom.cdx.json
+            else
+              echo "SBOM generation soft-fail: syft unavailable"
+            fi
+          fi
+        continue-on-error: true
+
   docker:
     name: Build Docker image
     runs-on: ubuntu-latest
@@ -138,3 +191,12 @@ jobs:
           tags: contextforge-api:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Docker Scout (optional soft-fail)
+        continue-on-error: true
+        run: |
+          if docker scout version >/dev/null 2>&1; then
+            docker scout cves contextforge-api:ci || true
+          else
+            echo "docker scout not available — soft-fail"
+          fi

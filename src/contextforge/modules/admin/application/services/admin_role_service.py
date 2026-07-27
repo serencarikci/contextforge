@@ -82,13 +82,11 @@ class AdminRoleService:
     ) -> Role:
         role = await uow.rbac.get_role(role_id)
         if role is None or role.organization_id != ctx.organization_id:
-            # Allow reading system roles for permission listing only when same-org custom.
             if role is None or (
                 role.organization_id is not None and role.organization_id != ctx.organization_id
             ):
                 raise ResourceNotFoundError("Role not found.")
             if role.is_system and role.organization_id is None:
-                # system roles are visible but immutable
                 return role
             if role.organization_id != ctx.organization_id:
                 raise ResourceNotFoundError("Role not found.")

@@ -1,16 +1,13 @@
-# Git
 .git
 .gitignore
 .gitattributes
 
-# Documentation and IDE (not needed in image)
 docs/
 .vscode/
 .idea/
 *.md
 !README.md
 
-# Tests and quality tooling
 tests/
 .pytest_cache/
 .mypy_cache/
@@ -21,21 +18,18 @@ coverage.xml
 .pre-commit-config.yaml
 .github/
 
-# Environment and secrets
 .env
 .env.*
 !.env.example
 *.pem
 *.key
 
-# Local data
 data/
 infrastructure/postgres/data/
 infrastructure/minio/data/
 infrastructure/redis/data/
 infrastructure/qdrant/data/
 
-# Python caches / build
 **/__pycache__/
 **/*.py[cod]
 **/*.egg-info/
@@ -43,7 +37,6 @@ infrastructure/qdrant/data/
 dist/
 build/
 
-# Misc
 .DS_Store
 Makefile
 LICENSE

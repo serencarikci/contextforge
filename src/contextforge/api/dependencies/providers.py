@@ -30,24 +30,10 @@ from contextforge.infrastructure.vector_store.qdrant_vector_store import QdrantV
 from contextforge.modules.admin.application.ports.admin_cache import AdminCachePort
 from contextforge.modules.admin.application.ports.llm_connectivity import LlmConnectivityCheckPort
 from contextforge.modules.admin.application.ports.secret_cipher import SecretCipherPort
-from contextforge.modules.admin.application.services.admin_role_service import AdminRoleService
-from contextforge.modules.admin.application.services.admin_user_service import AdminUserService
-from contextforge.modules.admin.application.services.audit_export_service import AuditExportService
-from contextforge.modules.admin.application.services.dashboard_service import DashboardService
 from contextforge.modules.admin.application.services.document_ops_service import DocumentOpsService
 from contextforge.modules.admin.application.services.feature_flag_service import FeatureFlagService
-from contextforge.modules.admin.application.services.ingestion_ops_service import (
-    IngestionOpsService,
-)
-from contextforge.modules.admin.application.services.knowledge_space_admin_service import (
-    KnowledgeSpaceAdminService,
-)
 from contextforge.modules.admin.application.services.llm_config_service import LlmConfigService
 from contextforge.modules.admin.application.services.ops_service import OpsService
-from contextforge.modules.admin.application.services.organization_settings_service import (
-    OrganizationSettingsService,
-)
-from contextforge.modules.admin.application.services.prompt_admin_service import PromptAdminService
 from contextforge.modules.admin.application.services.prompt_override_source import (
     DatabasePromptOverrideSource,
 )
@@ -55,9 +41,6 @@ from contextforge.modules.admin.application.services.retention_service import (
     RetentionCleanupService,
 )
 from contextforge.modules.admin.application.services.token_usage_service import TokenUsageService
-from contextforge.modules.admin.application.services.usage_analytics_service import (
-    UsageAnalyticsService,
-)
 from contextforge.modules.admin.infrastructure.cache import InMemoryAdminCache, RedisAdminCache
 from contextforge.modules.admin.infrastructure.crypto import FernetSecretCipher
 from contextforge.modules.admin.infrastructure.llm import HttpLlmConnectivityChecker
@@ -413,43 +396,3 @@ def get_system_info_service(
     settings: Annotated[Settings, Depends(get_settings_dependency)],
 ) -> SystemInfoService:
     return SystemInfoService(settings)
-
-
-def get_dashboard_service() -> DashboardService:
-    return DashboardService()
-
-
-def get_admin_user_service() -> AdminUserService:
-    return AdminUserService()
-
-
-def get_admin_role_service() -> AdminRoleService:
-    return AdminRoleService()
-
-
-def get_organization_settings_service() -> OrganizationSettingsService:
-    return OrganizationSettingsService()
-
-
-def get_knowledge_space_admin_service() -> KnowledgeSpaceAdminService:
-    return KnowledgeSpaceAdminService()
-
-
-def get_ingestion_ops_service() -> IngestionOpsService:
-    return IngestionOpsService()
-
-
-def get_audit_export_service() -> AuditExportService:
-    return AuditExportService()
-
-
-def get_usage_analytics_service() -> UsageAnalyticsService:
-    return UsageAnalyticsService()
-
-
-def get_prompt_admin_service() -> PromptAdminService:
-    return PromptAdminService()
-
-
-def get_retention_service(request: Request) -> RetentionCleanupService:
-    return get_retention_cleanup_service(request)

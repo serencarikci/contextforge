@@ -1,0 +1,24 @@
+api:
+  replicaCount: 2
+  env:
+    CONTEXTFORGE_APP_ENVIRONMENT: staging
+    CONTEXTFORGE_API_DOCS_ENABLED: "false"
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+
+ingress:
+  enabled: true
+  hosts:
+    - host: contextforge.staging.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+serviceMonitor:
+  enabled: true
+
+backupCronJob:
+  enabled: true

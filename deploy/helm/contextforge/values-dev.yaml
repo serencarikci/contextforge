@@ -1,0 +1,29 @@
+api:
+  replicaCount: 1
+  env:
+    CONTEXTFORGE_APP_ENVIRONMENT: development
+    CONTEXTFORGE_API_DOCS_ENABLED: "true"
+    CONTEXTFORGE_RATE_LIMIT_BACKEND: memory
+
+ingestionWorker:
+  replicaCount: 1
+
+retentionWorker:
+  replicaCount: 1
+
+autoscaling:
+  enabled: false
+
+pdb:
+  enabled: false
+
+networkPolicy:
+  enabled: false
+
+ingress:
+  enabled: true
+  hosts:
+    - host: contextforge.dev.local
+      paths:
+        - path: /
+          pathType: Prefix
