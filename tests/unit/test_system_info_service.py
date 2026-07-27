@@ -16,7 +16,7 @@ def test_system_info_service(monkeypatch: pytest.MonkeyPatch) -> None:
     info = service.get_info()
     assert info.name == "ContextForge API"
     assert info.environment == "staging"
-    assert info.capabilities.rag is False
+    assert info.capabilities.rag is True
 
 
 @pytest.mark.unit
@@ -39,8 +39,8 @@ def test_system_info_service_implemented_capabilities(monkeypatch: pytest.Monkey
     assert info.capabilities.document_chunking is True
     assert info.capabilities.document_embeddings is True
     assert info.capabilities.ingestion_workers is True
-    assert info.capabilities.rag is False
+    assert info.capabilities.rag is True
     assert info.capabilities.chat is False
-    assert info.capabilities.multilingual_answers is False
+    assert info.capabilities.multilingual_answers is True
 
     assert info.authentication == "development_only"

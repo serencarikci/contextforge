@@ -8,7 +8,11 @@ from uuid import UUID
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as qmodels
 
-from contextforge.application.ports.vector_store import ChunkVectorPoint, VectorStoreError
+from contextforge.application.ports.vector_store import (
+    ChunkVectorPoint,
+    VectorSearchHit,
+    VectorStoreError,
+)
 from contextforge.shared.config.settings import QdrantSettings
 from contextforge.shared.logging.setup import get_logger
 
@@ -148,6 +152,68 @@ class QdrantVectorStore:
             await asyncio.to_thread(_delete)
         except Exception as exc:
             raise VectorStoreError(f"Failed to delete document vectors: {exc}") from exc
+
+    async def search(
+        self,
+        *,
+        organization_id: UUID,
+        query_vector: list[float],
+        knowledge_space_ids: list[UUID],
+        top_k: int,
+    ) -> list[VectorSearchHit]:
+        if top_k < 1 or not knowledge_space_ids:
+            return []
+
+        must: list[qmodels.Condition] = [
+            qmodels.FieldCondition(
+                key="organization_id",
+                match=qmodels.MatchValue(value=str(organization_id)),
+            ),
+            qmodels.FieldCondition(
+                key="knowledge_space_id",
+                match=qmodels.MatchAny(any=[str(item) for item in knowledge_space_ids]),
+            ),
+        ]
+
+        def _search() -> list[VectorSearchHit]:
+            response = self._client.query_points(
+                collection_name=self._settings.collection_name,
+                query=query_vector,
+                query_filter=qmodels.Filter(must=must),
+                limit=top_k,
+                with_payload=True,
+            )
+            hits: list[VectorSearchHit] = []
+            for point in response.points:
+                payload = dict(point.payload or {})
+                try:
+                    chunk_id = UUID(str(point.id))
+                    org_id = UUID(str(payload["organization_id"]))
+                    document_id = UUID(str(payload["document_id"]))
+                    knowledge_space_id = UUID(str(payload["knowledge_space_id"]))
+                except (KeyError, TypeError, ValueError):
+                    continue
+                raw_index = payload.get("chunk_index")
+                chunk_index = int(raw_index) if isinstance(raw_index, int | float | str) else None
+                title = payload.get("document_title")
+                hits.append(
+                    VectorSearchHit(
+                        chunk_id=chunk_id,
+                        organization_id=org_id,
+                        document_id=document_id,
+                        knowledge_space_id=knowledge_space_id,
+                        score=float(point.score or 0.0),
+                        chunk_index=chunk_index,
+                        document_title=str(title) if title is not None else None,
+                        payload={key: value for key, value in payload.items()},
+                    )
+                )
+            return hits
+
+        try:
+            return await asyncio.to_thread(_search)
+        except Exception as exc:
+            raise VectorStoreError(f"Failed to search chunk vectors: {exc}") from exc
 
     async def close(self) -> None:
         await asyncio.to_thread(self._client.close)

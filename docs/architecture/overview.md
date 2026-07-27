@@ -14,6 +14,26 @@ ContextForge is implemented as a modular monolith.
 | `bootstrap` | Application factory and lifespan |
 | `workers` | Long-running background processes (ingestion) |
 
+## RAG flow
+
+```mermaid
+sequenceDiagram
+  participant Client
+  participant API
+  participant Hybrid as HybridRetrieval
+  participant Rerank
+  participant LLM
+  Client->>API: POST /rag/query
+  API->>API: rag:query + KS authz
+  API->>Hybrid: dense + BM25 fuse
+  Hybrid-->>API: candidates
+  API->>Rerank: reorder top-N
+  Rerank-->>API: context chunks
+  API->>LLM: system + untrusted context + question
+  LLM-->>API: answer
+  API-->>Client: answer + citations + diagnostics
+```
+
 ## Dependency rule
 
 * `domain` depends on nothing outside the domain/shared primitives

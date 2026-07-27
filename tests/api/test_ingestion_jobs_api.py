@@ -46,6 +46,9 @@ class _FakeVectorStore:
     async def ensure_ready(self, *, dimensions: int) -> None:
         return None
 
+    async def search(self, **kwargs: object) -> list[object]:
+        return []
+
 
 def _create_knowledge_space(api_client: TestClient, headers: dict[str, str]) -> str:
     response = api_client.post(

@@ -90,4 +90,5 @@ class PermissionCode(StrEnum):
     DOCUMENT_READ = "document:read"
     DOCUMENT_UPDATE = "document:update"
     DOCUMENT_DELETE = "document:delete"
+    RAG_QUERY = "rag:query"
     AUDIT_READ = "audit:read"

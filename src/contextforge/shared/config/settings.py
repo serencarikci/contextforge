@@ -165,6 +165,66 @@ class IngestionSettings(BaseSettings):
     worker_idle_sleep_seconds: float = Field(default=0.5, gt=0)
 
 
+class RagSettings(BaseSettings):
+    """Hybrid retrieval and RAG pipeline settings."""
+
+    model_config = SettingsConfigDict(extra="ignore")
+
+    dense_weight: float = Field(default=0.6, ge=0.0, le=1.0)
+    lexical_weight: float = Field(default=0.4, ge=0.0, le=1.0)
+    top_k: int = Field(default=20, ge=1, le=100)
+    candidate_multiplier: int = Field(default=3, ge=1, le=20)
+    max_context_tokens: int = Field(default=3000, ge=128, le=128000)
+    max_chunks_in_context: int = Field(default=8, ge=1, le=50)
+    default_language: Literal["en", "tr"] = "en"
+    fusion_method: Literal["weighted", "rrf"] = "weighted"
+    rrf_k: int = Field(default=60, ge=1, le=200)
+    lexical_corpus_limit: int = Field(default=5000, ge=100, le=100000)
+
+
+class RerankSettings(BaseSettings):
+    """Document reranking settings."""
+
+    model_config = SettingsConfigDict(extra="ignore")
+
+    provider: Literal["noop", "hashing", "openai_compatible"] = "hashing"
+    top_n: int = Field(default=8, ge=1, le=50)
+    model: str = "contextforge-hash-reranker-v1"
+    base_url: str = "https://api.openai.com/v1"
+    api_key: SecretStr | None = None
+    timeout_seconds: float = Field(default=30.0, gt=0)
+    max_retries: int = Field(default=2, ge=0, le=10)
+    retry_backoff_seconds: float = Field(default=0.5, gt=0)
+
+
+class LlmSettings(BaseSettings):
+    """LLM provider settings for answer generation."""
+
+    model_config = SettingsConfigDict(extra="ignore")
+
+    provider: Literal["mock", "openai", "azure_openai", "openai_compatible"] = "mock"
+    model: str = "gpt-4o-mini"
+    base_url: str = "https://api.openai.com/v1"
+    api_key: SecretStr | None = None
+    azure_endpoint: str = ""
+    azure_api_version: str = "2024-10-21"
+    azure_deployment: str = ""
+    temperature: float = Field(default=0.2, ge=0.0, le=2.0)
+    max_output_tokens: int = Field(default=1024, ge=16, le=16000)
+    timeout_seconds: float = Field(default=60.0, gt=0)
+    max_retries: int = Field(default=2, ge=0, le=10)
+    retry_backoff_seconds: float = Field(default=0.5, gt=0)
+
+
+class PromptSettings(BaseSettings):
+    """Versioned prompt template settings."""
+
+    model_config = SettingsConfigDict(extra="ignore")
+
+    active_version: str = "v1"
+    default_language: Literal["en", "tr"] = "en"
+
+
 class SecuritySettings(BaseSettings):
     """JWT and related auth settings reserved for real authentication."""
 
@@ -194,6 +254,10 @@ class Settings(BaseSettings):
     minio: MinioSettings = Field(default_factory=MinioSettings)
     embedding: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
     ingestion: IngestionSettings = Field(default_factory=IngestionSettings)
+    rag: RagSettings = Field(default_factory=RagSettings)
+    rerank: RerankSettings = Field(default_factory=RerankSettings)
+    llm: LlmSettings = Field(default_factory=LlmSettings)
+    prompts: PromptSettings = Field(default_factory=PromptSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
     security: SecuritySettings = Field(default_factory=SecuritySettings)
 
@@ -214,6 +278,8 @@ class Settings(BaseSettings):
                 )
         if self.app.environment == Environment.TEST:
             object.__setattr__(self.app, "debug", True)
+            object.__setattr__(self.llm, "provider", "mock")
+            object.__setattr__(self.rerank, "provider", "hashing")
         return self
 
 

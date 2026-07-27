@@ -6,8 +6,9 @@ and operational guides. Users later ask questions in Turkish or English and rece
 answers grounded in authorized company documents.
 
 > **Current scope:** identity, multi-tenancy, RBAC, audit logging, document upload/storage,
-> parsing, semantic chunking, multilingual embeddings (Qdrant), and background ingestion
-> workers are implemented. RAG retrieval, LLM answers, and chat are **not** shipped yet.
+> parsing, semantic chunking, multilingual embeddings (Qdrant), background ingestion
+> workers, and hybrid RAG answering are implemented. Multi-turn chat sessions are **not**
+> shipped yet.
 >
 > **Authentication:** identity is resolved via development-only HTTP headers (see
 > [Development identity headers](#development-identity-headers)), gated off in
@@ -45,6 +46,8 @@ answers grounded in authorized company documents.
   chunking, multilingual embeddings into Qdrant
 * **Background ingestion workers** — Redis-backed jobs that run parse → chunk → embed with
   retries and failed-job recovery (`make worker` / Compose `ingestion-worker`)
+* **Hybrid RAG** — dense (Qdrant) + BM25 lexical retrieval, reranking, provider-neutral LLM
+  answering with citations, prompt versioning, and injection-resistant context assembly
 * Pytest (unit, integration, architecture, authorization, security, API)
 * Ruff, mypy, pre-commit, GitHub Actions CI
 
@@ -375,6 +378,7 @@ make type-check
 | POST/GET/PATCH/PUT/DELETE | `/api/v1/documents`, `/{id}`, `/{id}/content`, `/{id}/download` | Document upload, metadata, content replace, download, delete |
 | POST/GET | `/api/v1/documents/{id}/parse`, `/{id}/chunks`, `/{id}/embeddings` | Parse, chunk, and embed a document on demand |
 | GET/POST | `/api/v1/ingestion-jobs`, `/{id}`, `/{id}/retry`, `/documents/{id}/ingestion-jobs` | Background ingestion jobs (list, inspect, retry failed) |
+| POST | `/api/v1/rag/search`, `/rag/query`, `/rag/query/stream` | Hybrid retrieval and grounded RAG answers (`rag:query`) |
 | GET | `/api/v1/audit` | Query the append-only audit trail (`audit:read`) |
 
 All endpoints above (except `/health/*` and `/system/info`) require
@@ -397,9 +401,9 @@ Example system info capabilities (implemented in this commit vs. still planned):
   "document_chunking": true,
   "document_embeddings": true,
   "ingestion_workers": true,
-  "rag": false,
+  "rag": true,
   "chat": false,
-  "multilingual_answers": false
+  "multilingual_answers": true
 }
 ```
 
@@ -536,9 +540,9 @@ RAG retrieval, LLM answer generation, and chat remain on the product roadmap —
 1. ~~Multi-tenancy, scoped RBAC, and audit logging~~ — done (development identity only;
    see [Auth roadmap](#auth-roadmap) for real authentication)
 2. ~~Document upload, parsing, chunking, embeddings, and ingestion workers~~ — done
-3. Real authentication (OIDC/SSO) replacing development identity
-4. Retrieval and grounded answer generation
-5. Multilingual chat experience (Turkish / English)
+3. ~~Hybrid retrieval, reranking, and RAG answering~~ — done
+4. Real authentication (OIDC/SSO) replacing development identity
+5. Multilingual chat experience (Turkish / English) with session memory
 6. Admin tooling on top of the audit trail
 
 ## License
@@ -559,3 +563,6 @@ Built by [serencarikci](https://github.com/serencarikci).
 * [ADR-006: Scoped Role-Based Access Control (RBAC)](docs/adr/ADR-006-scoped-rbac.md)
 * [ADR-007: Header-Based Development Identity](docs/adr/ADR-007-development-identity.md)
 * [ADR-008: Append-Only Audit Trail with Sanitized Metadata](docs/adr/ADR-008-append-only-audit.md)
+* [ADR-009: Hybrid Retrieval (Dense + BM25)](docs/adr/ADR-009-hybrid-retrieval.md)
+* [ADR-010: LLM Provider Abstraction](docs/adr/ADR-010-llm-provider-abstraction.md)
+* [ADR-011: RAG Security Boundaries](docs/adr/ADR-011-rag-security.md)

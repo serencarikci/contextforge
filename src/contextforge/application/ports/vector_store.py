@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Protocol
 from uuid import UUID
 
@@ -22,6 +22,20 @@ class ChunkVectorPoint:
     language: str
     vector: list[float]
     payload: dict[str, JSONValue]
+
+
+@dataclass(frozen=True, slots=True)
+class VectorSearchHit:
+    """One dense-search result from the vector store."""
+
+    chunk_id: UUID
+    organization_id: UUID
+    document_id: UUID
+    knowledge_space_id: UUID
+    score: float
+    chunk_index: int | None = None
+    document_title: str | None = None
+    payload: dict[str, JSONValue] = field(default_factory=dict)
 
 
 class VectorStoreError(Exception):
@@ -47,5 +61,21 @@ class VectorStorePort(Protocol):
         """Remove all vectors belonging to a document."""
         ...
 
+    async def search(
+        self,
+        *,
+        organization_id: UUID,
+        query_vector: list[float],
+        knowledge_space_ids: list[UUID],
+        top_k: int,
+    ) -> list[VectorSearchHit]:
+        """Dense similarity search scoped to an organization and knowledge spaces."""
+        ...
 
-__all__ = ["ChunkVectorPoint", "VectorStoreError", "VectorStorePort"]
+
+__all__ = [
+    "ChunkVectorPoint",
+    "VectorSearchHit",
+    "VectorStoreError",
+    "VectorStorePort",
+]

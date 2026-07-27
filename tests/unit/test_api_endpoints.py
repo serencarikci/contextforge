@@ -59,8 +59,8 @@ def test_system_info_capabilities(client: TestClient) -> None:
         "document_chunking": True,
         "document_embeddings": True,
         "ingestion_workers": True,
-        "rag": False,
+        "rag": True,
         "chat": False,
-        "multilingual_answers": False,
+        "multilingual_answers": True,
     }
     assert body["authentication"] == "development_only"
