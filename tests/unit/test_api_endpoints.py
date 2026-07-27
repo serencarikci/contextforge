@@ -26,7 +26,7 @@ def test_liveness(client: TestClient) -> None:
     assert body == {
         "status": "ok",
         "service": "contextforge-api",
-        "version": "0.1.0",
+        "version": "0.2.0",
     }
     assert "X-Correlation-ID" in response.headers
 
@@ -44,7 +44,7 @@ def test_system_info_capabilities(client: TestClient) -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["name"] == "ContextForge API"
-    assert body["version"] == "0.1.0"
+    assert body["version"] == "0.2.0"
     assert body["environment"] == "test"
     assert body["capabilities"] == {
         "identity_context": True,
