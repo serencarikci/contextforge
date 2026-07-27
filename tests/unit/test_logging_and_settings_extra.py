@@ -59,11 +59,11 @@ def test_console_formatter_and_configure_logging() -> None:
 
 @pytest.mark.unit
 def test_cors_origins_json_and_csv(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("CONTEXTFORGE_API__CORS_ORIGINS", '["http://a","http://b"]')
+    monkeypatch.setenv("CONTEXTFORGE_API_CORS_ORIGINS", '["http://a","http://b"]')
     clear_settings_cache()
     assert Settings().api.cors_origins == ["http://a", "http://b"]
 
-    monkeypatch.setenv("CONTEXTFORGE_API__CORS_ORIGINS", "http://a, http://b")
+    monkeypatch.setenv("CONTEXTFORGE_API_CORS_ORIGINS", "http://a, http://b")
     clear_settings_cache()
     assert Settings().api.cors_origins == ["http://a", "http://b"]
 

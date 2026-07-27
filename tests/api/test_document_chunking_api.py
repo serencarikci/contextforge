@@ -7,25 +7,16 @@ from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
+from tests.helpers import create_knowledge_space
 
 if TYPE_CHECKING:
     from tests.conftest import TenantScenario
 
 
-def _create_knowledge_space(api_client: TestClient, headers: dict[str, str]) -> str:
-    response = api_client.post(
-        "/api/v1/knowledge-spaces",
-        json={"name": "Chunk KS", "slug": f"chunk-ks-{uuid4().hex[:10]}"},
-        headers=headers,
-    )
-    assert response.status_code == 201
-    return str(response.json()["id"])
-
-
 def _upload_markdown(
     api_client: TestClient,
     headers: dict[str, str],
-    knowledge_space_id: str,
+    knowledge_space_id: object,
 ) -> Any:
     body = "\n\n".join(
         [
@@ -39,7 +30,7 @@ def _upload_markdown(
     )
     return api_client.post(
         "/api/v1/documents",
-        data={"knowledge_space_id": knowledge_space_id, "title": "Chunk Doc"},
+        data={"knowledge_space_id": str(knowledge_space_id), "title": "Chunk Doc"},
         files={"file": ("guide.md", body.encode("utf-8"), "text/markdown")},
         headers=headers,
     )
@@ -51,7 +42,7 @@ class TestDocumentChunkingApi:
         self, api_client: TestClient, tenant_scenario: TenantScenario
     ) -> None:
         headers = tenant_scenario.admin_headers()
-        ks_id = _create_knowledge_space(api_client, headers)
+        ks_id = create_knowledge_space(api_client, headers)
         upload = _upload_markdown(api_client, headers, ks_id)
         assert upload.status_code == 201
         document_id = upload.json()["id"]
@@ -82,7 +73,7 @@ class TestDocumentChunkingApi:
         self, api_client: TestClient, tenant_scenario: TenantScenario
     ) -> None:
         headers = tenant_scenario.admin_headers()
-        ks_id = _create_knowledge_space(api_client, headers)
+        ks_id = create_knowledge_space(api_client, headers)
         upload = _upload_markdown(api_client, headers, ks_id)
         document_id = upload.json()["id"]
 

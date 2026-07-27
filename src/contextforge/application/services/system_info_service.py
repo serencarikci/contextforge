@@ -24,7 +24,7 @@ class SystemCapabilities:
     document_embeddings: bool = True
     ingestion_workers: bool = True
     rag: bool = True
-    chat: bool = False
+    chat: bool = True
     multilingual_answers: bool = True
 
 

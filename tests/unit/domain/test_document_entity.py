@@ -89,7 +89,7 @@ class TestEnsureUploadSizeWithinLimit:
 
 
 @pytest.mark.unit
-class TestDocumentLifecycle:
+class TestDocumentEntityLifecycle:
     def test_update_metadata_changes_title(self) -> None:
         document = _make_document()
         document.update_metadata(title="New Title")

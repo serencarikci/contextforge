@@ -16,6 +16,7 @@ from contextforge.modules.rag.application.prompts.registry import PromptRegistry
 from contextforge.modules.rag.application.security.prompt_guard import (
     sanitize_model_answer,
     sanitize_user_question,
+    wrap_conversation_history,
 )
 from contextforge.modules.rag.application.services.context_builder import (
     build_citations,
@@ -51,6 +52,11 @@ class RagQueryService:
         self._prompts = prompts
         self._rag_settings = rag_settings
         self._rerank_settings = rerank_settings
+
+    @property
+    def model_name(self) -> str:
+        """Configured LLM model/deployment name, for observability/attribution."""
+        return self._llm.model
 
     def _resolve_knowledge_spaces(
         self,
@@ -179,6 +185,7 @@ class RagQueryService:
         knowledge_space_ids: list[UUID] | None = None,
         language: str | None = None,
         top_k: int | None = None,
+        history_context: str | None = None,
     ) -> RagAnswer:
         total_started = time.perf_counter()
         chunks, search_diagnostics = await self.search(
@@ -211,6 +218,10 @@ class RagQueryService:
             question=safe_question,
             context=context_text or "No authorized excerpts were retrieved.",
         )
+        if history_context:
+            safe_history = wrap_conversation_history(history_context)
+            if safe_history:
+                user_prompt = f"{safe_history}\n\n{user_prompt}"
         messages = [
             LlmMessage(role="system", content=system_prompt),
             LlmMessage(role="user", content=user_prompt),
@@ -279,6 +290,7 @@ class RagQueryService:
         knowledge_space_ids: list[UUID] | None = None,
         language: str | None = None,
         top_k: int | None = None,
+        history_context: str | None = None,
     ) -> AsyncIterator[str]:
         chunks, _diagnostics = await self.search(
             uow,
@@ -308,6 +320,10 @@ class RagQueryService:
             question=safe_question,
             context=context_text or "No authorized excerpts were retrieved.",
         )
+        if history_context:
+            safe_history = wrap_conversation_history(history_context)
+            if safe_history:
+                user_prompt = f"{safe_history}\n\n{user_prompt}"
         messages = [
             LlmMessage(role="system", content=system_prompt),
             LlmMessage(role="user", content=user_prompt),

@@ -20,6 +20,7 @@ def import_all_models() -> None:
     """Import every ORM model module so it registers with ``Base.metadata``."""
     from contextforge.infrastructure.database import models as _core_models  # noqa: F401
     from contextforge.modules.audit.infrastructure import models as _audit_models  # noqa: F401
+    from contextforge.modules.chat.infrastructure import models as _chat_models  # noqa: F401
     from contextforge.modules.customers.infrastructure import (
         models as _customer_models,  # noqa: F401
     )

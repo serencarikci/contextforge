@@ -32,4 +32,4 @@ def test_system_info_endpoint(api_client: TestClient) -> None:
     body = response.json()
     assert body["capabilities"]["rag"] is True
     assert body["capabilities"]["multilingual_answers"] is True
-    assert body["capabilities"]["chat"] is False
+    assert body["capabilities"]["chat"] is True

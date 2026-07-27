@@ -47,6 +47,8 @@ PERMISSIONS: tuple[tuple[str, str], ...] = (
     (PermissionCode.DOCUMENT_DELETE, "Delete documents"),
     (PermissionCode.RAG_QUERY, "Query the RAG retrieval engine"),
     (PermissionCode.AUDIT_READ, "Read audit events"),
+    (PermissionCode.CHAT_USE, "Use enterprise chat conversations"),
+    (PermissionCode.CHAT_MANAGE, "Manage chat conversations, analytics, and moderation"),
 )
 
 SYSTEM_ROLES: tuple[tuple[str, str, str], ...] = (
@@ -78,6 +80,7 @@ _PROJECT_MANAGER_PERMS = (
     PermissionCode.DOCUMENT_UPDATE,
     PermissionCode.DOCUMENT_DELETE,
     PermissionCode.RAG_QUERY,
+    PermissionCode.CHAT_USE,
 )
 
 _READ_PERMS = (
@@ -86,6 +89,7 @@ _READ_PERMS = (
     PermissionCode.KNOWLEDGE_SPACE_READ,
     PermissionCode.DOCUMENT_READ,
     PermissionCode.RAG_QUERY,
+    PermissionCode.CHAT_USE,
 )
 
 _DEVELOPER_PERMS = (
@@ -107,6 +111,8 @@ _KNOWLEDGE_MANAGER_PERMS = (
     PermissionCode.DOCUMENT_UPDATE,
     PermissionCode.DOCUMENT_DELETE,
     PermissionCode.RAG_QUERY,
+    PermissionCode.CHAT_USE,
+    PermissionCode.CHAT_MANAGE,
 )
 
 ROLE_PERMISSIONS: dict[str, tuple[str, ...]] = {

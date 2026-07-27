@@ -16,14 +16,14 @@ if TYPE_CHECKING:
     from contextforge.infrastructure.database.session import DatabaseManager
     from contextforge.shared.config.settings import Settings
 
-os.environ.setdefault("CONTEXTFORGE_APP__ENVIRONMENT", "test")
-os.environ.setdefault("CONTEXTFORGE_LOGGING__LEVEL", "WARNING")
-os.environ.setdefault("CONTEXTFORGE_LOGGING__FORMAT", "console")
-os.environ.setdefault("CONTEXTFORGE_SECURITY__SECRET_KEY", "test-secret-key-not-for-production")
-os.environ.setdefault("CONTEXTFORGE_API__DOCS_ENABLED", "true")
-os.environ.setdefault("CONTEXTFORGE_INGESTION__RETRY_BACKOFF_SECONDS", "0.01")
-os.environ.setdefault("CONTEXTFORGE_INGESTION__WORKER_IDLE_SLEEP_SECONDS", "0.01")
-os.environ.setdefault("CONTEXTFORGE_INGESTION__POLL_TIMEOUT_SECONDS", "1")
+os.environ.setdefault("CONTEXTFORGE_APP_ENVIRONMENT", "test")
+os.environ.setdefault("CONTEXTFORGE_LOGGING_LEVEL", "WARNING")
+os.environ.setdefault("CONTEXTFORGE_LOGGING_FORMAT", "console")
+os.environ.setdefault("CONTEXTFORGE_SECURITY_SECRET_KEY", "test-secret-key-not-for-production")
+os.environ.setdefault("CONTEXTFORGE_API_DOCS_ENABLED", "true")
+os.environ.setdefault("CONTEXTFORGE_INGESTION_RETRY_BACKOFF_SECONDS", "0.01")
+os.environ.setdefault("CONTEXTFORGE_INGESTION_WORKER_IDLE_SLEEP_SECONDS", "0.01")
+os.environ.setdefault("CONTEXTFORGE_INGESTION_POLL_TIMEOUT_SECONDS", "1")
 
 
 @pytest.fixture(autouse=True)
@@ -39,19 +39,19 @@ def _clear_settings_cache() -> None:
 def integration_settings() -> Settings:
     from contextforge.shared.config.settings import Settings, clear_settings_cache
 
-    os.environ.setdefault("CONTEXTFORGE_APP__ENVIRONMENT", "test")
-    os.environ.setdefault("CONTEXTFORGE_POSTGRES__HOST", "localhost")
-    os.environ.setdefault("CONTEXTFORGE_POSTGRES__PORT", "5432")
-    os.environ.setdefault("CONTEXTFORGE_POSTGRES__USER", "contextforge")
-    os.environ.setdefault("CONTEXTFORGE_POSTGRES__PASSWORD", "contextforge_dev_password")
-    os.environ.setdefault("CONTEXTFORGE_POSTGRES__DATABASE", "contextforge")
-    os.environ.setdefault("CONTEXTFORGE_REDIS__URL", "redis://localhost:6379/0")
-    os.environ.setdefault("CONTEXTFORGE_QDRANT__URL", "http://localhost:6333")
-    os.environ.setdefault("CONTEXTFORGE_MINIO__ENDPOINT", "localhost:9000")
-    os.environ.setdefault("CONTEXTFORGE_MINIO__ACCESS_KEY", "contextforge_minio")
-    os.environ.setdefault("CONTEXTFORGE_MINIO__SECRET_KEY", "contextforge_minio_secret")
-    os.environ.setdefault("CONTEXTFORGE_MINIO__BUCKET", "contextforge-documents")
-    os.environ.setdefault("CONTEXTFORGE_MINIO__SECURE", "false")
+    os.environ.setdefault("CONTEXTFORGE_APP_ENVIRONMENT", "test")
+    os.environ.setdefault("CONTEXTFORGE_POSTGRES_HOST", "localhost")
+    os.environ.setdefault("CONTEXTFORGE_POSTGRES_PORT", "5432")
+    os.environ.setdefault("CONTEXTFORGE_POSTGRES_USER", "contextforge")
+    os.environ.setdefault("CONTEXTFORGE_POSTGRES_PASSWORD", "contextforge_dev_password")
+    os.environ.setdefault("CONTEXTFORGE_POSTGRES_DATABASE", "contextforge")
+    os.environ.setdefault("CONTEXTFORGE_REDIS_URL", "redis://localhost:6379/0")
+    os.environ.setdefault("CONTEXTFORGE_QDRANT_URL", "http://localhost:6333")
+    os.environ.setdefault("CONTEXTFORGE_MINIO_ENDPOINT", "localhost:9000")
+    os.environ.setdefault("CONTEXTFORGE_MINIO_ACCESS_KEY", "contextforge_minio")
+    os.environ.setdefault("CONTEXTFORGE_MINIO_SECRET_KEY", "contextforge_minio_secret")
+    os.environ.setdefault("CONTEXTFORGE_MINIO_BUCKET", "contextforge-documents")
+    os.environ.setdefault("CONTEXTFORGE_MINIO_SECURE", "false")
     clear_settings_cache()
     return Settings()
 

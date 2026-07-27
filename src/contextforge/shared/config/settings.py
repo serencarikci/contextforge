@@ -28,7 +28,7 @@ class AppSettings(BaseSettings):
     name: str = "contextforge-api"
     environment: Environment = Environment.LOCAL
     debug: bool = False
-    version: str = "0.1.0"
+    version: str = "0.3.0"
 
     @field_validator("environment", mode="before")
     @classmethod
@@ -225,6 +225,24 @@ class PromptSettings(BaseSettings):
     default_language: Literal["en", "tr"] = "en"
 
 
+class ChatSettings(BaseSettings):
+    """Enterprise chat conversation, messaging, and streaming settings."""
+
+    model_config = SettingsConfigDict(extra="ignore")
+
+    max_message_length: int = Field(default=8000, ge=1, le=32000)
+    max_participants: int = Field(default=25, ge=1, le=500)
+    default_language: Literal["en", "tr"] = "en"
+    history_max_messages: int = Field(default=20, ge=1, le=200)
+    memory_strategy: Literal["recent", "token_budget", "summary"] = "token_budget"
+    memory_token_budget: int = Field(default=2000, ge=128, le=32000)
+    memory_summary_trigger_messages: int = Field(default=30, ge=2, le=1000)
+    memory_summary_recent_messages: int = Field(default=6, ge=1, le=100)
+    suggestion_count: int = Field(default=4, ge=1, le=10)
+    stream_heartbeat_seconds: float = Field(default=15.0, gt=0)
+    export_max_messages: int = Field(default=5000, ge=1, le=100000)
+
+
 class SecuritySettings(BaseSettings):
     """JWT and related auth settings reserved for real authentication."""
 
@@ -240,7 +258,8 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(
         env_prefix="CONTEXTFORGE_",
-        env_nested_delimiter="__",
+        env_nested_delimiter="_",
+        env_nested_max_split=1,
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
@@ -260,6 +279,7 @@ class Settings(BaseSettings):
     prompts: PromptSettings = Field(default_factory=PromptSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
     security: SecuritySettings = Field(default_factory=SecuritySettings)
+    chat: ChatSettings = Field(default_factory=ChatSettings)
 
     @model_validator(mode="after")
     def apply_environment_defaults(self) -> Settings:

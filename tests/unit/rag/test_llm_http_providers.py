@@ -18,7 +18,6 @@ from contextforge.application.ports.reranker import RerankCandidate
 from contextforge.infrastructure.llm.providers import (
     AzureOpenAILlmProvider,
     OpenAICompatibleLlmProvider,
-    OpenAILlmProvider,
     build_llm_provider,
 )
 from contextforge.infrastructure.reranking.rerankers import (
@@ -64,7 +63,7 @@ def test_build_llm_provider_variants() -> None:
             model="local-model",
         )
     )
-    assert isinstance(openai, OpenAILlmProvider)
+    assert isinstance(openai, OpenAICompatibleLlmProvider)
     assert isinstance(azure, AzureOpenAILlmProvider)
     assert isinstance(compatible, OpenAICompatibleLlmProvider)
 

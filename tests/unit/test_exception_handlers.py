@@ -12,7 +12,7 @@ from contextforge.shared.config.settings import Settings, clear_settings_cache
 
 @pytest.fixture
 def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
-    monkeypatch.setenv("CONTEXTFORGE_APP__ENVIRONMENT", "test")
+    monkeypatch.setenv("CONTEXTFORGE_APP_ENVIRONMENT", "test")
     clear_settings_cache()
     settings = Settings()
     app = create_app(settings)

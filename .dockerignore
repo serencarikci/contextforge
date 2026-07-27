@@ -47,6 +47,3 @@ build/
 .DS_Store
 Makefile
 LICENSE
-CONTRIBUTING.md
-SECURITY.md
-CODE_OF_CONDUCT.md

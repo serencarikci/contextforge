@@ -92,3 +92,5 @@ class PermissionCode(StrEnum):
     DOCUMENT_DELETE = "document:delete"
     RAG_QUERY = "rag:query"
     AUDIT_READ = "audit:read"
+    CHAT_USE = "chat:use"
+    CHAT_MANAGE = "chat:manage"

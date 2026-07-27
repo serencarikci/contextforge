@@ -9,7 +9,6 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from contextforge.domain.exceptions.base import (
     ApplicationError,
-    DependencyUnavailableError,
     DomainError,
 )
 from contextforge.shared.logging.context import get_correlation_id
@@ -65,7 +64,6 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(ValueError)
     async def value_error_handler(request: Request, exc: ValueError) -> JSONResponse:
-
         logger.warning(
             "domain_value_error",
             extra={"path": request.url.path, "error_message": str(exc)},
@@ -75,30 +73,11 @@ def register_exception_handlers(app: FastAPI) -> None:
             content=_error_payload("DOMAIN_ERROR", str(exc)),
         )
 
-    @app.exception_handler(DependencyUnavailableError)
-    async def dependency_exception_handler(
-        request: Request,
-        exc: DependencyUnavailableError,
-    ) -> JSONResponse:
-        logger.error(
-            "dependency_unavailable",
-            extra={"path": request.url.path, "code": exc.code},
-            exc_info=exc,
-        )
-        return JSONResponse(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            content=_error_payload(
-                exc.code,
-                "A required dependency is currently unavailable.",
-            ),
-        )
-
     @app.exception_handler(ApplicationError)
     async def application_exception_handler(
         request: Request,
         exc: ApplicationError,
     ) -> JSONResponse:
-
         status_code = getattr(exc, "http_status", None) or status.HTTP_500_INTERNAL_SERVER_ERROR
         log = logger.warning if status_code < 500 else logger.error
         log(

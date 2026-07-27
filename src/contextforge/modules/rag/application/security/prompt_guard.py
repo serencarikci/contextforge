@@ -48,6 +48,21 @@ _UNTRUSTED_MARKERS = re.compile(
 )
 
 
+def wrap_conversation_history(history: str) -> str:
+    """Sanitize and wrap prior conversation turns injected into the prompt.
+
+    Prior turns originate from end-user messages (already persisted), so they
+    receive the same control-character stripping and injection-phrase
+    filtering as a fresh question before being placed in the prompt.
+    """
+    safe = _CONTROL_CHARS.sub(" ", history or "").strip()
+    for pattern in _INJECTION_PATTERNS:
+        safe = pattern.sub("[filtered]", safe)
+    if not safe:
+        return ""
+    return f"CONVERSATION_HISTORY_BEGIN\n{safe}\nCONVERSATION_HISTORY_END"
+
+
 def sanitize_model_answer(answer: str) -> str:
     """Strip untrusted-document wrappers if a model echoes prompt scaffolding."""
     cleaned = _UNTRUSTED_MARKERS.sub(" ", answer or "")
@@ -60,5 +75,6 @@ __all__ = [
     "build_context_block",
     "sanitize_model_answer",
     "sanitize_user_question",
+    "wrap_conversation_history",
     "wrap_untrusted_document",
 ]
