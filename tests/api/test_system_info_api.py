@@ -29,10 +29,12 @@ def test_system_info_reports_expected_capability_flags(api_client: TestClient) -
         "document_chunking",
         "document_embeddings",
         "ingestion_workers",
+        "rag",
+        "multilingual_answers",
     )
     for flag in implemented:
         assert capabilities[flag] is True, f"expected capability '{flag}' to be True"
 
-    not_yet_implemented = ("rag", "chat", "multilingual_answers")
+    not_yet_implemented = ("chat",)
     for flag in not_yet_implemented:
         assert capabilities[flag] is False, f"expected capability '{flag}' to be False"

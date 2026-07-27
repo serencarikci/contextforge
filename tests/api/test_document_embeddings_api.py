@@ -29,6 +29,9 @@ class _FakeVectorStore:
     async def delete_by_document(self, organization_id: object, document_id: object) -> None:
         self.deleted.append((organization_id, document_id))
 
+    async def search(self, **kwargs: object) -> list[object]:
+        return []
+
 
 def _create_knowledge_space(api_client: TestClient, headers: dict[str, str]) -> str:
     response = api_client.post(

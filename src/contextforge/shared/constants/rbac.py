@@ -45,6 +45,7 @@ PERMISSIONS: tuple[tuple[str, str], ...] = (
     (PermissionCode.DOCUMENT_READ, "Read documents"),
     (PermissionCode.DOCUMENT_UPDATE, "Update documents"),
     (PermissionCode.DOCUMENT_DELETE, "Delete documents"),
+    (PermissionCode.RAG_QUERY, "Query the RAG retrieval engine"),
     (PermissionCode.AUDIT_READ, "Read audit events"),
 )
 
@@ -76,6 +77,7 @@ _PROJECT_MANAGER_PERMS = (
     PermissionCode.DOCUMENT_READ,
     PermissionCode.DOCUMENT_UPDATE,
     PermissionCode.DOCUMENT_DELETE,
+    PermissionCode.RAG_QUERY,
 )
 
 _READ_PERMS = (
@@ -83,6 +85,7 @@ _READ_PERMS = (
     PermissionCode.PROJECT_READ,
     PermissionCode.KNOWLEDGE_SPACE_READ,
     PermissionCode.DOCUMENT_READ,
+    PermissionCode.RAG_QUERY,
 )
 
 _DEVELOPER_PERMS = (
@@ -103,6 +106,7 @@ _KNOWLEDGE_MANAGER_PERMS = (
     PermissionCode.DOCUMENT_READ,
     PermissionCode.DOCUMENT_UPDATE,
     PermissionCode.DOCUMENT_DELETE,
+    PermissionCode.RAG_QUERY,
 )
 
 ROLE_PERMISSIONS: dict[str, tuple[str, ...]] = {

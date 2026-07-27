@@ -30,5 +30,6 @@ def test_system_info_endpoint(api_client: TestClient) -> None:
     response = api_client.get("/api/v1/system/info")
     assert response.status_code == 200
     body = response.json()
-    assert body["capabilities"]["rag"] is False
+    assert body["capabilities"]["rag"] is True
+    assert body["capabilities"]["multilingual_answers"] is True
     assert body["capabilities"]["chat"] is False

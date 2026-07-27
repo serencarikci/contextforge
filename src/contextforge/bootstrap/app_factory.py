@@ -22,8 +22,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         title="ContextForge API",
         version=resolved.app.version,
         description=(
-            "Secure enterprise knowledge platform foundation. "
-            "Document ingestion, RAG, and chat are not implemented in this release."
+            "Secure enterprise knowledge platform with document ingestion, "
+            "hybrid retrieval, and RAG answering. Chat sessions are not implemented yet."
         ),
         lifespan=lifespan,
         docs_url=docs_url,

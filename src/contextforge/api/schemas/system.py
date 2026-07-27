@@ -18,9 +18,9 @@ class CapabilitiesSchema(BaseModel):
     document_chunking: bool = True
     document_embeddings: bool = True
     ingestion_workers: bool = True
-    rag: bool = False
+    rag: bool = True
     chat: bool = False
-    multilingual_answers: bool = False
+    multilingual_answers: bool = True
 
 
 class SystemInfoResponse(BaseModel):
