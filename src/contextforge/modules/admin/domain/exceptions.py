@@ -12,11 +12,6 @@ class UnknownPermissionError(DomainError):
     code = "UNKNOWN_PERMISSION"
 
 
-class QuotaExceededError(ApplicationError):
-    code = "QUOTA_EXCEEDED"
-    http_status = 409
-
-
 class RetentionPolicyDisabledError(ApplicationError):
     code = "RETENTION_DISABLED"
     http_status = 409
@@ -28,7 +23,6 @@ class SecretDecryptionError(ApplicationError):
 
 
 __all__ = [
-    "QuotaExceededError",
     "RetentionPolicyDisabledError",
     "SecretDecryptionError",
     "SystemRoleImmutableError",

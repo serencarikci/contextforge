@@ -25,12 +25,18 @@ ENV/
 env/
 
 .env
-.env.local
-.env.*.local
+.env.*
+**/.env
+**/.env.*
+!config/.env.example
 *.pem
 *.key
 secrets/
 credentials.json
+config/.env
+config/.env.local
+config/.env.production
+config/.env.prod
 
 .coverage
 .coverage.*
@@ -71,8 +77,6 @@ frontend/web/.next/
 frontend/web/coverage/
 frontend/web/playwright-report/
 frontend/web/test-results/
-frontend/web/.env
-frontend/web/.env.local
 
 
 .pre-commit-cache/

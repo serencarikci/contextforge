@@ -3,7 +3,7 @@ import { Inbox } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
+interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
   icon?: React.ReactNode;
   title: string;
   description?: string;

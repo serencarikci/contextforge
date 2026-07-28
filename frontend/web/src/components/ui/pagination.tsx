@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export interface PaginationProps {
+interface PaginationProps {
   page: number;
   limit: number;
   total: number;

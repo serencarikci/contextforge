@@ -99,7 +99,7 @@ make bootstrap-dev
 
 # Frontend
 cd frontend/web
-cp .env.example .env.local
+cp config/.env.example .env.local
 npm install
 npm run dev          # http://localhost:3001
 ```
@@ -135,7 +135,7 @@ docker build -t contextforge-web .
 | Analytics / System | `/analytics`, `/system`, `/settings` |
 
 CORS must allow `http://localhost:3001` and the `X-ContextForge-*` headers (wired in
-API middleware + `.env.example`).
+API middleware + `config/.env.example`).
 
 ### UI screens & operations
 
@@ -571,7 +571,7 @@ scripts/ Entrypoint and utility scripts
 ## Local installation
 
 ```bash
-cp .env.example .env
+cp config/.env.example .env
 make install
 ```
 
@@ -603,7 +603,7 @@ docker compose down
 
 ## Environment variables
 
-See `.env.example`. Nested settings use:
+See `config/.env.example`. Nested settings use:
 
 ```text
 CONTEXTFORGE_APP_ENVIRONMENT

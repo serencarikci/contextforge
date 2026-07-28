@@ -68,7 +68,18 @@ uv run python scripts/bootstrap_dev.py
 echo "==> Starting frontend on http://127.0.0.1:3001"
 cd frontend/web
 if [ ! -f .env.local ]; then
-  cp .env.example .env.local
+  if [ -f ../../config/.env.example ]; then
+    grep -E '^(NEXT_PUBLIC_|PORT=)' ../../config/.env.example > .env.local || true
+  fi
+  if [ ! -s .env.local ]; then
+    cat > .env.local <<'EOF'
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+NEXT_PUBLIC_APP_NAME=ContextForge
+NEXT_PUBLIC_DEFAULT_LOCALE=en
+NEXT_PUBLIC_SESSION_TTL_HOURS=12
+PORT=3001
+EOF
+  fi
 fi
 export WATCHPACK_POLLING=true
 export CHOKIDAR_USEPOLLING=true
